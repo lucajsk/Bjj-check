@@ -235,9 +235,9 @@ textarea { width: 100%; min-height: 70px; border-radius: var(--r-sm); border: 1p
   position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 25;
   display: flex; gap: 4px; padding: 6px; border-radius: 22px; background: var(--glass); border: 1px solid var(--line);
   backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4); box-shadow: var(--shadow);
-  width: min(460px, calc(100% - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
+  width: min(520px, calc(100% - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
 }
-.tabs button { flex: 1; min-width: 0; border: 0; background: transparent; border-radius: 16px; padding: 8px 4px 7px; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--muted); font-size: 12px; font-weight: 650; }
+.tabs button { flex: 1; min-width: 0; border: 0; background: transparent; border-radius: 16px; padding: 8px 2px 7px; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--muted); font-size: 11.5px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tabs button svg { width: 22px; height: 22px; }
 .tabs button[aria-current="page"] { background: var(--raised); color: var(--ink); }
 .tabs button[aria-current="page"] svg { color: var(--accent); }
@@ -260,6 +260,51 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(3px); -
 .dlg-sec { grid-column: 1 / -1; padding-top: 6px; border-top: 1px solid var(--line); }
 .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom, 0px)); z-index: 40; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-weight: 650; font-size: 14px; box-shadow: var(--shadow); max-width: calc(100% - 32px); }
 footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
+
+/* Probanden */
+.who { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 12px 0 8px; border-radius: 12px; border: 1px solid var(--line); background: var(--raised); font-weight: 700; font-size: 14px; max-width: 46vw; }
+.who .av { width: 26px; height: 26px; border-radius: 8px; background: var(--accent); color: var(--accent-ink); display: grid; place-items: center; font-size: 11px; font-weight: 850; flex: none; font-stretch: 90%; }
+.who .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.who.none .av { background: var(--line); color: var(--muted); }
+.who.none .nm { color: var(--muted); font-weight: 600; }
+@media (max-width: 560px) { #model-txt { display: none; } #model-chip { padding: 9px; } }
+@media (max-width: 480px) { .logo b span { display: none; } .who { max-width: 38vw; } .top-in { gap: 8px; } }
+.who { min-width: 0; flex-shrink: 1; } .logo { flex: none; }
+.people { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.pcard { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 14px; display: flex; flex-direction: column; gap: 12px; min-width: 0; color: inherit; }
+.pcard:hover { border-color: var(--muted); }
+.pcard.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+.pc-head { display: flex; gap: 12px; align-items: center; min-width: 0; }
+.pc-av { width: 46px; height: 46px; border-radius: 14px; background: var(--raised); border: 1px solid var(--line); display: grid; place-items: center; font-family: var(--f-display); font-weight: 900; font-stretch: 85%; font-size: 17px; flex: none; }
+.pcard.active .pc-av, .pd-head .pc-av.on { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.pc-name { font-weight: 750; font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pc-sub { color: var(--muted); font-size: 13px; }
+.pc-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+.mini { font-size: 12px; color: var(--muted); padding: 8px 10px; border-radius: 10px; background: var(--raised); min-width: 0; }
+.mini b { display: block; font-size: 20px; color: var(--ink); font-family: var(--f-display); font-weight: 850; font-stretch: 90%; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.pd-head { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.pd-head .pc-av { width: 60px; height: 60px; font-size: 22px; border-radius: 18px; }
+.pd-head .grow { flex: 1; min-width: 160px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+.kpi { padding: 12px; border-radius: var(--r-sm); background: var(--raised); border: 1px solid var(--line); min-width: 0; }
+.kpi b { display: block; font-family: var(--f-display); font-size: 28px; font-weight: 850; font-stretch: 90%; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.kpi span { font-size: 12px; color: var(--muted); }
+.trend { display: flex; align-items: flex-end; gap: 4px; height: 90px; padding: 8px 4px 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.trend .tb { flex: 0 0 18px; display: flex; flex-direction: column-reverse; border-radius: 5px 5px 0 0; overflow: hidden; min-height: 3px; background: var(--raised); }
+.trend .tb i { display: block; } .trend .tb i.k { background: var(--ok); } .trend .tb i.f { background: var(--bad); }
+.slist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.srow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; align-items: center; padding: 12px; border-radius: var(--r-sm); background: var(--raised); border: 1px solid var(--line); }
+.srow .st { font-weight: 650; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.srow .sm { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 13px; color: var(--muted); }
+.srow .sa { display: flex; gap: 6px; }
+.srow .btn { min-height: 38px; padding: 0 12px; font-size: 14px; border-radius: 10px; }
+.btn.warnbtn { color: var(--bad); }
+.btn.confirm { background: var(--bad); border-color: var(--bad); color: #fff; }
+.pform { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 640px) { .pform { grid-template-columns: minmax(0, 1fr); } }
+.assign { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.assign select { min-height: 34px; border-radius: 9px; border: 1px solid var(--line); background: var(--raised); padding: 0 8px; font-size: 13px; color: var(--ink); max-width: 180px; }
+.privacy { font-size: 13px; color: var(--muted); padding: 10px 12px; border-radius: var(--r-sm); background: var(--raised); border: 1px dashed var(--line); }
 @media (max-width: 420px) { .logo b { font-size: 18px; } .chip#model-chip { max-width: 150px; overflow: hidden; text-overflow: ellipsis; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
@@ -275,6 +320,7 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
       <b>BBJ <span>Check</span></b>
     </a>
     <span class="spacer"></span>
+    <button class="who none" id="who" type="button" aria-label="Aktiver Proband"><span class="av" id="who-av">–</span><span class="nm" id="who-nm">Kein Proband</span></button>
     <span class="chip" id="model-chip"><i></i><span id="model-txt">KI nicht geladen</span></span>
     <button class="icon-btn" id="open-settings" type="button" aria-label="Einstellungen">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
@@ -386,7 +432,7 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
     <div class="view-head">
       <div>
         <h1>Auswertung</h1>
-        <div class="src" style="margin-top:8px"><span class="tag" id="r-src">–</span><span class="tag" id="r-meta">–</span></div>
+        <div class="src" style="margin-top:8px"><span class="tag" id="r-src">–</span><span class="tag" id="r-meta">–</span><label class="assign" id="assign-wrap" hidden>Proband <select id="assign"></select></label><span class="tag" id="saved-tag" hidden>gespeichert</span></div>
       </div>
       <div class="row">
         <button class="btn primary" id="export" type="button">
@@ -450,6 +496,67 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
     </div>
   </section>
 
+  <!-- PROBANDEN -->
+  <section class="view" id="v-people" hidden>
+    <div class="view-head">
+      <div>
+        <h1>Probanden</h1>
+        <p class="sub">Jede Aufnahme wird automatisch dem aktiven Probanden zugeordnet. Alles bleibt auf diesem Gerät.</p>
+      </div>
+      <button class="btn primary" id="p-new" type="button">+ Proband anlegen</button>
+    </div>
+
+    <div class="card" id="p-form" hidden>
+      <h2 id="p-form-title">Neuer Proband</h2>
+      <div class="pform">
+        <div class="field"><label for="pf-code">Kürzel</label><input id="pf-code" maxlength="24" placeholder="P01" autocomplete="off"></div>
+        <div class="field"><label for="pf-height">Körpergröße (cm)</label><input id="pf-height" type="number" inputmode="decimal" placeholder="z. B. 178"></div>
+        <div class="field"><label for="pf-note">Notiz</label><input id="pf-note" maxlength="120" placeholder="z. B. Gruppe A, erfahren"></div>
+      </div>
+      <p class="privacy">Für die Studie Pseudonyme wie P01 statt echter Namen verwenden. Die Zuordnung zu Personen gehört auf eine getrennte Liste außerhalb der App.</p>
+      <div class="row"><button class="btn primary" id="pf-save" type="button">Speichern</button><button class="btn" id="pf-cancel" type="button">Abbrechen</button></div>
+    </div>
+
+    <div class="people" id="p-list"></div>
+
+    <div class="card" id="p-detail" hidden>
+      <div class="pd-head">
+        <div class="pc-av" id="pd-av">P</div>
+        <div class="grow"><h2 id="pd-name">–</h2><div class="pc-sub" id="pd-sub">–</div></div>
+        <div class="row">
+          <button class="btn" id="pd-active" type="button">Als aktiv setzen</button>
+          <button class="btn" id="pd-edit" type="button">Bearbeiten</button>
+          <button class="btn ghost" id="pd-close" type="button" aria-label="Schließen">Schließen</button>
+        </div>
+      </div>
+      <div class="kpis" id="pd-kpis"></div>
+      <div><div class="label" style="margin-bottom:6px">Verlauf · korrekt und fehlerhaft je Aufnahme</div><div class="trend" id="pd-trend"></div></div>
+      <div class="row" style="justify-content:space-between"><h2>Aufnahmen</h2><span class="label" id="pd-count">0</span></div>
+      <ul class="slist" id="pd-sessions"></ul>
+      <div class="row">
+        <button class="btn" id="pd-export" type="button">Daten dieses Probanden exportieren</button>
+        <button class="btn warnbtn" id="pd-delete" type="button">Proband löschen</button>
+      </div>
+    </div>
+
+    <div class="card" id="p-unassigned-card" hidden>
+      <div class="row" style="justify-content:space-between"><h2>Ohne Proband</h2><span class="label" id="pu-count">0</span></div>
+      <ul class="slist" id="pu-sessions"></ul>
+    </div>
+
+    <div class="card">
+      <h2>Speicher</h2>
+      <div class="status" id="store-info">–</div>
+      <p class="privacy">Safari kann gespeicherte Daten von Webseiten löschen, die längere Zeit nicht geöffnet wurden. App deshalb über Teilen → Zum Home-Bildschirm installieren und regelmäßig alle Daten exportieren.</p>
+      <div class="row">
+        <button class="btn" id="all-export" type="button">Alle Daten exportieren</button>
+        <label class="btn" for="all-import">Daten importieren</label>
+        <input type="file" id="all-import" accept=".json,application/json" hidden>
+        <button class="btn warnbtn" id="all-delete" type="button">Alles löschen</button>
+      </div>
+    </div>
+  </section>
+
   <!-- INFO -->
   <section class="view" id="v-info" hidden>
     <div class="view-head"><div><h1>Info</h1><p class="sub">Geprüft wird nach dem HYROX Single Rulebook 26/27, Abschnitt 8.4.</p></div></div>
@@ -477,6 +584,7 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
   <button type="button" data-tab="live"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M15 10l5-3v10l-5-3z"/><rect x="3" y="6" width="12" height="12" rx="3"/></svg>Live</button>
   <button type="button" data-tab="video"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M10 9l5 3-5 3z"/></svg>Video</button>
   <button type="button" data-tab="results"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Auswertung</button>
+  <button type="button" data-tab="people"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14c2 .8 3 3 3 6"/></svg>Probanden</button>
   <button type="button" data-tab="info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>Info</button>
 </nav>
 
@@ -1017,7 +1125,7 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
 (function () {
   "use strict";
   const $ = (id) => document.getElementById(id);
-  const APP_VERSION = "0.3.0";
+  const APP_VERSION = "0.4.0";
   const MP_VERSIONS = ["0.10.14", "0.10.18", "0.10.21"];
   const MODEL_URL = (v) => `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_${v}/float16/latest/pose_landmarker_${v}.task`;
   const SKEL = [[11,12],[11,13],[13,15],[12,14],[14,16],[15,19],[16,20],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],[27,29],[29,31],[27,31],[28,30],[30,32],[28,32]];
@@ -1042,11 +1150,12 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
   applyTheme();
   const num = (id) => { const v = parseFloat(String($(id).value).replace(",", ".")); return isFinite(v) && v > 0 ? v : null; };
   const poseSel = () => $("s-pose").value;
-  function cfg(extra, skel) {
+  function cfg(extra, skel, profileId) {
     const sk = skel || poseSel();
+    const ph = typeof profHeight === "function" ? profHeight(profileId === undefined ? activeProfileId() : profileId) : null;
     return Object.assign({
       minSichtbarkeit: sk === "rtmw" ? 0.3 : 0.5,
-      pixelProCm: num("s-pxcm"), koerpergroesseCm: num("s-height"),
+      pixelProCm: num("s-pxcm"), koerpergroesseCm: ph || num("s-height"),
       overstepToleranzCm: parseFloat($("s-tol").value) || 0, flugSchwelleCm: parseFloat($("s-air").value) || 4,
       richtung: $("s-dir").value, seite: $("s-side").value, einzelschrittAlsFehler: $("s-step").checked,
     }, extra || {});
@@ -1178,10 +1287,13 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
 
   // ---------------- Sitzung & Ergebnisse ----------------
   const S = { skelett: "mediapipe", source: "demo", name: "Beispiel", frames: [], fps: 30, w: 0, h: 0, result: null, videoURL: null, korr: {}, missing: 0, created: new Date().toISOString(), playing: false, t: 0 };
-  function setSession(o) { Object.assign(S, { korr: {}, missing: 0, created: new Date().toISOString(), skelett: "mediapipe" }, o); $("note").value = o.note || ""; evaluate(); }
+  function setSession(o) {
+    Object.assign(S, { korr: {}, missing: 0, created: new Date().toISOString(), skelett: "mediapipe", dbId: null, profileId: null }, o);
+    $("note").value = o.note || ""; evaluate();
+  }
   function evaluate() {
     if (!S.frames.length) return;
-    S.result = BBJ.analyse(S.frames, S.fps, cfg(S.source === "demo" ? { pixelProCm: 4, koerpergroesseCm: null, richtung: "auto", seite: "auto" } : null, S.skelett));
+    S.result = BBJ.analyse(S.frames, S.fps, S.source === "demo" ? cfg({ pixelProCm: 4, koerpergroesseCm: null, richtung: "auto", seite: "auto" }, S.skelett, null) : cfg(null, S.skelett, S.profileId));
     renderResults();
   }
   const KORR = [["", "– Was war wirklich? –"], ["korrekt", "Korrekt"], ["F1", "Doppelsprung"], ["F2", "Overstepping"], ["F3", "Kein Brustkontakt"], ["mehrere", "Mehrere Fehler"], ["keine", "Keine echte Wdh"]];
@@ -1194,6 +1306,7 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
     const pOk = reps.length ? ok / reps.length * 100 : 0, pBad = reps.length ? bad / reps.length * 100 : 0;
     $("ring-ok").setAttribute("stroke-dasharray", `${pOk} ${100 - pOk}`);
     $("ring-bad").setAttribute("stroke-dasharray", `${pBad} ${100 - pBad}`); $("ring-bad").setAttribute("stroke-dashoffset", `${-pOk}`);
+    renderAssign();
     const src = $("r-src"); src.textContent = S.source === "demo" ? "Beispiel · simulierte Daten" : S.name; src.className = "tag" + (S.source === "demo" ? " example" : "");
     $("r-meta").textContent = `${fmt(S.frames.length / S.fps, false)} s · ${Math.round(S.fps)} fps · Seite ${({ L: "links", R: "rechts", beide: "beide" })[r.meta.seite] || "–"} · Richtung ${r.meta.richtung || "–"} · ${S.skelett === "rtmw" ? "RTMW" : "MediaPipe"}`;
     $("notes").textContent = (r.meta.hinweise || []).join(" ");
@@ -1212,7 +1325,7 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
         <div class="rc"><select aria-label="Tatsächliches Ergebnis Wiederholung ${x.wdh}">${KORR.map(([v, t]) => `<option value="${v}">${t}</option>`).join("")}</select></div>`;
       const sel = li.querySelector("select"); sel.value = S.korr[x.wdh] || "";
       const mark = () => { li.classList.remove("corrected-ok", "corrected-bad"); const v = sel.value; if (!v) return; li.classList.add(truthBinary(v) === kiBinary(x) ? "corrected-ok" : "corrected-bad"); };
-      sel.addEventListener("change", () => { if (sel.value) S.korr[x.wdh] = sel.value; else delete S.korr[x.wdh]; mark(); renderAgree(); });
+      sel.addEventListener("change", () => { if (sel.value) S.korr[x.wdh] = sel.value; else delete S.korr[x.wdh]; mark(); renderAgree(); queueSave(); });
       mark();
       li.querySelector(".rn").addEventListener("click", () => { seekFrame(Math.max(0, x.frameTiefpunkt - 15)); $("player").scrollIntoView({ behavior: "smooth", block: "center" }); });
       ul.append(li);
@@ -1230,9 +1343,10 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
     if (!rated.length && !S.missing) { $("agree").innerHTML = "Trag bei jeder Wiederholung ein, was wirklich passiert ist. So sehen wir, wo die KI danebenliegt."; return; }
     $("agree").innerHTML = `KI stimmt bei <b>${same} von ${rated.length}</b> bewerteten Wdh mit dir überein` + (S.missing ? ` · <b>${S.missing}</b> Wdh übersehen` : "");
   }
-  $("missing").addEventListener("click", () => { S.missing++; renderAgree(); toast("Übersehene Wiederholung gezählt"); });
-  $("missing").addEventListener("contextmenu", (e) => { e.preventDefault(); S.missing = Math.max(0, S.missing - 1); renderAgree(); });
-  $("reeval").addEventListener("click", () => { evaluate(); toast("Neu bewertet"); });
+  $("missing").addEventListener("click", () => { S.missing++; renderAgree(); queueSave(); toast("Übersehene Wiederholung gezählt"); });
+  $("missing").addEventListener("contextmenu", (e) => { e.preventDefault(); S.missing = Math.max(0, S.missing - 1); renderAgree(); queueSave(); });
+  $("note").addEventListener("input", () => queueSave());
+  $("reeval").addEventListener("click", () => { evaluate(); queueSave(); toast("Neu bewertet"); });
 
   // ---------------- Player ----------------
   const pv = $("pv"), pbg = $("pbg"), pov = $("pov");
@@ -1339,18 +1453,19 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
       const frames = decodeFrames(j.punkte.daten, j.bilder);
       setSession({ source: j.quelle === "demo" ? "demo" : "datei", name: j.name || f.name, frames, fps: j.fps, w: j.breite, h: j.hoehe, videoURL: null, note: j.notiz || "", skelett: j.skelett || "mediapipe" });
       S.created = j.erstellt || S.created; S.missing = j.uebersehen || 0; for (const k of j.korrekturen || []) S.korr[k.wdh] = k.wert;
-      renderResults(); toast("Datei geladen");
+      renderResults(); await saveCurrent(activeProfileId()); toast("Datei geladen und gespeichert");
     } catch (err) { toast("Datei konnte nicht gelesen werden: " + err.message); }
   });
 
   // ---------------- Navigation ----------------
-  const VIEWS = ["live", "video", "results", "info"];
+  const VIEWS = ["live", "video", "results", "people", "info"];
   function go(tab, push) {
     if (!VIEWS.includes(tab)) tab = "live";
     for (const v of VIEWS) $("v-" + v).hidden = v !== tab;
     document.querySelectorAll(".tabs button").forEach((b) => b.setAttribute("aria-current", b.dataset.tab === tab ? "page" : "false"));
     if (tab !== "live" && liveOn) stopLive(false);
     if (tab === "results") requestAnimationFrame(paint);
+    if (tab === "people") renderPeople();
     if (push !== false && location.hash !== "#" + tab) history.replaceState(null, "", "#" + tab);
     window.scrollTo({ top: 0 });
   }
@@ -1392,7 +1507,8 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
         if (i % 5 === 0) { const pct = (i + 1) / n, el = (performance.now() - t0) / 1000, rest = el / pct - el; $("v-bar").style.width = (pct * 100).toFixed(1) + "%"; status(`Bild ${i + 1} von ${n} · noch ca. ${Math.max(1, Math.round(rest))} s`); }
       }
       if (S.videoURL) URL.revokeObjectURL(S.videoURL);
-      setSession({ source: "video", name: file.name, frames, fps: rate, w: W, h: H, videoURL: url, skelett: poseSel() === "rtmw" && RTMW.session ? "rtmw" : "mediapipe" });
+      setSession({ source: "video", name: file.name, frames, fps: rate, w: W, h: H, videoURL: url, skelett: poseSel() === "rtmw" && RTMW.session ? "rtmw" : "mediapipe", profileId: activeProfileId() });
+      saveCurrent(activeProfileId());
       $("v-bar").style.width = "100%"; status("Fertig"); setTimeout(() => ($("v-prog").hidden = true), 800); go("results");
     } catch (e) { status(e.message === "abgebrochen" ? "Analyse abgebrochen." : "Fehler: " + e.message); }
     finally { releaseAwake(); }
@@ -1486,7 +1602,7 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
   function liveAnalyse() {
     const fps = liveFps(); $("fps-chip").textContent = Math.round(fps) + " fps" + (fps < 15 ? " · zu langsam" : "");
     if (buf.length < fps * 1.5) return;
-    const r = BBJ.analyse(buf, fps, cfg(null, liveSkel)), T = buf.length;
+    const r = BBJ.analyse(buf, fps, cfg(null, liveSkel, activeProfileId())), T = buf.length;
     r.reps.forEach((rep, k) => {
       const ms = bufT[rep.frameTiefpunkt]; let e = findEntry(ms);
       const f2Known = T - 1 > rep._fenster2[1];
@@ -1520,7 +1636,8 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
     releaseAwake();
     if (!silent && all.length > 30) {
       const span = (allT[allT.length - 1] - allT[0]) / 1000, fps = Math.max(5, Math.min(60, (all.length - 1) / span));
-      setSession({ source: "live", name: "Live-Aufnahme " + new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }), frames: all.slice(), fps, w: camOv.width, h: camOv.height, videoURL: null, skelett: liveSkel });
+      setSession({ source: "live", name: "Live-Aufnahme " + new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }), frames: all.slice(), fps, w: camOv.width, h: camOv.height, videoURL: null, skelett: liveSkel, profileId: activeProfileId() });
+      saveCurrent(activeProfileId());
       go("results"); toast("Aufnahme ausgewertet. Trag jetzt ein, was wirklich passiert ist.");
     }
   }
@@ -1528,9 +1645,276 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
   $("live-stop").addEventListener("click", () => stopLive(false));
   document.addEventListener("visibilitychange", () => { if (document.hidden && liveOn) stopLive(false); });
 
+  // ---------------- Speicher (IndexedDB, nur auf diesem Gerät) ----------------
+  const DB = (() => {
+    let dbp = null;
+    function open() {
+      if (dbp) return dbp;
+      dbp = new Promise((res, rej) => {
+        if (!window.indexedDB) { rej(new Error("Speicher nicht verfügbar")); return; }
+        const r = indexedDB.open("bbj-check", 1);
+        r.onupgradeneeded = () => {
+          const d = r.result;
+          if (!d.objectStoreNames.contains("profiles")) d.createObjectStore("profiles", { keyPath: "id" });
+          if (!d.objectStoreNames.contains("sessions")) d.createObjectStore("sessions", { keyPath: "id" }).createIndex("profileId", "profileId");
+          if (!d.objectStoreNames.contains("frames")) d.createObjectStore("frames", { keyPath: "id" });
+        };
+        r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+      });
+      return dbp;
+    }
+    async function run(store, mode, op) {
+      const d = await open();
+      return new Promise((res, rej) => {
+        const t = d.transaction(store, mode); const r = op(t.objectStore(store));
+        t.oncomplete = () => res(r ? r.result : undefined); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error);
+      });
+    }
+    return {
+      all: (s) => run(s, "readonly", (st) => st.getAll()),
+      get: (s, id) => run(s, "readonly", (st) => st.get(id)),
+      put: (s, o) => run(s, "readwrite", (st) => st.put(o)),
+      del: (s, id) => run(s, "readwrite", (st) => st.delete(id)),
+      clear: (s) => run(s, "readwrite", (st) => st.clear()),
+    };
+  })();
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  const P = { profiles: [], sessions: [], open: null, editing: null };
+  const LS_ACTIVE = "bbj-active-profile";
+  const activeProfileId = () => { const id = store.get(LS_ACTIVE); return P.profiles.some((p) => p.id === id) ? id : null; };
+  const profById = (id) => P.profiles.find((p) => p.id === id) || null;
+  function profHeight(id) { const p = profById(id); return p && p.groesseCm ? p.groesseCm : null; }
+  const initials = (code) => (code || "?").replace(/\s+/g, "").slice(0, 3).toUpperCase();
+  const fmtDate = (iso) => { try { return new Date(iso).toLocaleString("de-DE", { day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" }); } catch (e) { return iso; } };
+  const pct = (a, b) => b ? Math.round(a / b * 100) + " %" : "–";
+
+  async function loadAll() {
+    try { P.profiles = (await DB.all("profiles")).sort((a, b) => (a.code || "").localeCompare(b.code || "", "de", { numeric: true })); P.sessions = await DB.all("sessions"); }
+    catch (e) { P.profiles = []; P.sessions = []; toast("Speicher nicht verfügbar: " + e.message); }
+    renderWho();
+  }
+  function summary() {
+    const reps = S.result ? S.result.reps : [];
+    const rated = reps.filter((x) => S.korr[x.wdh]);
+    return {
+      n: reps.length, ok: reps.filter((x) => x.kiLabel === "korrekt").length, bad: reps.filter((x) => x.kiLabel !== "korrekt").length,
+      unsicher: reps.filter((x) => x.unsicher).length, f1: reps.filter((x) => x.fehler1Doppelsprung).length, f2: reps.filter((x) => x.fehler2Overstep).length,
+      bewertet: rated.length, uebereinstimmung: rated.filter((x) => truthBinary(S.korr[x.wdh]) === kiBinary(x)).length,
+      uebersehen: S.missing, dauerS: Math.round(S.frames.length / S.fps * 10) / 10,
+      wahr: { korrekt: rated.filter((x) => S.korr[x.wdh] === "korrekt").length, F1: rated.filter((x) => S.korr[x.wdh] === "F1").length, F2: rated.filter((x) => S.korr[x.wdh] === "F2").length, F3: rated.filter((x) => S.korr[x.wdh] === "F3").length },
+    };
+  }
+  function sessionMeta() {
+    return { id: S.dbId, profileId: S.profileId || null, created: S.created, updated: new Date().toISOString(), source: S.source, name: S.name, skelett: S.skelett,
+      fps: S.fps, w: S.w, h: S.h, bilder: S.frames.length, korr: Object.assign({}, S.korr), missing: S.missing, note: $("note").value,
+      einstellungen: cfg(null, S.skelett, S.profileId), summary: summary(), version: APP_VERSION };
+  }
+  async function saveCurrent(profileId) {
+    if (!S.result || S.source === "demo") return;
+    const isNew = !S.dbId;
+    if (isNew) { S.dbId = uid(); S.profileId = profileId || null; }
+    const m = sessionMeta();
+    try {
+      if (isNew) await DB.put("frames", { id: S.dbId, punkte: encodeFrames(S.frames) });
+      await DB.put("sessions", m);
+      const i = P.sessions.findIndex((s) => s.id === m.id); if (i >= 0) P.sessions[i] = m; else P.sessions.push(m);
+      $("saved-tag").hidden = false; renderAssign();
+      if (isNew) toast(S.profileId ? `Aufnahme bei ${profById(S.profileId).code} gespeichert` : "Aufnahme gespeichert · kein Proband aktiv");
+    } catch (e) { toast("Speichern fehlgeschlagen: " + e.message); }
+  }
+  let saveT = 0;
+  function queueSave() { if (!S.dbId) return; clearTimeout(saveT); saveT = setTimeout(() => saveCurrent(), 500); }
+  function renderAssign() {
+    const wrap = $("assign-wrap"), sel = $("assign");
+    $("saved-tag").hidden = !S.dbId;
+    if (!S.dbId) { wrap.hidden = true; return; }
+    wrap.hidden = false;
+    sel.innerHTML = `<option value="">ohne Proband</option>` + P.profiles.map((p) => `<option value="${esc(p.id)}">${esc(p.code)}</option>`).join("");
+    sel.value = S.profileId || "";
+  }
+  $("assign").addEventListener("change", async (e) => {
+    S.profileId = e.target.value || null; evaluate(); await saveCurrent();
+    toast(S.profileId ? `Zugeordnet zu ${profById(S.profileId).code}` : "Zuordnung entfernt");
+  });
+  async function openSession(id) {
+    const m = P.sessions.find((s) => s.id === id); if (!m) return;
+    const fr = await DB.get("frames", id); if (!fr) { toast("Posedaten fehlen"); return; }
+    if (S.videoURL) { URL.revokeObjectURL(S.videoURL); }
+    setSession({ source: m.source, name: m.name, frames: decodeFrames(fr.punkte, m.bilder), fps: m.fps, w: m.w, h: m.h, videoURL: null, note: m.note || "", skelett: m.skelett || "mediapipe", dbId: m.id, profileId: m.profileId || null });
+    S.created = m.created; S.missing = m.missing || 0; S.korr = Object.assign({}, m.korr || {});
+    renderResults(); go("results");
+  }
+  async function deleteSession(id) {
+    await DB.del("sessions", id); await DB.del("frames", id);
+    P.sessions = P.sessions.filter((s) => s.id !== id);
+    if (S.dbId === id) { S.dbId = null; renderAssign(); }
+    renderPeople(); toast("Aufnahme gelöscht");
+  }
+
+  // Zweistufiges Löschen ohne Browser-Dialog
+  function confirmBtn(btn, label, action) {
+    if (btn.dataset.armed) { delete btn.dataset.armed; btn.classList.remove("confirm"); btn.textContent = label; action(); return; }
+    btn.dataset.armed = "1"; btn.classList.add("confirm"); btn.textContent = "Wirklich löschen?";
+    setTimeout(() => { if (btn.dataset.armed) { delete btn.dataset.armed; btn.classList.remove("confirm"); btn.textContent = label; } }, 3500);
+  }
+
+  function renderWho() {
+    const p = profById(activeProfileId()), w = $("who");
+    w.classList.toggle("none", !p); $("who-av").textContent = p ? initials(p.code) : "–"; $("who-nm").textContent = p ? p.code : "Kein Proband";
+  }
+  $("who").addEventListener("click", () => go("people"));
+
+  function profStats(pid) {
+    const ss = P.sessions.filter((s) => (s.profileId || null) === pid).sort((a, b) => a.created.localeCompare(b.created));
+    const t = { sessions: ss, n: 0, ok: 0, bad: 0, f1: 0, f2: 0, bewertet: 0, ueber: 0, uebersehen: 0 };
+    for (const s of ss) { const m = s.summary || {}; t.n += m.n || 0; t.ok += m.ok || 0; t.bad += m.bad || 0; t.f1 += m.f1 || 0; t.f2 += m.f2 || 0; t.bewertet += m.bewertet || 0; t.ueber += m.uebereinstimmung || 0; t.uebersehen += m.uebersehen || 0; }
+    return t;
+  }
+  function sessionRow(s) {
+    const m = s.summary || {}, li = document.createElement("li"); li.className = "srow";
+    li.innerHTML = `<span class="st">${esc(s.name || "Aufnahme")}</span>
+      <span class="sa"><button class="btn" type="button" data-a="open">Öffnen</button><button class="btn warnbtn" type="button" data-a="del">Löschen</button></span>
+      <span class="sm"><span>${fmtDate(s.created)}</span><span>${m.n || 0} Wdh</span><span style="color:var(--ok)">${m.ok || 0} korrekt</span><span style="color:var(--bad)">${m.bad || 0} fehlerhaft</span><span>${m.bewertet ? `${m.uebereinstimmung}/${m.bewertet} KI stimmt` : "nicht bewertet"}</span><span>${s.skelett === "rtmw" ? "RTMW" : "MediaPipe"}</span></span>`;
+    li.querySelector('[data-a="open"]').addEventListener("click", () => openSession(s.id));
+    const del = li.querySelector('[data-a="del"]'); del.addEventListener("click", () => confirmBtn(del, "Löschen", () => deleteSession(s.id)));
+    return li;
+  }
+  function renderPeople() {
+    const list = $("p-list"), act = activeProfileId(); list.innerHTML = "";
+    if (!P.profiles.length) {
+      const d = document.createElement("div"); d.className = "card"; d.style.gridColumn = "1 / -1";
+      d.innerHTML = `<h2>Noch keine Probanden</h2><p class="sub" style="margin:0">Leg den ersten Probanden an, zum Beispiel P01. Danach werden Live- und Video-Aufnahmen automatisch bei ihm gespeichert.</p>`;
+      list.append(d);
+    }
+    for (const p of P.profiles) {
+      const st = profStats(p.id), b = document.createElement("button");
+      b.type = "button"; b.className = "pcard" + (p.id === act ? " active" : "");
+      b.innerHTML = `<span class="pc-head"><span class="pc-av">${esc(initials(p.code))}</span><span style="min-width:0"><span class="pc-name" style="display:block">${esc(p.code)}</span><span class="pc-sub">${p.id === act ? "aktiv · " : ""}${st.sessions.length} ${st.sessions.length === 1 ? "Aufnahme" : "Aufnahmen"}${p.groesseCm ? ` · ${p.groesseCm} cm` : ""}</span></span></span>
+        <span class="pc-stats"><span class="mini"><b>${st.n}</b>Wdh</span><span class="mini"><b>${pct(st.ok, st.n)}</b>korrekt</span><span class="mini"><b>${st.bewertet ? pct(st.ueber, st.bewertet) : "–"}</b>KI stimmt</span></span>`;
+      b.addEventListener("click", () => openProfile(p.id));
+      list.append(b);
+    }
+    const un = P.sessions.filter((s) => !s.profileId || !profById(s.profileId));
+    $("p-unassigned-card").hidden = !un.length; $("pu-count").textContent = un.length;
+    const ul = $("pu-sessions"); ul.innerHTML = ""; un.sort((a, b) => b.created.localeCompare(a.created)).forEach((s) => ul.append(sessionRow(s)));
+    if (P.open && profById(P.open)) openProfile(P.open, true); else $("p-detail").hidden = true;
+    storageInfo();
+  }
+  function openProfile(id, keepScroll) {
+    const p = profById(id); if (!p) return; P.open = id;
+    const st = profStats(id), act = activeProfileId() === id;
+    $("p-detail").hidden = false;
+    $("pd-av").textContent = initials(p.code); $("pd-av").classList.toggle("on", act);
+    $("pd-name").textContent = p.code;
+    $("pd-sub").textContent = [act ? "aktiver Proband" : null, p.groesseCm ? `${p.groesseCm} cm` : "Körpergröße fehlt", p.notiz || null, `angelegt ${fmtDate(p.created)}`].filter(Boolean).join(" · ");
+    $("pd-active").textContent = act ? "Aktiv ✓" : "Als aktiv setzen"; $("pd-active").disabled = act;
+    $("pd-kpis").innerHTML = [
+      ["Aufnahmen", st.sessions.length, ""], ["Wiederholungen", st.n, ""], ["korrekt", pct(st.ok, st.n), "color:var(--ok)"],
+      ["Doppelsprung", st.f1, "color:var(--bad)"], ["Overstepping", st.f2, "color:var(--bad)"],
+      ["KI stimmt überein", st.bewertet ? `${st.ueber}/${st.bewertet}` : "–", ""], ["übersehene Wdh", st.uebersehen, ""],
+    ].map(([l, v, s]) => `<div class="kpi"><b style="${s}">${v}</b><span>${l}</span></div>`).join("");
+    const tr = $("pd-trend"); tr.innerHTML = "";
+    const maxN = Math.max(1, ...st.sessions.map((s) => (s.summary || {}).n || 0));
+    if (!st.sessions.length) tr.innerHTML = '<span class="empty">Noch keine Aufnahmen</span>';
+    for (const s of st.sessions) {
+      const m = s.summary || {}, d = document.createElement("span"); d.className = "tb";
+      d.style.height = Math.max(4, (m.n || 0) / maxN * 80) + "px"; d.title = `${fmtDate(s.created)}: ${m.ok || 0} korrekt, ${m.bad || 0} fehlerhaft`;
+      d.innerHTML = `<i class="k" style="height:${m.n ? m.ok / m.n * 100 : 0}%"></i><i class="f" style="height:${m.n ? m.bad / m.n * 100 : 0}%"></i>`;
+      tr.append(d);
+    }
+    $("pd-count").textContent = st.sessions.length;
+    const ul = $("pd-sessions"); ul.innerHTML = "";
+    if (!st.sessions.length) ul.innerHTML = '<li class="empty">Noch keine Aufnahmen. Proband aktiv setzen und im Live- oder Video-Bereich aufnehmen.</li>';
+    st.sessions.slice().reverse().forEach((s) => ul.append(sessionRow(s)));
+    document.querySelectorAll(".pcard").forEach((c) => c.style.outline = "");
+    if (!keepScroll) $("p-detail").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+  $("pd-close").addEventListener("click", () => { P.open = null; $("p-detail").hidden = true; });
+  $("pd-active").addEventListener("click", () => { store.set(LS_ACTIVE, P.open); renderWho(); renderPeople(); toast(`${profById(P.open).code} ist aktiv`); });
+
+  function nextCode() { let n = 1; const codes = new Set(P.profiles.map((p) => p.code)); while (codes.has("P" + String(n).padStart(2, "0"))) n++; return "P" + String(n).padStart(2, "0"); }
+  function showForm(p) {
+    P.editing = p ? p.id : null; $("p-form").hidden = false; $("p-form-title").textContent = p ? `${p.code} bearbeiten` : "Neuer Proband";
+    $("pf-code").value = p ? p.code : nextCode(); $("pf-height").value = p && p.groesseCm ? p.groesseCm : ""; $("pf-note").value = p ? p.notiz || "" : "";
+    $("p-form").scrollIntoView({ behavior: "smooth", block: "start" }); setTimeout(() => $("pf-code").focus(), 250);
+  }
+  $("p-new").addEventListener("click", () => showForm(null));
+  $("pd-edit").addEventListener("click", () => showForm(profById(P.open)));
+  $("pf-cancel").addEventListener("click", () => { $("p-form").hidden = true; });
+  $("pf-save").addEventListener("click", async () => {
+    const code = $("pf-code").value.trim();
+    if (!code) { toast("Bitte ein Kürzel eintragen"); $("pf-code").focus(); return; }
+    if (P.profiles.some((p) => p.code.toLowerCase() === code.toLowerCase() && p.id !== P.editing)) { toast(`Das Kürzel ${code} gibt es schon`); return; }
+    const h = parseFloat(String($("pf-height").value).replace(",", "."));
+    const old = P.editing ? profById(P.editing) : null;
+    const p = { id: old ? old.id : uid(), code, groesseCm: isFinite(h) && h > 80 && h < 250 ? h : null, notiz: $("pf-note").value.trim(), created: old ? old.created : new Date().toISOString() };
+    try { await DB.put("profiles", p); } catch (e) { toast("Speichern fehlgeschlagen: " + e.message); return; }
+    await loadAll();
+    if (!old && !activeProfileId()) store.set(LS_ACTIVE, p.id);
+    $("p-form").hidden = true; renderWho(); P.open = p.id; renderPeople(); openProfile(p.id);
+    toast(old ? "Gespeichert" : `${code} angelegt` + (activeProfileId() === p.id ? " und aktiv gesetzt" : ""));
+  });
+  $("pd-delete").addEventListener("click", (e) => confirmBtn(e.currentTarget, "Proband löschen", async () => {
+    const id = P.open, p = profById(id);
+    for (const s of P.sessions.filter((s) => s.profileId === id)) { await DB.del("sessions", s.id); await DB.del("frames", s.id); }
+    await DB.del("profiles", id);
+    if (store.get(LS_ACTIVE) === id) store.set(LS_ACTIVE, null);
+    if (S.profileId === id) { S.dbId = null; S.profileId = null; }
+    P.open = null; await loadAll(); renderPeople(); renderAssign(); toast(`${p.code} und alle Aufnahmen gelöscht`);
+  }));
+
+  // Export / Import aller Daten
+  async function bundle(pid) {
+    const ss = pid === undefined ? P.sessions : P.sessions.filter((s) => s.profileId === pid);
+    const out = [];
+    for (const s of ss) { const fr = await DB.get("frames", s.id); out.push(Object.assign({}, s, { punkte: fr ? fr.punkte : null })); }
+    return { format: "bbj-check-daten", formatVersion: 1, app: APP_VERSION, erkennung: BBJ.VERSION, exportiert: new Date().toISOString(),
+      probanden: pid === undefined ? P.profiles : P.profiles.filter((p) => p.id === pid), aufnahmen: out,
+      kodierung: "punkte: int16-base64 [x_px, y_px, sichtbarkeit*1000] × 33 je Bild, -32768 = fehlt" };
+  }
+  const stamp = () => { const d = new Date(), p = (n) => String(n).padStart(2, "0"); return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}`; };
+  $("pd-export").addEventListener("click", async () => {
+    const p = profById(P.open); const r = await shareOrDownload(new Blob([JSON.stringify(await bundle(P.open))], { type: "application/json" }), `bbj_${p.code}_${stamp()}.json`);
+    if (r !== "abgebrochen") toast("Export " + r);
+  });
+  $("all-export").addEventListener("click", async () => {
+    if (!P.sessions.length && !P.profiles.length) { toast("Noch keine Daten"); return; }
+    const r = await shareOrDownload(new Blob([JSON.stringify(await bundle())], { type: "application/json" }), `bbj_alle_daten_${stamp()}.json`);
+    if (r !== "abgebrochen") toast("Export " + r);
+  });
+  $("all-import").addEventListener("change", async (e) => {
+    const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+    try {
+      const j = JSON.parse(await f.text());
+      if (j.format !== "bbj-check-daten") throw new Error("Das ist keine BBJ-Check-Datensicherung");
+      let np = 0, ns = 0;
+      for (const p of j.probanden || []) { if (!profById(p.id)) { await DB.put("profiles", p); np++; } }
+      for (const s of j.aufnahmen || []) {
+        if (P.sessions.some((x) => x.id === s.id) || !s.punkte) continue;
+        const punkte = s.punkte; const meta = Object.assign({}, s); delete meta.punkte;
+        await DB.put("frames", { id: s.id, punkte }); await DB.put("sessions", meta); ns++;
+      }
+      await loadAll(); renderPeople(); toast(`${np} ${np === 1 ? "Proband" : "Probanden"} und ${ns} ${ns === 1 ? "Aufnahme" : "Aufnahmen"} importiert`);
+    } catch (err) { toast("Import fehlgeschlagen: " + err.message); }
+  });
+  $("all-delete").addEventListener("click", (e) => confirmBtn(e.currentTarget, "Alles löschen", async () => {
+    await DB.clear("frames"); await DB.clear("sessions"); await DB.clear("profiles"); store.set(LS_ACTIVE, null);
+    S.dbId = null; S.profileId = null; P.open = null; await loadAll(); renderPeople(); renderAssign(); toast("Alle Daten gelöscht");
+  }));
+  async function storageInfo() {
+    let txt = `${P.profiles.length} ${P.profiles.length === 1 ? "Proband" : "Probanden"} · ${P.sessions.length} ${P.sessions.length === 1 ? "Aufnahme" : "Aufnahmen"}`;
+    try {
+      if (navigator.storage && navigator.storage.estimate) { const est = await navigator.storage.estimate(); txt += ` · belegt ca. ${(est.usage / 1e6).toFixed(1)} MB`; }
+      if (navigator.storage && navigator.storage.persisted) txt += (await navigator.storage.persisted()) ? " · dauerhaft gespeichert" : " · Speicher nicht garantiert dauerhaft";
+    } catch (e) {}
+    $("store-info").textContent = txt;
+  }
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+
   // ---------------- Start ----------------
   const demo = BBJ.synth();
   setSession({ source: "demo", name: "Beispiel", frames: demo.frames, fps: demo.fps, w: demo.width, h: demo.height });
+  loadAll().then(() => { if (location.hash === "#people") renderPeople(); });
   go(location.hash.slice(1) || "live", false);
 })();
 </script>

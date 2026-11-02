@@ -318,6 +318,8 @@ h3 { font-style: italic; font-weight: 850; font-stretch: 85%; text-transform: up
 
 /* Buttons: Parallelogramm */
 .btn { border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 850; font-size: 14px; }
+.btn { max-width: 100%; white-space: normal; text-align: center; line-height: 1.15; }
+.btn.big { white-space: nowrap; }
 .btn.primary, .btn.stop { clip-path: polygon(var(--cut) 0, 100% 0, calc(100% - var(--cut)) 100%, 0 100%); border: 0; padding: 0 28px; }
 .btn.primary { background: var(--accent); color: var(--accent-ink); }
 .btn.primary:hover { background: #FFE94F; }
@@ -605,7 +607,7 @@ dialog { border-radius: 10px; }
       <div class="row" style="justify-content:space-between"><h2>Aufnahmen</h2><span class="label" id="pd-count">0</span></div>
       <ul class="slist" id="pd-sessions"></ul>
       <div class="row">
-        <button class="btn" id="pd-export" type="button">Daten dieses Probanden exportieren</button>
+        <button class="btn" id="pd-export" type="button">Probanden-Daten exportieren</button>
         <button class="btn warnbtn" id="pd-delete" type="button">Proband löschen</button>
       </div>
     </div>

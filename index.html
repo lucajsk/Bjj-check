@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="Erkennt beim HYROX Burpee Broad Jump Doppelsprünge und Overstepping – live über die Kamera oder aus einem Video.">
-<meta name="theme-color" content="#0B0F14">
+<meta name="theme-color" content="#090909">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -16,48 +16,34 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:ital,wdth,wght@0,62..125,400..900;1,62..125,400..900&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
 /* Layout: App-Hülle mit schwebender Tab-Leiste unten; Live = Kamerabühne mit Ergebnis-Karte darüber, auf iPad quer zweispaltig mit Feed */
 :root {
-  --bg: #0B0F14;
-  --surface: #121821;
-  --raised: #19212C;
-  --line: #243041;
-  --ink: #EEF2F6;
-  --muted: #8C99AA;
-  --accent: #FF5B37;
-  --accent-ink: #1A0803;
-  --ok: #34D27F;
-  --ok-soft: rgba(52, 210, 127, 0.14);
-  --bad: #FF5468;
-  --bad-soft: rgba(255, 84, 104, 0.15);
-  --warn: #FFB648;
-  --warn-soft: rgba(255, 182, 72, 0.15);
-  --stage: #05080B;
-  --glass: rgba(14, 19, 26, 0.72);
-  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  /* Wettkampf-Optik: Hallenboden-Schwarz, Signalgelb, kantige Formen; bewusst nur ein dunkles Thema */
+  --bg: #090909;
+  --surface: #121212;
+  --raised: #1B1B1B;
+  --line: #2A2A2A;
+  --ink: #F5F5F2;
+  --muted: #9A9A93;
+  --accent: #FFE01B;
+  --accent-ink: #0A0A0A;
+  --ok: #2DE38A;
+  --ok-soft: rgba(45, 227, 138, 0.13);
+  --bad: #FF3B4E;
+  --bad-soft: rgba(255, 59, 78, 0.14);
+  --warn: #FF9A1F;
+  --warn-soft: rgba(255, 154, 31, 0.15);
+  --stage: #000000;
+  --glass: rgba(10, 10, 10, 0.8);
+  --shadow: 0 12px 34px rgba(0, 0, 0, 0.55);
   --f-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
   --f-body: "Archivo", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
-  --r-lg: 22px; --r: 16px; --r-sm: 12px;
+  --r-lg: 10px; --r: 8px; --r-sm: 6px;
+  --cut: 10px;
   color-scheme: dark;
-}
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-    --bg: #EEF1F5; --surface: #FFFFFF; --raised: #F4F6F9; --line: #DCE2EA; --ink: #0E141B; --muted: #5B6778;
-    --accent: #E9471F; --accent-ink: #FFFFFF; --ok: #11914D; --ok-soft: rgba(17, 145, 77, 0.12);
-    --bad: #D7263D; --bad-soft: rgba(215, 38, 61, 0.1); --warn: #B26A00; --warn-soft: rgba(178, 106, 0, 0.12);
-    --stage: #0B0F14; --glass: rgba(255, 255, 255, 0.82); --shadow: 0 10px 30px rgba(20, 30, 45, 0.12);
-    color-scheme: light;
-  }
-}
-:root[data-theme="light"] {
-  --bg: #EEF1F5; --surface: #FFFFFF; --raised: #F4F6F9; --line: #DCE2EA; --ink: #0E141B; --muted: #5B6778;
-  --accent: #E9471F; --accent-ink: #FFFFFF; --ok: #11914D; --ok-soft: rgba(17, 145, 77, 0.12);
-  --bad: #D7263D; --bad-soft: rgba(215, 38, 61, 0.1); --warn: #B26A00; --warn-soft: rgba(178, 106, 0, 0.12);
-  --stage: #0B0F14; --glass: rgba(255, 255, 255, 0.82); --shadow: 0 10px 30px rgba(20, 30, 45, 0.12);
-  color-scheme: light;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
@@ -306,6 +292,90 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
 .assign select { min-height: 34px; border-radius: 9px; border: 1px solid var(--line); background: var(--raised); padding: 0 8px; font-size: 13px; color: var(--ink); max-width: 180px; }
 .privacy { font-size: 13px; color: var(--muted); padding: 10px 12px; border-radius: var(--r-sm); background: var(--raised); border: 1px dashed var(--line); }
 @media (max-width: 420px) { .logo b { font-size: 18px; } .chip#model-chip { max-width: 150px; overflow: hidden; text-overflow: ellipsis; } }
+/* ===== Wettkampf-Layer ===== */
+body { background:
+  linear-gradient(180deg, rgba(255,224,27,0.035), transparent 280px),
+  var(--bg); background-attachment: fixed; }
+h1 { font-style: italic; font-weight: 900; font-stretch: 72%; font-size: clamp(42px, 8vw, 76px); line-height: 0.88; letter-spacing: -0.01em; }
+h2 { font-style: italic; font-weight: 850; font-stretch: 80%; text-transform: uppercase; font-size: 22px; letter-spacing: 0.005em; }
+h3 { font-style: italic; font-weight: 850; font-stretch: 85%; text-transform: uppercase; }
+.view-head h1::after { content: ""; display: block; width: 64px; height: 6px; margin-top: 12px; background: var(--accent); clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%); }
+.sub { color: var(--muted); }
+.label { letter-spacing: 0.16em; font-weight: 800; }
+
+/* Kopf */
+.top { border-bottom: 1px solid var(--line); background: rgba(9,9,9,0.92); }
+.logo-mark { border-radius: 4px; background: var(--accent); clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%); width: 40px; }
+.logo b { font-style: italic; font-weight: 900; font-stretch: 75%; font-size: 26px; letter-spacing: 0.01em; }
+.logo b span { color: var(--accent); }
+.station { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); white-space: nowrap; }
+.station em { font-style: italic; font-weight: 900; font-stretch: 75%; font-size: 15px; letter-spacing: 0.02em; background: var(--accent); color: var(--accent-ink); padding: 3px 10px 2px; clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%); }
+@media (max-width: 900px) { .station { display: none; } }
+.chip { border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; font-size: 11.5px; font-weight: 800; }
+.icon-btn { border-radius: 6px; }
+.who { border-radius: 6px; text-transform: uppercase; letter-spacing: 0.04em; font-style: italic; font-weight: 900; font-stretch: 85%; }
+.who .av { border-radius: 3px; clip-path: polygon(3px 0, 100% 0, calc(100% - 3px) 100%, 0 100%); }
+
+/* Buttons: Parallelogramm */
+.btn { border-radius: 4px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 850; font-size: 14px; }
+.btn.primary, .btn.stop { clip-path: polygon(var(--cut) 0, 100% 0, calc(100% - var(--cut)) 100%, 0 100%); border: 0; padding: 0 28px; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn.primary:hover { background: #FFE94F; }
+.btn.big { font-size: 17px; font-style: italic; font-weight: 900; font-stretch: 85%; letter-spacing: 0.04em; min-height: 58px; padding: 0 34px; }
+.btn.warnbtn { color: var(--bad); }
+.btn.confirm { color: #fff; }
+
+/* Flächen */
+.card { border-radius: var(--r-lg); background: var(--surface); }
+.stage { border-radius: 6px; box-shadow: none; outline: 1px solid var(--line); }
+.stage .placeholder { background: repeating-linear-gradient(135deg, rgba(255,255,255,0.025) 0 14px, transparent 14px 28px); }
+.stage-chips .chip { border-radius: 3px; }
+
+/* Ergebnis-Karte im Kamerabild: Startnummer-Optik */
+.verdict { border-radius: 6px; padding: 10px 16px 10px 10px; border: 1px solid rgba(255,255,255,0.08); }
+.verdict .vn { background: var(--accent); color: var(--accent-ink) !important; font-style: italic; font-stretch: 70%; padding: 6px 16px 4px; clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%); min-width: 2.1ch; }
+.verdict .vt { font-style: italic; font-weight: 900; font-stretch: 75%; font-size: clamp(26px, 4.4vw, 40px); }
+.verdict.ok { box-shadow: inset 4px 0 0 var(--ok); border-color: rgba(45,227,138,0.35); }
+.verdict.bad { box-shadow: inset 4px 0 0 var(--bad); border-color: rgba(255,59,78,0.4); }
+.verdict.bad .vn { background: var(--bad); color: #fff !important; }
+.verdict.ok .vn { background: var(--ok); }
+
+/* Pills, Zahlen */
+.pill { border-radius: 3px; font-style: italic; font-weight: 900; letter-spacing: 0.08em; }
+.stat, .kpi, .mini { border-radius: 6px; }
+.stat b, .kpi b, .mini b, .ring .rc b { font-style: italic; font-stretch: 72%; font-weight: 900; }
+.stat b, .kpi b { font-size: 34px; }
+.tips .n { border-radius: 3px; background: var(--accent); color: var(--accent-ink); border: 0; font-style: italic; clip-path: polygon(4px 0, 100% 0, calc(100% - 4px) 100%, 0 100%); }
+.tog { border-radius: 4px; text-transform: uppercase; font-size: 12.5px; letter-spacing: 0.05em; font-weight: 800; }
+.feed li { border-radius: 6px; }
+.feed .fn, .rep .rn { font-style: italic; font-stretch: 70%; }
+.rep { border-radius: 8px; }
+.rep .rn { border-radius: 4px; clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%); width: 52px; }
+.rep .rt { font-style: italic; font-weight: 850; font-stretch: 88%; text-transform: uppercase; letter-spacing: 0.01em; }
+.rep select, .assign select, .field input, .field select, textarea { border-radius: 4px; }
+.lane { border-radius: 4px; }
+.lane i { border-radius: 1px; transform: translateX(-4px) skewX(-12deg); }
+.drop { border-radius: 8px; border-style: dashed; }
+.drop .ic { border-radius: 4px; background: var(--accent); color: var(--accent-ink); border: 0; clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%); width: 66px; }
+.bar { border-radius: 2px; height: 12px; }
+.bar i { border-radius: 0; background: repeating-linear-gradient(135deg, var(--accent) 0 10px, #E6C800 10px 20px); }
+.rule { border-radius: 8px; border-top: 4px solid var(--accent); }
+.rule .k { color: var(--accent); font-weight: 700; }
+.pcard { border-radius: 8px; }
+.pc-av { border-radius: 4px; font-style: italic; font-stretch: 72%; clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%); width: 52px; }
+.pc-name { font-style: italic; font-weight: 900; font-stretch: 80%; font-size: 22px; text-transform: uppercase; }
+.trend .tb { border-radius: 1px; }
+dialog { border-radius: 10px; }
+
+/* Tab-Leiste */
+.tabs { border-radius: 8px; background: rgba(12,12,12,0.92); padding: 5px; }
+.tabs button { border-radius: 4px; text-transform: uppercase; letter-spacing: 0.06em; font-size: 10.5px; font-weight: 850; }
+.tabs button[aria-current="page"] { background: var(--accent); color: var(--accent-ink); clip-path: polygon(7px 0, 100% 0, calc(100% - 7px) 100%, 0 100%); }
+.tabs button[aria-current="page"] svg { color: var(--accent-ink); }
+@media (max-width: 480px) { .tabs button { font-size: 9px; letter-spacing: 0.01em; padding-inline: 0; } .tabs button[aria-current="page"] { clip-path: polygon(5px 0, 100% 0, calc(100% - 5px) 100%, 0 100%); } }
+.toast { border-radius: 4px; background: var(--accent); color: var(--accent-ink); font-weight: 850; text-transform: uppercase; letter-spacing: 0.04em; font-size: 13px; }
+:focus-visible { outline-color: var(--accent); }
+
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
@@ -319,6 +389,7 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
       </span>
       <b>BBJ <span>Check</span></b>
     </a>
+    <span class="station" aria-label="Station 4, Burpee Broad Jumps, 80 Meter"><em>ST 04</em>Burpee Broad Jumps · 80 m</span>
     <span class="spacer"></span>
     <button class="who none" id="who" type="button" aria-label="Aktiver Proband"><span class="av" id="who-av">–</span><span class="nm" id="who-nm">Kein Proband</span></button>
     <span class="chip" id="model-chip"><i></i><span id="model-txt">KI nicht geladen</span></span>
@@ -357,9 +428,9 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
             <svg viewBox="0 0 220 150" aria-label="Kamera seitlich zur Sprungbahn, 3 bis 5 Meter Abstand">
                 <rect x="10" y="20" width="200" height="40" rx="8" fill="none" stroke="#5B6778" stroke-dasharray="5 5"/>
                 <text x="110" y="15" fill="#8C99AA" font-size="11" text-anchor="middle" font-family="IBM Plex Mono, monospace">Sprungbahn</text>
-                <g fill="#FF5B37"><circle cx="40" cy="40" r="6"/><circle cx="85" cy="40" r="6" opacity=".6"/><circle cx="130" cy="40" r="6" opacity=".35"/></g>
-                <path d="M150 40h40" stroke="#FF5B37" stroke-width="2.5" marker-end="url(#ar)"/>
-                <defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#FF5B37"/></marker></defs>
+                <g fill="#FFE01B"><circle cx="40" cy="40" r="6"/><circle cx="85" cy="40" r="6" opacity=".6"/><circle cx="130" cy="40" r="6" opacity=".35"/></g>
+                <path d="M150 40h40" stroke="#FFE01B" stroke-width="2.5" marker-end="url(#ar)"/>
+                <defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#FFE01B"/></marker></defs>
                 <line x1="110" y1="64" x2="110" y2="112" stroke="#8C99AA" stroke-width="1.5" stroke-dasharray="3 4"/>
                 <text x="118" y="92" fill="#8C99AA" font-size="11" font-family="IBM Plex Mono, monospace">3–5 m</text>
                 <rect x="94" y="114" width="32" height="22" rx="5" fill="#EEF2F6"/>
@@ -576,14 +647,14 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
       <p>Die Körperpunkte werden geschätzt und sind typischerweise einige Zentimeter ungenau. Werte nahe an der Grenze werden deshalb als Grenzfall markiert. Bei verdeckter Körperseite nutzt die App automatisch die zur Kamera gewandte Seite.</p>
       <p>Forschungsprototyp für eine Pilotstudie. Ergebnisse immer mit einer menschlichen Bewertung abgleichen.</p>
     </div>
-    <footer class="foot" id="ver">Version</footer>
+    <footer class="foot"><span id="ver">Version</span><br>Unabhängiges Studienprojekt. Keine offizielle App von HYROX und nicht mit HYROX verbunden.</footer>
   </section>
 </main>
 
 <nav class="tabs" aria-label="Bereiche">
   <button type="button" data-tab="live"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M15 10l5-3v10l-5-3z"/><rect x="3" y="6" width="12" height="12" rx="3"/></svg>Live</button>
   <button type="button" data-tab="video"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M10 9l5 3-5 3z"/></svg>Video</button>
-  <button type="button" data-tab="results"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Auswertung</button>
+  <button type="button" data-tab="results"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Analyse</button>
   <button type="button" data-tab="people"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 4.5a3.5 3.5 0 010 7M18 14c2 .8 3 3 3 6"/></svg>Probanden</button>
   <button type="button" data-tab="info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>Info</button>
 </nav>
@@ -604,7 +675,6 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
     <div class="field wide" id="rtmw-file-row"><label for="s-rtmw-file">RTMW-Modelldatei (nur falls der Download scheitert)</label><input id="s-rtmw-file" type="file" accept=".onnx"><span class="hint">Datei rtmw-m.onnx, wird auf dem Gerät gespeichert</span></div>
     <div class="field"><label for="s-model">MediaPipe-Modell</label><select id="s-model"><option value="lite">Lite · schnell</option><option value="full" selected>Full · ausgewogen</option><option value="heavy">Heavy · genau, langsam</option></select><span class="hint">Unter 15 fps im Live-Modus: Lite wählen</span></div>
     <div class="field"><label for="s-rate">Analyse-Rate bei Videos</label><select id="s-rate"><option value="30" selected>30 Bilder/s</option><option value="60">60 Bilder/s</option></select></div>
-    <div class="field"><label for="s-theme">Darstellung</label><select id="s-theme"><option value="">System</option><option value="dark">Dunkel</option><option value="light">Hell</option></select></div>
   </div>
 </dialog>
 
@@ -1125,7 +1195,7 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
 (function () {
   "use strict";
   const $ = (id) => document.getElementById(id);
-  const APP_VERSION = "0.4.0";
+  const APP_VERSION = "0.5.0";
   const MP_VERSIONS = ["0.10.14", "0.10.18", "0.10.21"];
   const MODEL_URL = (v) => `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_${v}/float16/latest/pose_landmarker_${v}.task`;
   const SKEL = [[11,12],[11,13],[13,15],[12,14],[14,16],[15,19],[16,20],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],[27,29],[29,31],[27,31],[28,30],[30,32],[28,32]];
@@ -1139,15 +1209,12 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
 
   // ---------------- Einstellungen ----------------
   const LS = "bbj-settings-v2";
-  const FIELDS = ["s-height", "s-pxcm", "s-dir", "s-side", "s-tol", "s-air", "s-step", "s-pose", "s-model", "s-rate", "s-theme", "t-voice", "t-sound", "t-skel"];
+  const FIELDS = ["s-height", "s-pxcm", "s-dir", "s-side", "s-tol", "s-air", "s-step", "s-pose", "s-model", "s-rate", "t-voice", "t-sound", "t-skel"];
   const store = { get(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
   const saved = store.get(LS) || {};
   for (const id of FIELDS) if (id in saved) { const el = $(id); if (el.type === "checkbox") el.checked = saved[id]; else el.value = saved[id]; }
   function saveSettings() { const o = {}; for (const id of FIELDS) { const el = $(id); o[id] = el.type === "checkbox" ? el.checked : el.value; } store.set(LS, o); }
   FIELDS.forEach((id) => $(id).addEventListener("change", saveSettings));
-  function applyTheme() { const v = $("s-theme").value; if (v) document.documentElement.setAttribute("data-theme", v); else document.documentElement.removeAttribute("data-theme"); }
-  $("s-theme").addEventListener("change", () => { applyTheme(); paint(); });
-  applyTheme();
   const num = (id) => { const v = parseFloat(String($(id).value).replace(",", ".")); return isFinite(v) && v > 0 ? v : null; };
   const poseSel = () => $("s-pose").value;
   function cfg(extra, skel, profileId) {
@@ -1236,7 +1303,7 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
     ctx.beginPath(); for (const [a, b] of SKEL) { ctx.moveTo(f[a * 3], f[a * 3 + 1]); ctx.lineTo(f[b * 3], f[b * 3 + 1]); } ctx.stroke();
     ctx.fillStyle = "#fff"; for (const j of [0, 15, 16, 23, 24, 27, 28]) { ctx.beginPath(); ctx.arc(f[j * 3], f[j * 3 + 1], lw * 1.3, 0, 7); ctx.fill(); }
     ctx.fillStyle = "#3FB7FF"; for (const j of [19, 20]) { ctx.beginPath(); ctx.arc(f[j * 3], f[j * 3 + 1], lw * 1.8, 0, 7); ctx.fill(); }
-    ctx.fillStyle = css("--accent") || "#FF5B37"; for (const j of [31, 32]) { ctx.beginPath(); ctx.arc(f[j * 3], f[j * 3 + 1], lw * 1.8, 0, 7); ctx.fill(); }
+    ctx.fillStyle = css("--accent") || "#FFE01B"; for (const j of [31, 32]) { ctx.beginPath(); ctx.arc(f[j * 3], f[j * 3 + 1], lw * 1.8, 0, 7); ctx.fill(); }
     ctx.restore();
   }
   function drawDetail(ctx) {
@@ -1273,14 +1340,14 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
       ctx.beginPath(); ctx.moveTo(rep._fingerX, 0); ctx.lineTo(rep._fingerX, H); ctx.stroke(); ctx.setLineDash([]);
     }
     for (const [zs, ze] of rep._zusatz) if (t >= zs && t <= ze + 10) {
-      ctx.fillStyle = css("--bad"); ctx.font = `900 ${Math.round(H / 14)}px ${css("--f-display")}`; ctx.fillText("ZUSATZSPRUNG", W * 0.03, H * 0.92);
+      ctx.fillStyle = css("--bad"); ctx.font = `italic 900 ${Math.round(H / 14)}px ${css("--f-display")}`; ctx.fillText("ZUSATZSPRUNG", W * 0.03, H * 0.92);
     }
     const done = t >= rep._ende - 1 || (t >= b && rep.fehler2Overstep);
     const txt = done ? `WDH ${rep.wdh} · ${rep.kiLabel === "korrekt" ? "KORREKT" : reasons(rep).toUpperCase()}` : `WDH ${rep.wdh} · WIRD GEPRÜFT`;
-    const col = done ? (rep.kiLabel === "korrekt" ? css("--ok") : css("--bad")) : "#FFB648";
-    const fs = Math.round(H / 17); ctx.font = `850 ${fs}px ${css("--f-display")}`;
+    const col = done ? (rep.kiLabel === "korrekt" ? css("--ok") : css("--bad")) : css("--accent");
+    const fs = Math.round(H / 17); ctx.font = `italic 900 ${fs}px ${css("--f-display")}`;
     const tw = ctx.measureText(txt).width, x0 = W * 0.025, y0 = H * 0.04, ph = fs * 1.55;
-    ctx.fillStyle = "rgba(0,0,0,0.6)"; roundRect(ctx, x0, y0, tw + fs, ph, ph / 2); ctx.fill();
+    ctx.fillStyle = "rgba(0,0,0,0.72)"; ctx.beginPath(); const sk = ph * 0.3; ctx.moveTo(x0 + sk, y0); ctx.lineTo(x0 + tw + fs + sk, y0); ctx.lineTo(x0 + tw + fs, y0 + ph); ctx.lineTo(x0, y0 + ph); ctx.closePath(); ctx.fill();
     ctx.fillStyle = col; ctx.fillText(txt, x0 + fs / 2, y0 + fs * 1.1);
   }
   function roundRect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }

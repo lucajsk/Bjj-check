@@ -3,8 +3,8 @@
  "short_name": "BBJ Check",
  "start_url": "./#live",
  "display": "standalone",
- "background_color": "#0B0F14",
- "theme_color": "#0B0F14",
+ "background_color": "#090909",
+ "theme_color": "#090909",
  "orientation": "any",
  "lang": "de",
  "icons": [

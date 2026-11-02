@@ -254,6 +254,7 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(3px); -
 .field label { font-size: 13px; font-weight: 650; color: var(--muted); }
 .field input, .field select { min-height: 46px; border-radius: 12px; border: 1px solid var(--line); background: var(--raised); padding: 0 12px; width: 100%; }
 .field .hint { font-size: 12px; color: var(--muted); }
+.field input[type=file] { min-height: auto; padding: 10px 12px; }
 .check { display: flex; gap: 10px; align-items: center; font-size: 15px; grid-column: 1 / -1; }
 .check input { width: 20px; height: 20px; accent-color: var(--accent); margin: 0; }
 .dlg-sec { grid-column: 1 / -1; padding-top: 6px; border-top: 1px solid var(--line); }
@@ -464,7 +465,8 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
     </div>
     <div class="card prose">
       <h2>Grenzen</h2>
-      <p>Die Körperpunkte werden von Google MediaPipe geschätzt und sind typischerweise einige Zentimeter ungenau. Werte nahe an der Grenze werden deshalb als Grenzfall markiert. Bei verdeckter Körperseite nutzt die App automatisch die zur Kamera gewandte Seite.</p>
+      <p>Zwei Skelett-Modelle stehen zur Wahl: MediaPipe (33 Punkte, schnell) und RTMW von OpenMMLab (133 Punkte mit je 21 Punkten pro Hand und 3 pro Fuß). RTMW misst Fingerspitzen und Zehen genauer, ist aber langsamer.</p>
+      <p>Die Körperpunkte werden geschätzt und sind typischerweise einige Zentimeter ungenau. Werte nahe an der Grenze werden deshalb als Grenzfall markiert. Bei verdeckter Körperseite nutzt die App automatisch die zur Kamera gewandte Seite.</p>
       <p>Forschungsprototyp für eine Pilotstudie. Ergebnisse immer mit einer menschlichen Bewertung abgleichen.</p>
     </div>
     <footer class="foot" id="ver">Version</footer>
@@ -490,7 +492,9 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
     <div class="field"><label for="s-air">Flug-Schwelle (cm)</label><input id="s-air" type="number" inputmode="decimal" step="0.5" value="4"><span class="hint">Ab dieser Fußhöhe zählt ein Sprung</span></div>
     <label class="check"><input type="checkbox" id="s-step"> Nachschritt mit nur einem Fuß als Fehler werten</label>
     <div class="dlg-sec label">KI</div>
-    <div class="field"><label for="s-model">Modell</label><select id="s-model"><option value="lite">Lite · schnell</option><option value="full" selected>Full · ausgewogen</option><option value="heavy">Heavy · genau, langsam</option></select><span class="hint">Unter 15 fps im Live-Modus: Lite wählen</span></div>
+    <div class="field wide"><label for="s-pose">Skelett</label><select id="s-pose"><option value="mediapipe">MediaPipe · 33 Punkte · schnell</option><option value="rtmw">RTMW · 133 Punkte · präzise Hände und Füße</option></select><span class="hint" id="pose-hint">RTMW lädt beim ersten Mal ein größeres Modell und läuft am besten mit WebGPU. MediaPipe wird weiterhin für die Personen-Box genutzt.</span></div>
+    <div class="field wide" id="rtmw-file-row"><label for="s-rtmw-file">RTMW-Modelldatei (nur falls der Download scheitert)</label><input id="s-rtmw-file" type="file" accept=".onnx"><span class="hint">Datei rtmw-m.onnx, wird auf dem Gerät gespeichert</span></div>
+    <div class="field"><label for="s-model">MediaPipe-Modell</label><select id="s-model"><option value="lite">Lite · schnell</option><option value="full" selected>Full · ausgewogen</option><option value="heavy">Heavy · genau, langsam</option></select><span class="hint">Unter 15 fps im Live-Modus: Lite wählen</span></div>
     <div class="field"><label for="s-rate">Analyse-Rate bei Videos</label><select id="s-rate"><option value="30" selected>30 Bilder/s</option><option value="60">60 Bilder/s</option></select></div>
     <div class="field"><label for="s-theme">Darstellung</label><select id="s-theme"><option value="">System</option><option value="dark">Dunkel</option><option value="light">Hell</option></select></div>
   </div>
@@ -853,10 +857,167 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
 
 </script>
 <script>
+/* RTMW-m (OpenMMLab, 133 COCO-WholeBody-Punkte) im Browser über ONNX Runtime Web.
+   Top-down: Die Personen-Box kommt aus dem MediaPipe-Ergebnis, RTMW schätzt darin die Punkte.
+   Ergebnis wird in das 33-Punkte-Format der App übertragen (präzise Fingerspitzen, großer Zeh, Ferse). */
+(function (root) {
+  "use strict";
+  const IN_W = 192, IN_H = 256, K = 133;
+  const MEAN = [123.675, 116.28, 103.53], STD = [58.395, 57.12, 57.375];
+  const MODEL_URLS = ["https://huggingface.co/simonswiss/shot-doctor-models/resolve/main/rtmw-m.onnx"];
+  const ORT_URLS = [
+    ["https://cdnjs.cloudflare.com/ajax/libs/onnxruntime-web/1.30.0/ort.min.js", "https://cdnjs.cloudflare.com/ajax/libs/onnxruntime-web/1.30.0/"],
+    ["https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/ort.min.js", "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.30.0/dist/"],
+    ["https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/ort.min.js", "https://cdn.jsdelivr.net/npm/onnxruntime-web@1.22.0/dist/"],
+  ];
+  const CACHE = "bbj-models-v1", CACHE_KEY = "/bbj-models/rtmw-m.onnx";
+
+  // App-Index (MediaPipe-Schema) ← COCO-WholeBody-Index
+  const MAP = {
+    0: 0, 11: 5, 12: 6, 13: 7, 14: 8, 15: 9, 16: 10, 23: 11, 24: 12, 25: 13, 26: 14, 27: 15, 28: 16,
+    29: 19, 30: 22,          // Fersen
+    31: 17, 32: 20,          // große Zehen
+    19: 103, 20: 124,        // Mittelfinger-Spitzen (längster Finger = vorderste Fingerspitze bei flacher Hand)
+    17: 111, 18: 132,        // kleiner Finger
+    21: 95, 22: 116,         // Daumen
+  };
+
+  // Box aus einem 33-Punkte-Frame: Mittelpunkt, Größe mit 1,25-fachem Rand und 3:4-Seitenverhältnis
+  function boxFromFrame(f, imgW, imgH) {
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity, n = 0;
+    for (let j = 0; j < 33; j++) {
+      const x = f[j * 3], y = f[j * 3 + 1];
+      if (isNaN(x) || isNaN(y)) continue;
+      x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); n++;
+    }
+    if (n < 5) return null;
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    let w = (x1 - x0) * 1.25, h = (y1 - y0) * 1.25;
+    const ar = IN_W / IN_H;
+    if (w / h > ar) h = w / ar; else w = h * ar;
+    w = Math.max(w, 32); h = Math.max(h, 32 / ar);
+    return { x: cx - w / 2, y: cy - h / 2, w, h, imgW, imgH };
+  }
+
+  // SimCC dekodieren: argmax je Achse, 2 Bins pro Eingabepixel, Score = Mittel der beiden Maxima
+  function decode(sx, sy, box) {
+    const nx = sx.length / K, ny = sy.length / K;
+    const rx = nx / IN_W, ry = ny / IN_H;
+    const out = new Float32Array(K * 3);
+    for (let k = 0; k < K; k++) {
+      let bx = 0, vx = -Infinity, by = 0, vy = -Infinity;
+      const ox = k * nx, oy = k * ny;
+      for (let i = 0; i < nx; i++) { const v = sx[ox + i]; if (v > vx) { vx = v; bx = i; } }
+      for (let i = 0; i < ny; i++) { const v = sy[oy + i]; if (v > vy) { vy = v; by = i; } }
+      const xi = bx / rx, yi = by / ry;
+      out[k * 3] = box.x + xi * (box.w / IN_W);
+      out[k * 3 + 1] = box.y + yi * (box.h / IN_H);
+      out[k * 3 + 2] = 0.5 * (vx + vy);
+    }
+    return out;
+  }
+
+  // 133 Punkte in den 33-Punkte-Frame übernehmen (übrige MediaPipe-Punkte bleiben erhalten)
+  function merge(mpFrame, kp133) {
+    const f = Float32Array.from(mpFrame);
+    for (const a in MAP) {
+      const b = MAP[a];
+      f[a * 3] = kp133[b * 3]; f[a * 3 + 1] = kp133[b * 3 + 1];
+      f[a * 3 + 2] = Math.max(0, Math.min(1, kp133[b * 3 + 2]));
+    }
+    return f;
+  }
+
+  function loadScript(src) {
+    return new Promise((res, rej) => { const s = document.createElement("script"); s.src = src; s.crossOrigin = "anonymous"; s.onload = res; s.onerror = () => rej(new Error("Skript nicht geladen: " + src)); document.head.append(s); });
+  }
+
+  const R = {
+    session: null, ep: "", ort: null, busy: false, lastKp: null, canvas: null, ctx: null,
+    async loadOrt() {
+      if (root.ort) return root.ort;
+      let err;
+      for (const [src, base] of ORT_URLS) {
+        try { await loadScript(src); if (root.ort) { root.ort.env.wasm.wasmPaths = base; root.ort.env.wasm.numThreads = 1; return root.ort; } }
+        catch (e) { err = e; }
+      }
+      throw err || new Error("ONNX Runtime konnte nicht geladen werden.");
+    },
+    async getModelBytes(onProgress) {
+      try { const c = await caches.open(CACHE); const hit = await c.match(CACHE_KEY); if (hit) { onProgress && onProgress(1, "aus Speicher"); return await hit.arrayBuffer(); } } catch (e) {}
+      let lastErr;
+      for (const url of MODEL_URLS) {
+        try {
+          const resp = await fetch(url, { mode: "cors" });
+          if (!resp.ok) throw new Error("HTTP " + resp.status);
+          const total = +resp.headers.get("content-length") || 0;
+          const reader = resp.body.getReader(); const chunks = []; let got = 0;
+          for (;;) { const { done, value } = await reader.read(); if (done) break; chunks.push(value); got += value.length; onProgress && onProgress(total ? got / total : 0, `${(got / 1e6).toFixed(0)} MB`); }
+          const buf = new Uint8Array(got); let o = 0; for (const c of chunks) { buf.set(c, o); o += c.length; }
+          try { const c = await caches.open(CACHE); await c.put(CACHE_KEY, new Response(buf, { headers: { "content-type": "application/octet-stream" } })); } catch (e) {}
+          return buf.buffer;
+        } catch (e) { lastErr = e; }
+      }
+      throw new Error("RTMW-Modell konnte nicht geladen werden (" + (lastErr && lastErr.message) + "). Du kannst die Datei rtmw-m.onnx in den Einstellungen auch manuell wählen.");
+    },
+    async storeModelFile(file) {
+      const buf = await file.arrayBuffer();
+      try { const c = await caches.open(CACHE); await c.put(CACHE_KEY, new Response(buf)); } catch (e) {}
+      this.session = null; return buf;
+    },
+    async load(onProgress) {
+      if (this.session) return this;
+      const ort = await this.loadOrt();
+      const bytes = await this.getModelBytes(onProgress);
+      onProgress && onProgress(1, "starte Modell …");
+      const tries = (navigator.gpu ? [["webgpu"], ["wasm"]] : [["wasm"]]);
+      let err;
+      for (const eps of tries) {
+        try { this.session = await ort.InferenceSession.create(bytes, { executionProviders: eps, graphOptimizationLevel: "all" }); this.ep = eps[0]; break; }
+        catch (e) { err = e; }
+      }
+      if (!this.session) throw new Error("RTMW konnte nicht gestartet werden: " + (err && err.message));
+      this.ort = ort;
+      this.canvas = document.createElement("canvas"); this.canvas.width = IN_W; this.canvas.height = IN_H;
+      this.ctx = this.canvas.getContext("2d", { willReadFrequently: true });
+      return this;
+    },
+    // source: video/canvas/image; mpFrame: 33-Punkte-Frame von MediaPipe (für die Box)
+    async infer(source, imgW, imgH, mpFrame) {
+      const box = boxFromFrame(mpFrame, imgW, imgH);
+      if (!box) { this.lastKp = null; return mpFrame; }
+      const c = this.ctx;
+      c.fillStyle = "#000"; c.fillRect(0, 0, IN_W, IN_H);
+      c.drawImage(source, box.x, box.y, box.w, box.h, 0, 0, IN_W, IN_H);
+      const px = c.getImageData(0, 0, IN_W, IN_H).data, N = IN_W * IN_H;
+      const data = new Float32Array(3 * N);
+      for (let i = 0; i < N; i++) {
+        data[i] = (px[i * 4] - MEAN[0]) / STD[0];
+        data[N + i] = (px[i * 4 + 1] - MEAN[1]) / STD[1];
+        data[2 * N + i] = (px[i * 4 + 2] - MEAN[2]) / STD[2];
+      }
+      const input = new this.ort.Tensor("float32", data, [1, 3, IN_H, IN_W]);
+      const feeds = {}; feeds[this.session.inputNames[0]] = input;
+      const out = await this.session.run(feeds);
+      const names = this.session.outputNames;
+      let sx = out["simcc_x"], sy = out["simcc_y"];
+      if (!sx || !sy) { sx = out[names[0]]; sy = out[names[1]]; }
+      const kp = decode(sx.data, sy.data, box);
+      this.lastKp = kp;
+      return merge(mpFrame, kp);
+    },
+  };
+
+  root.RTMW = Object.assign(R, { _decode: decode, _box: boxFromFrame, _merge: merge, MAP, IN_W, IN_H });
+  if (typeof module !== "undefined") module.exports = root.RTMW;
+})(typeof window !== "undefined" ? window : globalThis);
+
+</script>
+<script>
 (function () {
   "use strict";
   const $ = (id) => document.getElementById(id);
-  const APP_VERSION = "0.2.0";
+  const APP_VERSION = "0.3.0";
   const MP_VERSIONS = ["0.10.14", "0.10.18", "0.10.21"];
   const MODEL_URL = (v) => `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_${v}/float16/latest/pose_landmarker_${v}.task`;
   const SKEL = [[11,12],[11,13],[13,15],[12,14],[14,16],[15,19],[16,20],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],[27,29],[29,31],[27,31],[28,30],[30,32],[28,32]];
@@ -870,7 +1031,7 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
 
   // ---------------- Einstellungen ----------------
   const LS = "bbj-settings-v2";
-  const FIELDS = ["s-height", "s-pxcm", "s-dir", "s-side", "s-tol", "s-air", "s-step", "s-model", "s-rate", "s-theme", "t-voice", "t-sound", "t-skel"];
+  const FIELDS = ["s-height", "s-pxcm", "s-dir", "s-side", "s-tol", "s-air", "s-step", "s-pose", "s-model", "s-rate", "s-theme", "t-voice", "t-sound", "t-skel"];
   const store = { get(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
   const saved = store.get(LS) || {};
   for (const id of FIELDS) if (id in saved) { const el = $(id); if (el.type === "checkbox") el.checked = saved[id]; else el.value = saved[id]; }
@@ -880,8 +1041,11 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
   $("s-theme").addEventListener("change", () => { applyTheme(); paint(); });
   applyTheme();
   const num = (id) => { const v = parseFloat(String($(id).value).replace(",", ".")); return isFinite(v) && v > 0 ? v : null; };
-  function cfg(extra) {
+  const poseSel = () => $("s-pose").value;
+  function cfg(extra, skel) {
+    const sk = skel || poseSel();
     return Object.assign({
+      minSichtbarkeit: sk === "rtmw" ? 0.3 : 0.5,
       pixelProCm: num("s-pxcm"), koerpergroesseCm: num("s-height"),
       overstepToleranzCm: parseFloat($("s-tol").value) || 0, flugSchwelleCm: parseFloat($("s-air").value) || 4,
       richtung: $("s-dir").value, seite: $("s-side").value, einzelschrittAlsFehler: $("s-step").checked,
@@ -931,6 +1095,29 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
     return f;
   }
 
+  // ---------------- Skelett-Pipeline (MediaPipe allein oder MediaPipe-Box + RTMW) ----------------
+  async function ensurePose() {
+    const lmk = await getLandmarker();
+    if (poseSel() !== "rtmw") return;
+    if (RTMW.session) { setModel("ready", `KI bereit · RTMW · ${RTMW.ep === "webgpu" ? "WebGPU" : "CPU"}`); return; }
+    setModel("busy", "Lade RTMW …");
+    try {
+      await RTMW.load((p, t) => setModel("busy", `RTMW ${p ? Math.round(p * 100) + " % · " : ""}${t || ""}`));
+      setModel("ready", `KI bereit · RTMW · ${RTMW.ep === "webgpu" ? "WebGPU" : "CPU (langsam)"}`);
+    } catch (e) { setModel("err", "RTMW-Fehler"); throw e; }
+    return lmk;
+  }
+  async function detectFrame(source, w, h, tsMs) {
+    const mp = toFrame(landmarker.detectForVideo(source, tsMs), w, h);
+    if (poseSel() !== "rtmw" || !RTMW.session) return mp;
+    try { return await RTMW.infer(source, w, h, mp); } catch (e) { return mp; }
+  }
+  $("s-pose").addEventListener("change", () => { setModel(landmarker ? "ready" : "idle"); });
+  $("s-rtmw-file").addEventListener("change", async (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    try { await RTMW.storeModelFile(f); toast("RTMW-Modell gespeichert"); } catch (err) { toast("Datei konnte nicht gespeichert werden"); }
+  });
+
   // ---------------- Zeichnen ----------------
   function drawPose(ctx, f, alpha) {
     if (!f || isNaN(f[23 * 3])) return;
@@ -941,6 +1128,15 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
     ctx.fillStyle = "#fff"; for (const j of [0, 15, 16, 23, 24, 27, 28]) { ctx.beginPath(); ctx.arc(f[j * 3], f[j * 3 + 1], lw * 1.3, 0, 7); ctx.fill(); }
     ctx.fillStyle = "#3FB7FF"; for (const j of [19, 20]) { ctx.beginPath(); ctx.arc(f[j * 3], f[j * 3 + 1], lw * 1.8, 0, 7); ctx.fill(); }
     ctx.fillStyle = css("--accent") || "#FF5B37"; for (const j of [31, 32]) { ctx.beginPath(); ctx.arc(f[j * 3], f[j * 3 + 1], lw * 1.8, 0, 7); ctx.fill(); }
+    ctx.restore();
+  }
+  function drawDetail(ctx) {
+    const kp = RTMW.lastKp; if (!kp || poseSel() !== "rtmw") return;
+    const lw = Math.max(1.5, ctx.canvas.width / 600);
+    ctx.save(); ctx.fillStyle = "rgba(63,183,255,0.9)";
+    for (let k = 91; k < 133; k++) if (kp[k * 3 + 2] > 0.3) { ctx.beginPath(); ctx.arc(kp[k * 3], kp[k * 3 + 1], lw, 0, 7); ctx.fill(); }
+    ctx.fillStyle = "rgba(255,91,55,0.95)";
+    for (let k = 17; k < 23; k++) if (kp[k * 3 + 2] > 0.3) { ctx.beginPath(); ctx.arc(kp[k * 3], kp[k * 3 + 1], lw * 1.6, 0, 7); ctx.fill(); }
     ctx.restore();
   }
   const repAt = (reps, t) => { let cur = null; for (const r of reps) if (t >= r.frameTiefpunkt - 15) cur = r; return cur; };
@@ -981,11 +1177,11 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
   function roundRect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
 
   // ---------------- Sitzung & Ergebnisse ----------------
-  const S = { source: "demo", name: "Beispiel", frames: [], fps: 30, w: 0, h: 0, result: null, videoURL: null, korr: {}, missing: 0, created: new Date().toISOString(), playing: false, t: 0 };
-  function setSession(o) { Object.assign(S, { korr: {}, missing: 0, created: new Date().toISOString() }, o); $("note").value = o.note || ""; evaluate(); }
+  const S = { skelett: "mediapipe", source: "demo", name: "Beispiel", frames: [], fps: 30, w: 0, h: 0, result: null, videoURL: null, korr: {}, missing: 0, created: new Date().toISOString(), playing: false, t: 0 };
+  function setSession(o) { Object.assign(S, { korr: {}, missing: 0, created: new Date().toISOString(), skelett: "mediapipe" }, o); $("note").value = o.note || ""; evaluate(); }
   function evaluate() {
     if (!S.frames.length) return;
-    S.result = BBJ.analyse(S.frames, S.fps, cfg(S.source === "demo" ? { pixelProCm: 4, koerpergroesseCm: null, richtung: "auto", seite: "auto" } : null));
+    S.result = BBJ.analyse(S.frames, S.fps, cfg(S.source === "demo" ? { pixelProCm: 4, koerpergroesseCm: null, richtung: "auto", seite: "auto" } : null, S.skelett));
     renderResults();
   }
   const KORR = [["", "– Was war wirklich? –"], ["korrekt", "Korrekt"], ["F1", "Doppelsprung"], ["F2", "Overstepping"], ["F3", "Kein Brustkontakt"], ["mehrere", "Mehrere Fehler"], ["keine", "Keine echte Wdh"]];
@@ -999,7 +1195,7 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
     $("ring-ok").setAttribute("stroke-dasharray", `${pOk} ${100 - pOk}`);
     $("ring-bad").setAttribute("stroke-dasharray", `${pBad} ${100 - pBad}`); $("ring-bad").setAttribute("stroke-dashoffset", `${-pOk}`);
     const src = $("r-src"); src.textContent = S.source === "demo" ? "Beispiel · simulierte Daten" : S.name; src.className = "tag" + (S.source === "demo" ? " example" : "");
-    $("r-meta").textContent = `${fmt(S.frames.length / S.fps, false)} s · ${Math.round(S.fps)} fps · Seite ${({ L: "links", R: "rechts", beide: "beide" })[r.meta.seite] || "–"} · Richtung ${r.meta.richtung || "–"}`;
+    $("r-meta").textContent = `${fmt(S.frames.length / S.fps, false)} s · ${Math.round(S.fps)} fps · Seite ${({ L: "links", R: "rechts", beide: "beide" })[r.meta.seite] || "–"} · Richtung ${r.meta.richtung || "–"} · ${S.skelett === "rtmw" ? "RTMW" : "MediaPipe"}`;
     $("notes").textContent = (r.meta.hinweise || []).join(" ");
     const ul = $("reps"); ul.innerHTML = "";
     if (!reps.length) { const li = document.createElement("li"); li.className = "empty"; li.textContent = "Keine Wiederholung erkannt. Prüfe, ob die Kamera seitlich steht und die ganze Person im Bild ist."; ul.append(li); }
@@ -1104,7 +1300,7 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
   function sessionJSON() {
     return {
       format: "bbj-check-session", formatVersion: 1, app: APP_VERSION, erkennung: BBJ.VERSION, erstellt: S.created, exportiert: new Date().toISOString(),
-      quelle: S.source, name: S.name, fps: S.fps, breite: S.w, hoehe: S.h, bilder: S.frames.length, einstellungen: cfg(),
+      quelle: S.source, skelett: S.skelett, name: S.name, fps: S.fps, breite: S.w, hoehe: S.h, bilder: S.frames.length, einstellungen: cfg(null, S.skelett),
       geraet: navigator.userAgent, notiz: $("note").value, uebersehen: S.missing,
       ki: S.result ? S.result.reps.map(cleanRep) : [], meta: S.result ? S.result.meta : null,
       korrekturen: Object.entries(S.korr).map(([wdh, wert]) => ({ wdh: +wdh, wert })),
@@ -1141,7 +1337,7 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
     try {
       const j = JSON.parse(await f.text()); if (j.format !== "bbj-check-session") throw new Error("Keine BBJ-Check-Datei");
       const frames = decodeFrames(j.punkte.daten, j.bilder);
-      setSession({ source: j.quelle === "demo" ? "demo" : "datei", name: j.name || f.name, frames, fps: j.fps, w: j.breite, h: j.hoehe, videoURL: null, note: j.notiz || "" });
+      setSession({ source: j.quelle === "demo" ? "demo" : "datei", name: j.name || f.name, frames, fps: j.fps, w: j.breite, h: j.hoehe, videoURL: null, note: j.notiz || "", skelett: j.skelett || "mediapipe" });
       S.created = j.erstellt || S.created; S.missing = j.uebersehen || 0; for (const k of j.korrekturen || []) S.korr[k.wdh] = k.wert;
       renderResults(); toast("Datei geladen");
     } catch (err) { toast("Datei konnte nicht gelesen werden: " + err.message); }
@@ -1182,7 +1378,7 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
     const status = (t) => ($("v-status").textContent = t); status("Lade KI-Modell …");
     try {
       await keepAwake();
-      const lmk = await getLandmarker();
+      await ensurePose();
       const url = URL.createObjectURL(file), v = document.createElement("video");
       v.muted = true; v.playsInline = true; v.preload = "auto"; v.src = url;
       await waitEvent(v, "loadeddata", 20000);
@@ -1192,11 +1388,11 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
       for (let i = 0; i < n; i++) {
         if (cancelled) throw new Error("abgebrochen");
         v.currentTime = Math.min(dur - 0.001, i / rate); await waitEvent(v, "seeked", 8000);
-        frames.push(toFrame(lmk.detectForVideo(v, Math.round(i * 1000 / rate) + 1), W, H));
+        frames.push(await detectFrame(v, W, H, Math.round(i * 1000 / rate) + 1));
         if (i % 5 === 0) { const pct = (i + 1) / n, el = (performance.now() - t0) / 1000, rest = el / pct - el; $("v-bar").style.width = (pct * 100).toFixed(1) + "%"; status(`Bild ${i + 1} von ${n} · noch ca. ${Math.max(1, Math.round(rest))} s`); }
       }
       if (S.videoURL) URL.revokeObjectURL(S.videoURL);
-      setSession({ source: "video", name: file.name, frames, fps: rate, w: W, h: H, videoURL: url });
+      setSession({ source: "video", name: file.name, frames, fps: rate, w: W, h: H, videoURL: url, skelett: poseSel() === "rtmw" && RTMW.session ? "rtmw" : "mediapipe" });
       $("v-bar").style.width = "100%"; status("Fertig"); setTimeout(() => ($("v-prog").hidden = true), 800); go("results");
     } catch (e) { status(e.message === "abgebrochen" ? "Analyse abgebrochen." : "Fehler: " + e.message); }
     finally { releaseAwake(); }
@@ -1204,7 +1400,7 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
 
   // ---------------- Live ----------------
   const cam = $("cam"), camOv = $("cam-ov");
-  let liveOn = false, stream = null, buf = [], bufT = [], all = [], allT = [], announced = [], liveRaf = 0, lastAnalyse = 0, audio = null, facing = store.get("bbj-facing") || "environment";
+  let liveSkel = "mediapipe", liveOn = false, stream = null, buf = [], bufT = [], all = [], allT = [], announced = [], liveRaf = 0, lastAnalyse = 0, audio = null, facing = store.get("bbj-facing") || "environment";
   const BUF_S = 20, MAX_ALL = 60 * 60 * 15;
   $("cam-label").textContent = facing === "environment" ? "Rückkamera" : "Frontkamera";
   $("cam-switch").addEventListener("click", async () => {
@@ -1254,7 +1450,8 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
     try {
       try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume(); } catch (e) {}
       if (window.speechSynthesis) { try { speechSynthesis.speak(new SpeechSynthesisUtterance(" ")); } catch (e) {} }
-      const lmk = await getLandmarker();
+      await ensurePose();
+      liveSkel = poseSel() === "rtmw" && RTMW.session ? "rtmw" : "mediapipe";
       liveStatus("Starte Kamera …"); await openCamera();
       liveOn = true; buf = []; bufT = []; all = []; allT = []; announced = [];
       $("feed").innerHTML = '<li class="empty" style="display:block;border:0;background:none;padding:0">Warte auf den ersten Burpee …</li>';
@@ -1262,15 +1459,18 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
       $("live-ph").hidden = true; $("live-tips").hidden = true; $("live-chips").hidden = false; $("live-start").hidden = true; $("live-stop").hidden = false; liveStatus("");
       showVerdict("–", null, "Bereit", "Erster Burpee wird erwartet");
       await keepAwake();
-      let lastVT = -1;
-      const tick = () => {
+      let lastVT = -1, busy = false;
+      const tick = async () => {
         if (!liveOn) return;
-        if (cam.currentTime !== lastVT && cam.readyState >= 2) {
+        if (!busy && cam.currentTime !== lastVT && cam.readyState >= 2) {
+          busy = true;
           lastVT = cam.currentTime; const now = performance.now();
-          const f = toFrame(lmk.detectForVideo(cam, Math.round(now)), cam.videoWidth, cam.videoHeight);
+          let f;
+          try { f = await detectFrame(cam, cam.videoWidth, cam.videoHeight, Math.round(now)); } finally { busy = false; }
+          if (!liveOn) return;
           buf.push(f); bufT.push(now); if (all.length < MAX_ALL) { all.push(f); allT.push(now); }
           const maxN = Math.round(BUF_S * liveFps()); while (buf.length > maxN) { buf.shift(); bufT.shift(); }
-          const c = camOv.getContext("2d"); c.clearRect(0, 0, camOv.width, camOv.height); if ($("t-skel").checked) drawPose(c, f);
+          const c = camOv.getContext("2d"); c.clearRect(0, 0, camOv.width, camOv.height); if ($("t-skel").checked) { drawPose(c, f); drawDetail(c); }
           if (now - lastAnalyse > 350) { lastAnalyse = now; liveAnalyse(); }
         }
         liveRaf = requestAnimationFrame(tick);
@@ -1286,7 +1486,7 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
   function liveAnalyse() {
     const fps = liveFps(); $("fps-chip").textContent = Math.round(fps) + " fps" + (fps < 15 ? " · zu langsam" : "");
     if (buf.length < fps * 1.5) return;
-    const r = BBJ.analyse(buf, fps, cfg()), T = buf.length;
+    const r = BBJ.analyse(buf, fps, cfg(null, liveSkel)), T = buf.length;
     r.reps.forEach((rep, k) => {
       const ms = bufT[rep.frameTiefpunkt]; let e = findEntry(ms);
       const f2Known = T - 1 > rep._fenster2[1];
@@ -1320,7 +1520,7 @@ footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
     releaseAwake();
     if (!silent && all.length > 30) {
       const span = (allT[allT.length - 1] - allT[0]) / 1000, fps = Math.max(5, Math.min(60, (all.length - 1) / span));
-      setSession({ source: "live", name: "Live-Aufnahme " + new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }), frames: all.slice(), fps, w: camOv.width, h: camOv.height, videoURL: null });
+      setSession({ source: "live", name: "Live-Aufnahme " + new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }), frames: all.slice(), fps, w: camOv.width, h: camOv.height, videoURL: null, skelett: liveSkel });
       go("results"); toast("Aufnahme ausgewertet. Trag jetzt ein, was wirklich passiert ist.");
     }
   }

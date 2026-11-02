@@ -1,0 +1,1079 @@
+<title>BBJ Check</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F1F3F6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C1016" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="description" content="Erkennt beim HYROX Burpee Broad Jump Doppelsprünge und Overstepping – live über die Kamera oder aus einem Video.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: eine schmale Spalte wie ein Messprotokoll; Kopf mit Moduswahl, darunter Arbeitsfläche, Ergebnisse als Bahn-Liste */
+:root {
+  --bg: #F1F3F6;
+  --surface: #FFFFFF;
+  --surface-2: #E8ECF1;
+  --ink: #0F1720;
+  --muted: #5A6575;
+  --line: #D8DEE6;
+  --accent: #F2531C;
+  --accent-ink: #FFFFFF;
+  --ok: #138A48;
+  --ok-soft: #DDF3E6;
+  --bad: #D42F35;
+  --bad-soft: #FBE2E2;
+  --warn: #A86A00;
+  --warn-soft: #FBEFD5;
+  --stage: #0E141B;
+  --stage-line: #2A3442;
+  --f-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
+  --f-body: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --r: 14px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0C1016; --surface: #151B23; --surface-2: #1C242E; --ink: #E8EDF3; --muted: #8E99A8;
+    --line: #26303C; --accent: #FF6634; --accent-ink: #160A04; --ok: #3DD083; --ok-soft: #12301F;
+    --bad: #FF6166; --bad-soft: #3A1517; --warn: #F2B544; --warn-soft: #33270D; --stage: #070A0E; --stage-line: #222B37;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0C1016; --surface: #151B23; --surface-2: #1C242E; --ink: #E8EDF3; --muted: #8E99A8;
+  --line: #26303C; --accent: #FF6634; --accent-ink: #160A04; --ok: #3DD083; --ok-soft: #12301F;
+  --bad: #FF6166; --bad-soft: #3A1517; --warn: #F2B544; --warn-soft: #33270D; --stage: #070A0E; --stage-line: #222B37;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { background: var(--bg); color: var(--ink); }
+body {
+  margin: 0; font-family: var(--f-body); font-size: 16px; line-height: 1.5;
+  -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
+}
+.wrap {
+  max-width: 760px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 20px 48px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: 0.01em; }
+.eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); font-weight: 600; }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+button, input, select { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+
+/* Kopf */
+header.top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand { display: flex; flex-direction: column; gap: 2px; }
+.brand h1 { font-size: 40px; line-height: 0.95; font-weight: 800; text-transform: uppercase; }
+.brand h1 span { color: var(--accent); }
+.brand p { margin: 0; color: var(--muted); font-size: 15px; }
+.rulechip {
+  font-family: var(--f-mono); font-size: 12px; color: var(--muted); border: 1px solid var(--line);
+  padding: 4px 10px; border-radius: 999px; white-space: nowrap;
+}
+
+/* Moduswahl */
+.modes { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--surface-2); padding: 4px; border-radius: 12px; gap: 4px; }
+.modes button {
+  border: 0; background: transparent; padding: 10px 6px; border-radius: 9px; cursor: pointer;
+  font-family: var(--f-display); font-size: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted);
+}
+.modes button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+
+/* Flächen */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.panel h2 { font-size: 24px; font-weight: 700; text-transform: uppercase; }
+.lead { margin: 0; color: var(--muted); max-width: 62ch; }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px;
+  padding: 0 20px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface);
+  font-weight: 600; cursor: pointer; text-decoration: none;
+}
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.danger { background: var(--bad); border-color: var(--bad); color: #fff; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn svg { width: 20px; height: 20px; }
+.drop {
+  border: 2px dashed var(--line); border-radius: var(--r); padding: 22px 16px; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 10px; transition: border-color .2s, background .2s;
+}
+.drop.over { border-color: var(--accent); background: var(--surface-2); }
+.drop small { color: var(--muted); }
+.checklist { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.checklist li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; color: var(--muted); font-size: 15px; }
+.checklist li::before { content: ""; width: 8px; height: 8px; margin: 8px 0 0 6px; border-radius: 2px; background: var(--accent); }
+
+/* Einstellungen */
+details.settings { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); }
+details.settings summary {
+  list-style: none; cursor: pointer; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;
+  font-family: var(--f-display); font-size: 20px; font-weight: 700; text-transform: uppercase;
+}
+details.settings summary::-webkit-details-marker { display: none; }
+details.settings summary::after { content: "+"; font-family: var(--f-mono); color: var(--muted); }
+details.settings[open] summary::after { content: "−"; }
+.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 0 18px 18px; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field label { font-size: 13px; font-weight: 600; color: var(--muted); }
+.field input, .field select {
+  min-height: 44px; border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 0 12px; width: 100%;
+}
+.field .hint { font-size: 12px; color: var(--muted); }
+.switch { display: flex; align-items: center; gap: 10px; grid-column: 1 / -1; font-size: 15px; }
+.switch input { width: 22px; height: 22px; accent-color: var(--accent); }
+@media (max-width: 480px) { .grid { grid-template-columns: 1fr; } .brand h1 { font-size: 34px; } }
+
+/* Fortschritt */
+.progress { display: flex; flex-direction: column; gap: 8px; }
+.bar { height: 10px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+.status { font-size: 14px; color: var(--muted); }
+
+/* Bühne (Video / Kamera) */
+.stage { position: relative; background: var(--stage); border-radius: var(--r); overflow: hidden; }
+.stage video, .stage canvas.bg { display: block; width: 100%; height: auto; max-width: 100%; }
+.stage canvas.ov { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.stage .tag {
+  position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6); color: #fff; font-size: 12px;
+  padding: 4px 10px; border-radius: 999px; font-family: var(--f-mono);
+}
+.controls { display: flex; gap: 10px; align-items: center; }
+.controls input[type=range] { flex: 1; min-width: 0; accent-color: var(--accent); }
+.iconbtn { width: 48px; height: 48px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); display: grid; place-items: center; cursor: pointer; flex: none; }
+.iconbtn svg { width: 22px; height: 22px; }
+.lane { position: relative; height: 26px; background: var(--surface-2); border-radius: 8px; overflow: hidden; cursor: pointer; }
+.lane i { position: absolute; top: 4px; bottom: 4px; width: 6px; border-radius: 3px; transform: translateX(-3px); }
+.lane i.k { background: var(--ok); } .lane i.f { background: var(--bad); }
+.lane b { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ink); }
+
+/* Live-Anzeige */
+.banner {
+  border-radius: var(--r); padding: 16px 18px; display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: center;
+  background: var(--surface-2); border: 1px solid var(--line); transition: background .25s, border-color .25s;
+}
+.banner .num { grid-row: span 2; font-family: var(--f-display); font-weight: 800; font-size: 54px; line-height: 0.9; font-variant-numeric: tabular-nums; }
+.banner .verdict { font-family: var(--f-display); font-weight: 800; font-size: 30px; line-height: 1; text-transform: uppercase; }
+.banner .why { color: var(--muted); font-size: 15px; }
+.banner.ok { background: var(--ok-soft); border-color: var(--ok); } .banner.ok .verdict { color: var(--ok); }
+.banner.bad { background: var(--bad-soft); border-color: var(--bad); } .banner.bad .verdict { color: var(--bad); }
+.banner.flash { animation: flash .5s ease-out; }
+@keyframes flash { from { transform: scale(1.03); } to { transform: none; } }
+.livebar { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* Kennzahlen */
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
+.stat b { display: block; font-family: var(--f-display); font-size: 34px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
+.stat.ok b { color: var(--ok); } .stat.bad b { color: var(--bad); } .stat.warn b { color: var(--warn); }
+@media (max-width: 420px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Wiederholungen */
+.reps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.rep {
+  display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 4px 12px; align-items: center;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; cursor: pointer; text-align: left; width: 100%;
+}
+.rep:hover { border-color: var(--muted); }
+.rep .n { grid-row: span 2; font-family: var(--f-display); font-weight: 800; font-size: 30px; text-align: center; color: var(--muted); font-variant-numeric: tabular-nums; }
+.rep .t { font-weight: 600; }
+.rep .d { grid-column: 2 / 4; font-size: 13px; color: var(--muted); display: flex; gap: 6px 14px; flex-wrap: wrap; }
+.pill { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+.pill.ok { background: var(--ok-soft); color: var(--ok); } .pill.bad { background: var(--bad-soft); color: var(--bad); } .pill.warn { background: var(--warn-soft); color: var(--warn); }
+.notes { margin: 0; padding: 12px 14px; border-radius: 12px; background: var(--warn-soft); color: var(--ink); font-size: 14px; }
+.notes:empty { display: none; }
+.example { font-size: 12px; font-family: var(--f-mono); color: var(--warn); }
+
+/* Regeln */
+.rules { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.rule { border-top: 3px solid var(--accent); padding-top: 10px; }
+.rule h3 { font-size: 20px; text-transform: uppercase; }
+.rule p { margin: 4px 0 0; color: var(--muted); font-size: 15px; }
+@media (max-width: 560px) { .rules { grid-template-columns: 1fr; } }
+footer { color: var(--muted); font-size: 13px; display: flex; flex-direction: column; gap: 6px; }
+footer p { margin: 0; max-width: 70ch; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>BBJ <span>Check</span></h1>
+      <p>Fehlererkennung beim HYROX Burpee Broad Jump</p>
+    </div>
+    <span class="rulechip">Rulebook 26/27 · §8.4</span>
+  </header>
+
+  <nav class="modes" aria-label="Modus">
+    <button type="button" id="m-live" aria-pressed="false">Live</button>
+    <button type="button" id="m-video" aria-pressed="false">Video</button>
+    <button type="button" id="m-demo" aria-pressed="true">Demo</button>
+  </nav>
+
+  <!-- LIVE -->
+  <section class="panel" id="p-live" hidden>
+    <h2>Live-Erkennung</h2>
+    <p class="lead">Die Kamera verfolgt jede Wiederholung und meldet Fehler sofort. Overstepping kommt beim Aufrichten, Doppelsprung oder „korrekt“ beim Aufsetzen der Hände für den nächsten Burpee.</p>
+    <ul class="checklist">
+      <li>Handy quer auf ein Stativ, seitlich zur Sprungrichtung, etwa 3–5 m entfernt</li>
+      <li>Ganze Person inklusive Hände und Füße über die ganze Strecke im Bild</li>
+      <li>Gutes Licht, keine weiteren Personen im Bild</li>
+    </ul>
+    <div class="row">
+      <button type="button" class="btn primary" id="live-start">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10l5-3v10l-5-3z"/><rect x="3" y="6" width="12" height="12" rx="2"/></svg>
+        Kamera starten
+      </button>
+      <button type="button" class="btn danger" id="live-stop" hidden>Stoppen</button>
+      <label class="switch" style="grid-column:auto"><input type="checkbox" id="live-voice" checked> Sprachansage</label>
+    </div>
+    <div class="progress" id="live-load" hidden><div class="status" id="live-status">Lade KI-Modell …</div></div>
+    <div class="banner" id="banner" hidden>
+      <div class="num mono" id="b-num">–</div>
+      <div class="verdict" id="b-verdict">Bereit</div>
+      <div class="why" id="b-why">Erster Burpee wird erwartet</div>
+    </div>
+    <div class="stage" id="live-stage" hidden>
+      <video id="cam" playsinline muted autoplay></video>
+      <canvas class="ov" id="cam-ov"></canvas>
+      <span class="tag" id="cam-tag">– fps</span>
+    </div>
+  </section>
+
+  <!-- VIDEO -->
+  <section class="panel" id="p-video" hidden>
+    <h2>Video analysieren</h2>
+    <p class="lead">Video aus der Galerie wählen oder neu aufnehmen. Die Auswertung läuft komplett auf diesem Gerät, das Video wird nirgendwo hochgeladen.</p>
+    <div class="drop" id="drop">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
+      <label class="btn primary" for="file">Video auswählen</label>
+      <input type="file" id="file" accept="video/*" hidden>
+      <small>MP4 oder MOV · Seitenansicht · am besten 60 fps</small>
+    </div>
+    <div class="progress" id="v-prog" hidden>
+      <div class="bar"><i id="v-bar"></i></div>
+      <div class="row" style="justify-content:space-between">
+        <span class="status" id="v-status">Starte …</span>
+        <button type="button" class="btn" id="v-cancel">Abbrechen</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- DEMO -->
+  <section class="panel" id="p-demo">
+    <h2>Demo</h2>
+    <p class="lead">Simulierter Ablauf mit sechs Wiederholungen und bekannten Fehlern. So sieht die Auswertung aus, bevor du ein eigenes Video lädst.</p>
+  </section>
+
+  <details class="settings" id="settings">
+    <summary>Einstellungen</summary>
+    <div class="grid">
+      <div class="field"><label for="s-height">Körpergröße (cm)</label><input id="s-height" type="number" inputmode="decimal" placeholder="z. B. 182"><span class="hint">Für Werte in cm (Schätzung)</span></div>
+      <div class="field"><label for="s-pxcm">Pixel pro cm</label><input id="s-pxcm" type="number" inputmode="decimal" step="0.01" placeholder="leer = aus"><span class="hint">Genauer: aus 1-m-Markierung am Boden</span></div>
+      <div class="field"><label for="s-tol">Overstep-Toleranz (cm)</label><input id="s-tol" type="number" inputmode="decimal" step="0.5" value="0"></div>
+      <div class="field"><label for="s-air">Flug-Schwelle (cm)</label><input id="s-air" type="number" inputmode="decimal" step="0.5" value="4"></div>
+      <div class="field"><label for="s-dir">Sprungrichtung</label><select id="s-dir"><option value="auto">Automatisch</option><option value="rechts">nach rechts</option><option value="links">nach links</option></select></div>
+      <div class="field"><label for="s-model">KI-Modell</label><select id="s-model"><option value="lite">Lite (schnell)</option><option value="full" selected>Full (ausgewogen)</option><option value="heavy">Heavy (genau, langsam)</option></select></div>
+      <div class="field"><label for="s-rate">Analyse-Rate (Video)</label><select id="s-rate"><option value="30" selected>30 Bilder/s</option><option value="60">60 Bilder/s</option></select></div>
+      <label class="switch"><input type="checkbox" id="s-step"> Einzelnen Nachschritt mit einem Fuß als Fehler werten</label>
+    </div>
+  </details>
+
+  <!-- ERGEBNISSE -->
+  <section class="panel" id="results">
+    <div class="row" style="justify-content:space-between">
+      <h2>Auswertung</h2>
+      <span class="example" id="r-source">Beispiel · simulierte Daten</span>
+    </div>
+    <div class="stats">
+      <div class="stat"><b id="st-n">0</b><span>Wdh</span></div>
+      <div class="stat ok"><b id="st-ok">0</b><span>korrekt</span></div>
+      <div class="stat bad"><b id="st-bad">0</b><span>fehlerhaft</span></div>
+      <div class="stat warn"><b id="st-un">0</b><span>unsicher</span></div>
+    </div>
+    <div class="stage" id="player">
+      <video id="pv" playsinline muted hidden></video>
+      <canvas class="bg" id="pbg" hidden></canvas>
+      <canvas class="ov" id="pov"></canvas>
+    </div>
+    <div class="controls">
+      <button type="button" class="iconbtn" id="play" aria-label="Abspielen">
+        <svg id="ic-play" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5v14l12-7z"/></svg>
+        <svg id="ic-pause" viewBox="0 0 24 24" fill="currentColor" hidden><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+      </button>
+      <input type="range" id="seek" min="0" max="1000" value="0" aria-label="Position">
+      <span class="mono status" id="ptime">0,0 s</span>
+    </div>
+    <div class="lane" id="lane" aria-hidden="true"></div>
+    <p class="notes" id="notes"></p>
+    <ul class="reps" id="reps"></ul>
+    <div class="row">
+      <button type="button" class="btn" id="csv">CSV herunterladen</button>
+      <button type="button" class="btn" id="copy">Tabelle kopieren</button>
+      <button type="button" class="btn" id="reeval">Mit Einstellungen neu bewerten</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <h2>Was geprüft wird</h2>
+    <div class="rules">
+      <div class="rule"><h3>Fehler 1 · Doppelsprung</h3><p>Beide Füße heben nach der Landung des Broad Jumps erneut ab, bevor die Hände für den nächsten Burpee aufsetzen.</p></div>
+      <div class="rule"><h3>Fehler 2 · Overstepping</h3><p>Die Zehenspitze steht beim Herausspringen aus dem Burpee vor der Linie der Fingerspitzen.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    <p>Forschungsprototyp für eine Pilotstudie. Die Körperpunkte werden von Google MediaPipe geschätzt und sind typischerweise einige Zentimeter ungenau. Grenzfälle im Zentimeterbereich sind deshalb nicht zuverlässig. Ergebnisse immer mit einer menschlichen Bewertung abgleichen.</p>
+    <p>Version 0.1 · Analyse läuft lokal im Browser.</p>
+  </footer>
+</div>
+
+<script>
+/* BBJ-Analyse – Erkennungskern (Port von bbj_analyse.py, gleiche Logik).
+   Eingabe: frames = Array von Float32Array(99) [x_px, y_px, sichtbarkeit] × 33, NaN = keine Person. */
+(function (root) {
+  "use strict";
+  const NOSE = 0, LSH = 11, RSH = 12, LWR = 15, RWR = 16, LIX = 19, RIX = 20,
+    LHIP = 23, RHIP = 24, LANK = 27, RANK = 28, LHEEL = 29, RHEEL = 30, LTOE = 31, RTOE = 32;
+
+  const DEFAULTS = {
+    pixelProCm: null, koerpergroesseCm: null,
+    overstepToleranzCm: 0, overstepToleranzPx: 0,
+    flugSchwelleCm: 4, flugSchwelleRel: 0.025, minFlugzeitS: 0.05,
+    einzelschrittCm: 8, einzelschrittAlsFehler: false,
+    torsoHorizontalGrad: 60, minBurpeeS: 0.2, haendeBodenRel: 0.07,
+    minSichtbarkeit: 0.5, richtung: "auto", glaettungFrames: 5,
+  };
+
+  const median = (a) => {
+    const s = Float64Array.from(a).sort();
+    const n = s.length; if (!n) return NaN;
+    return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2;
+  };
+  const percentile = (a, p) => {           // wie numpy (linear)
+    const s = Float64Array.from(a).sort(); const n = s.length;
+    if (!n) return NaN; const r = (p / 100) * (n - 1), lo = Math.floor(r), hi = Math.ceil(r);
+    return s[lo] + (s[hi] - s[lo]) * (r - lo);
+  };
+  function runs(mask, minLen = 1) {
+    const out = []; let t = 0; const n = mask.length;
+    while (t < n) {
+      if (mask[t]) { const s = t; while (t < n && mask[t]) t++; if (t - s >= minLen) out.push([s, t - 1]); }
+      else t++;
+    }
+    return out;
+  }
+  function polyfit1(x, y) {
+    const n = x.length; let sx = 0, sy = 0, sxx = 0, sxy = 0;
+    for (let i = 0; i < n; i++) { sx += x[i]; sy += y[i]; sxx += x[i] * x[i]; sxy += x[i] * y[i]; }
+    const a = (n * sxy - sx * sy) / (n * sxx - sx * sx); return [a, (sy - a * sx) / n];
+  }
+  function fitGround(xs, ys) {
+    const x = [], y = [];
+    for (let i = 0; i < xs.length; i++) if (!isNaN(xs[i]) && !isNaN(ys[i])) { x.push(xs[i]); y.push(ys[i]); }
+    if (x.length < 10) return [0, y.length ? Math.max(...y) : 0];
+    const mn = Math.min(...x), mx = Math.max(...x) + 1e-6, bx = [], by = [];
+    for (let k = 0; k < 10; k++) {
+      const a = mn + (mx - mn) * k / 10, b = mn + (mx - mn) * (k + 1) / 10;
+      const sx = [], sy = [];
+      for (let i = 0; i < x.length; i++) if (x[i] >= a && x[i] < b) { sx.push(x[i]); sy.push(y[i]); }
+      if (sx.length >= 5) { bx.push(median(sx)); by.push(percentile(sy, 90)); }
+    }
+    if (bx.length >= 3 && Math.max(...bx) - Math.min(...bx) > 1e-3) {
+      const [a, b] = polyfit1(bx, by); if (Math.abs(a) < 0.15) return [a, b];
+    }
+    return [0, percentile(y, 95)];
+  }
+
+  function prepare(raw, k) {
+    const T = raw.length, lm = raw.map((f) => Float32Array.from(f));
+    for (let j = 0; j < 33; j++) {
+      for (let c = 0; c < 2; c++) {
+        const idx = [], val = [];
+        for (let t = 0; t < T; t++) { const v = raw[t][j * 3 + c]; if (!isNaN(v)) { idx.push(t); val.push(v); } }
+        if (!idx.length) continue;
+        let p = 0;
+        for (let t = 0; t < T; t++) {
+          let v;
+          if (t <= idx[0]) v = val[0];
+          else if (t >= idx[idx.length - 1]) v = val[val.length - 1];
+          else { while (idx[p + 1] < t) p++; const r = (t - idx[p]) / (idx[p + 1] - idx[p]); v = val[p] + r * (val[p + 1] - val[p]); }
+          lm[t][j * 3 + c] = v;
+        }
+      }
+      for (let t = 0; t < T; t++) if (isNaN(lm[t][j * 3 + 2])) lm[t][j * 3 + 2] = 0;
+    }
+    // Medianfilter über die Zeit
+    k = k % 2 ? k : k + 1; const h = k >> 1;
+    if (k > 1) {
+      const out = lm.map((f) => Float32Array.from(f)), buf = new Float64Array(k);
+      for (let j = 0; j < 33; j++) for (let c = 0; c < 2; c++) {
+        const o = j * 3 + c;
+        for (let t = 0; t < T; t++) {
+          for (let q = -h; q <= h; q++) buf[q + h] = lm[Math.min(T - 1, Math.max(0, t + q))][o];
+          buf.sort();
+          out[t][o] = buf[h];
+        }
+      }
+      return out;
+    }
+    return lm;
+  }
+
+  function analyse(raw, fps, userCfg) {
+    const cfg = Object.assign({}, DEFAULTS, userCfg || {});
+    const T = raw.length, hinweise = [];
+    if (!T) return { reps: [], meta: { hinweise: ["Keine Bilder."] }, series: null };
+    const valid = raw.map((f) => !isNaN(f[LHIP * 3]));
+    const validFrac = valid.filter(Boolean).length / T;
+    if (validFrac < 0.5) hinweise.push(`Person nur in ${Math.round(validFrac * 100)} % der Bilder erkannt – Ergebnisse unzuverlässig.`);
+    const lm = prepare(raw, cfg.glaettungFrames);
+    const X = (t, j) => lm[t][j * 3], Y = (t, j) => lm[t][j * 3 + 1];
+    const sec = (s) => Math.max(1, Math.round(s * fps));
+    const range = (n) => Array.from({ length: n }, (_, i) => i);
+    const ts = range(T);
+
+    // Richtung
+    const hipX = ts.map((t) => (X(t, LHIP) + X(t, RHIP)) / 2);
+    let d;
+    if (cfg.richtung === "rechts") d = 1; else if (cfg.richtung === "links") d = -1;
+    else {
+      const n10 = Math.max(1, Math.floor(T / 10));
+      const diff = median(hipX.slice(T - n10)) - median(hipX.slice(0, n10));
+      d = diff >= 0 ? 1 : -1;
+      let mnx = Infinity, mxx = -Infinity;
+      for (const f of lm) for (let j = 0; j < 33; j++) { const v = f[j * 3]; if (v < mnx) mnx = v; if (v > mxx) mxx = v; }
+      if (Math.abs(diff) < 0.05 * (mxx - mnx + 1e-6)) hinweise.push("Bewegungsrichtung kaum erkennbar – ggf. Richtung in den Einstellungen festlegen.");
+    }
+
+    // Rumpfwinkel
+    const shY = ts.map((t) => (Y(t, LSH) + Y(t, RSH)) / 2);
+    const torso = ts.map((t) => {
+      const vx = (X(t, LSH) + X(t, RSH)) / 2 - hipX[t], vy = shY[t] - (Y(t, LHIP) + Y(t, RHIP)) / 2;
+      return Math.atan2(Math.abs(vx), -vy) * 180 / Math.PI;
+    });
+    const torsoLen = ts.map((t) => {
+      const vx = (X(t, LSH) + X(t, RSH)) / 2 - hipX[t], vy = shY[t] - (Y(t, LHIP) + Y(t, RHIP)) / 2;
+      return Math.hypot(vx, vy);
+    });
+
+    // Bodenlinie
+    const feet = [LHEEL, RHEEL, LTOE, RTOE], lowX = [], lowY = [];
+    for (let t = 0; t < T; t++) {
+      let bj = feet[0];
+      for (const j of feet) if (Y(t, j) > Y(t, bj)) bj = j;
+      lowX.push(X(t, bj)); lowY.push(Y(t, bj));
+    }
+    const [ga, gb] = fitGround(lowX, lowY);
+    const ground = (x) => ga * x + gb;
+
+    // Körperhöhe & Maßstab
+    const noseH = [];
+    for (let t = 0; t < T; t++) if (torso[t] < 20) noseH.push(ground(X(t, NOSE)) - Y(t, NOSE));
+    let bodyPx;
+    if (noseH.length >= 5) bodyPx = median(noseH) / 0.93;
+    else { bodyPx = median(torsoLen) * 3.3; hinweise.push("Keine aufrechte Phase gefunden – Körperhöhe geschätzt."); }
+    bodyPx = Math.max(bodyPx, 50);
+
+    let pxCm = null, einheit = "px";
+    if (cfg.pixelProCm) { pxCm = +cfg.pixelProCm; einheit = "cm"; }
+    else if (cfg.koerpergroesseCm) { pxCm = bodyPx / cfg.koerpergroesseCm; einheit = "cm (geschätzt)"; }
+    const toPx = pxCm ? (cm) => cm * pxCm : null;
+    const flugThr = toPx ? toPx(cfg.flugSchwelleCm) : cfg.flugSchwelleRel * bodyPx;
+    const overTol = toPx ? toPx(cfg.overstepToleranzCm) : cfg.overstepToleranzPx;
+    const stepThr = toPx ? toPx(cfg.einzelschrittCm) : 0.05 * bodyPx;
+    const handThr = cfg.haendeBodenRel * bodyPx;
+    const conv = pxCm ? (px) => px / pxCm : (px) => px;
+
+    // Hände am Boden
+    const handsDown = ts.map((t) => Math.min(ground(X(t, LWR)) - Y(t, LWR), ground(X(t, RWR)) - Y(t, RWR)) < handThr);
+    const hdRuns = runs(handsDown, sec(0.08));
+
+    // Füße in der Luft
+    const footClear = (t, heel, toe) => {
+      const hy = Y(t, heel), ty = Y(t, toe);
+      return hy >= ty ? ground(X(t, heel)) - hy : ground(X(t, toe)) - ty;
+    };
+    const clear = ts.map((t) => Math.min(footClear(t, LHEEL, LTOE), footClear(t, RHEEL, RTOE)));
+    const airborne = clear.map((c) => c > flugThr);
+    const minAir = Math.max(2, sec(cfg.minFlugzeitS));
+    const feetMid = ts.map((t) => d * (X(t, LANK) + X(t, RANK)) / 2);
+    const toeFront = ts.map((t) => Math.max(d * X(t, LTOE), d * X(t, RTOE)));
+    const fingerFront = ts.map((t) => Math.max(d * X(t, LIX), d * X(t, RIX)));
+
+    // Burpee-Tiefpunkte
+    const horiz = runs(torso.map((a) => a > cfg.torsoHorizontalGrad), sec(cfg.minBurpeeS));
+    const merged = [];
+    for (const [s, e] of horiz) {
+      if (merged.length && s - merged[merged.length - 1][1] <= sec(0.3)) merged[merged.length - 1][1] = e;
+      else merged.push([s, e]);
+    }
+    const bottoms = merged.map(([s, e]) => { let b = s; for (let t = s; t <= e; t++) if (shY[t] > shY[b]) b = t; return b; });
+    if (!bottoms.length) hinweise.push("Kein Burpee erkannt (Kamera seitlich? ganze Person im Bild?).");
+
+    const regions = bottoms.map((b, i) => {
+      for (const [s, e] of hdRuns) if (s - sec(0.1) <= b && b <= e + sec(0.1)) return [s, e];
+      return merged[i];
+    });
+
+    const keyPts = [LIX, RIX, LTOE, RTOE, LHEEL, RHEEL, LWR, RWR];
+    const reps = bottoms.map((b, k) => {
+      const [hs, he] = regions[k], notes = [];
+      const fsEnd = Math.max(hs, he - Math.max(1, Math.floor(0.15 * (he - hs))));
+      const finger = median(fingerFront.slice(hs, fsEnd + 1));
+
+      const w2s = b, w2e = Math.min(T - 1, he + sec(0.1));
+      let overMax = -Infinity, overFrame = w2s;
+      for (let t = w2s; t <= w2e; t++) { const o = toeFront[t] - finger; if (o > overMax) { overMax = o; overFrame = t; } }
+      const f2 = overMax > overTol;
+
+      const nxt = k + 1 < regions.length ? regions[k + 1][0] : T;
+      const w1s = he, w1e = Math.max(he, nxt - 1);
+      // Bodenhöhe lokal nachjustieren: Füße stehen den Großteil des Fensters am Boden
+      const base = w1e - w1s >= 5 ? percentile(clear.slice(w1s, w1e + 1), 25) : 0;
+      const airLocal = clear.slice(w1s, w1e + 1).map((c) => c - base > flugThr);
+      for (let t = w1s; t <= w1e; t++) airborne[t] = airLocal[t - w1s];
+      const airRuns = runs(airLocal, minAir).map(([s, e]) => [w1s + s, w1s + e]);
+      const disp = airRuns.map(([s, e]) => feetMid[Math.min(T - 1, e + 2)] - feetMid[Math.max(0, s - 2)]);
+      let sprung = false, weite = null, zusatz = [], landing = null;
+      if (airRuns.length && Math.max(...disp) > 0.1 * bodyPx) {
+        const j = disp.indexOf(Math.max(...disp));
+        sprung = true; weite = conv(disp[j]); zusatz = airRuns.slice(j + 1); landing = airRuns[j][1];
+      } else notes.push("Broad Jump nicht eindeutig erkannt");
+      let f1 = zusatz.length > 0;
+
+      let einzel = false;
+      if (landing !== null) {
+        const a = landing + sec(0.15), e = w1e;
+        if (e - a > 2) for (const toe of [LTOE, RTOE]) {
+          let mn = Infinity, mx = -Infinity;
+          for (let t = a; t <= e; t++) { const v = d * X(t, toe); if (v < mn) mn = v; if (v > mx) mx = v; }
+          if (mx - mn > stepThr) einzel = true;
+        }
+        if (einzel && !f1) notes.push("möglicher Nachschritt mit einem Fuß");
+      }
+      if (cfg.einzelschrittAlsFehler && einzel) f1 = true;
+
+      let vs = 0, vn = 0, vf = 0;
+      for (let t = b; t <= w1e; t++) {
+        if (valid[t]) vf++;
+        for (const j of keyPts) { const v = raw[t][j * 3 + 2]; if (!isNaN(v)) { vs += v; vn++; } }
+      }
+      const vis = vn ? vs / vn : 0, validW = (w1e >= b) ? vf / (w1e - b + 1) : 0;
+      let unsicher = vis < cfg.minSichtbarkeit || !sprung;
+      if (vis < cfg.minSichtbarkeit) notes.push(`geringe Sichtbarkeit der Hände/Füße (${vis.toFixed(2)})`);
+      if (validW < 0.8) { unsicher = true; notes.push(`Person nur in ${Math.round(validW * 100)} % der Bilder erkannt`); }
+
+      const r1 = (v) => Math.round(v * 10) / 10;
+      return {
+        wdh: k + 1, frameTiefpunkt: b, zeitS: Math.round(b / fps * 100) / 100,
+        kiLabel: f1 || f2 ? "fehlerhaft" : "korrekt",
+        fehler1Doppelsprung: f1, anzahlZusatzspruenge: zusatz.length,
+        fehler2Overstep: f2, overstepWert: r1(conv(overMax)), einheit,
+        sprungErkannt: sprung, sprungweite: weite === null ? null : r1(weite),
+        einzelschrittHinweis: einzel, sichtbarkeit: Math.round(vis * 100) / 100,
+        unsicher, hinweise: notes.join("; "),
+        _fenster2: [w2s, w2e], _fingerX: d * finger, _ende: w1e, _zusatz: zusatz, _overFrame: overFrame,
+      };
+    });
+
+    return {
+      reps,
+      meta: {
+        frames: T, fps, richtung: d > 0 ? "rechts" : "links", koerperhoehePx: r(bodyPx),
+        pixelProCm: pxCm, einheit, boden: [ga, gb], hinweise,
+      },
+      series: { lm, ground: [ga, gb], airborne },
+    };
+    function r(v) { return Math.round(v * 10) / 10; }
+  }
+
+  // Synthetische Demo-Daten (Seitenansicht, 6 Wiederholungen, bekannte Fehler)
+  function synth() {
+    const S = 4, G = 950, FPS = 30;
+    let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    const gauss = () => Math.sqrt(-2 * Math.log(rnd() + 1e-12)) * Math.cos(2 * Math.PI * rnd());
+    const IDX = { nose: [0], sh: [11, 12], wr: [15, 16], ix: [19, 20], hip: [23, 24], ank: [27, 28], heel: [29, 30], toe: [31, 32] };
+    const P = (o) => o;
+    const stand = (x, l = 0) => P({ nose: [x + 5, 163 + l], sh: [x, 145 + l], wr: [x, 85 + l], ix: [x + 2, 78 + l], hip: [x, 95 + l], ank: [x, 8 + l], heel: [x - 5, l], toe: [x + 20, l] });
+    const crouch = (x, l = 0) => P({ nose: [x + 35, 120 + l], sh: [x + 20, 105 + l], wr: [x - 15, 60 + l], ix: [x - 12, 52 + l], hip: [x - 10, 60 + l], ank: [x, 8 + l], heel: [x - 5, l], toe: [x + 20, l] });
+    const hdown = (x, hx) => P({ nose: [hx + 10, 75], sh: [hx - 5, 60], wr: [hx, 4], ix: [hx + 10, 0], hip: [x - 10, 60], ank: [x, 8], heel: [x - 5, 0], toe: [x + 20, 0] });
+    const plank = (hx, lf = 0, fx = null) => { fx = fx === null ? hx - 150 : fx; return P({ nose: [hx + 12, 8], sh: [hx - 5, 6], wr: [hx, 4], ix: [hx + 10, 0], hip: [hx - 70, 14 + lf * 0.6], ank: [fx, 8 + lf], heel: [fx - 5, 2 + lf], toe: [fx + 15, lf] }); };
+    const feetIn = (hx, tx) => { const ax = tx - 20; return P({ nose: [hx + 15, 70], sh: [hx - 3, 55], wr: [hx, 4], ix: [hx + 10, 0], hip: [ax - 10, 50], ank: [ax, 8], heel: [ax - 5, 0], toe: [tx, 0] }); };
+    function rep(x, over, hops) {
+      const hx = x + 35, tl = hx + 10 + over;
+      const kf = [[0, stand(x)], [0.35, hdown(x, hx)], [0.6, plank(hx)], [0.95, plank(hx)],
+        [1.05, plank(hx, 25, (hx - 150 + tl - 15) / 2)], [1.2, feetIn(hx, tl)], [1.35, feetIn(hx, tl)]];
+      const ax = tl - 20;
+      kf.push([1.75, stand(ax)], [1.95, crouch(ax)], [2.05, crouch(ax + 10, 5)], [2.25, stand(ax + 60, 30)], [2.45, crouch(ax + 120)], [2.75, stand(ax + 120)]);
+      let t = 2.75, x2 = ax + 120;
+      for (let i = 0; i < hops; i++) { kf.push([t + 0.15, crouch(x2)], [t + 0.3, stand(x2 + 8, 12)], [t + 0.45, crouch(x2 + 15)], [t + 0.7, stand(x2 + 15)]); t += 0.7; x2 += 15; }
+      kf.push([t + 0.3, stand(x2)]);
+      return [kf, x2, t + 0.3];
+    }
+    const seq = [[-5, 0], [10, 0], [-5, 1], [3, 0], [-3, 2], [-8, 0]];
+    const all = [[0, stand(40)]]; let x = 40, t0 = 0.5;
+    for (const [o, h] of seq) { const [kf, nx, dur] = rep(x, o, h); for (const [t, p] of kf) all.push([t0 + t, p]); x = nx; t0 += dur; }
+    all.push([t0 + 0.5, stand(x)]);
+    const T = Math.floor(all[all.length - 1][0] * FPS), frames = [], times = all.map((a) => a[0]);
+    for (let f = 0; f < T; f++) {
+      const t = f / FPS; let i = 0; while (i < times.length - 2 && times[i + 1] <= t) i++;
+      const a = Math.min(1, Math.max(0, (t - times[i]) / (times[i + 1] - times[i])));
+      const A = all[i][1], B = all[i + 1][1], fr = new Float32Array(99).fill(NaN);
+      for (const k in IDX) IDX[k].forEach((j, s) => {
+        const px = (1 - a) * A[k][0] + a * B[k][0], py = (1 - a) * A[k][1] + a * B[k][1];
+        fr[j * 3] = px * S + s * 1.8 + gauss() * 1.5; fr[j * 3 + 1] = G - py * S + gauss() * 1.5; fr[j * 3 + 2] = 0.95;
+      });
+      for (let j = 0; j < 33; j++) if (isNaN(fr[j * 3])) { fr[j * 3] = fr[0]; fr[j * 3 + 1] = fr[1]; fr[j * 3 + 2] = 0.95; }
+      frames.push(fr);
+    }
+    return { frames, fps: FPS, width: 2400, height: 1000, pixelProCm: S, erwartet: ["korrekt", "Overstep", "Doppelsprung", "Overstep", "Doppelsprung", "korrekt"] };
+  }
+
+  root.BBJ = { analyse, synth, DEFAULTS };
+  if (typeof module !== "undefined") module.exports = root.BBJ;
+})(typeof window !== "undefined" ? window : globalThis);
+
+</script>
+<script>
+(function () {
+  "use strict";
+  const $ = (id) => document.getElementById(id);
+  const MP_VERSIONS = ["0.10.14", "0.10.18", "0.10.21"];
+  const MODEL_URL = (v) => `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_${v}/float16/latest/pose_landmarker_${v}.task`;
+  const SKEL = [[11,12],[11,13],[13,15],[12,14],[14,16],[15,19],[16,20],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],[27,29],[29,31],[27,31],[28,30],[30,32],[28,32]];
+  const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+  const state = { source: "demo", frames: [], fps: 30, w: 0, h: 0, result: null, videoURL: null, file: null, playing: false, demoT: 0 };
+
+  // ---------- Einstellungen ----------
+  const LS = "bbj-settings";
+  const fields = ["s-height", "s-pxcm", "s-tol", "s-air", "s-dir", "s-model", "s-rate", "s-step"];
+  try {
+    const saved = JSON.parse(localStorage.getItem(LS) || "{}");
+    for (const id of fields) if (id in saved) { const el = $(id); if (el.type === "checkbox") el.checked = saved[id]; else el.value = saved[id]; }
+  } catch (e) {}
+  for (const id of fields) $(id).addEventListener("change", () => {
+    try { const o = {}; for (const f of fields) { const el = $(f); o[f] = el.type === "checkbox" ? el.checked : el.value; } localStorage.setItem(LS, JSON.stringify(o)); } catch (e) {}
+  });
+  const num = (id) => { const v = parseFloat($(id).value.replace(",", ".")); return isFinite(v) && v > 0 ? v : null; };
+  function cfg(extra) {
+    return Object.assign({
+      pixelProCm: num("s-pxcm"), koerpergroesseCm: num("s-height"),
+      overstepToleranzCm: parseFloat($("s-tol").value) || 0, flugSchwelleCm: parseFloat($("s-air").value) || 4,
+      richtung: $("s-dir").value, einzelschrittAlsFehler: $("s-step").checked,
+    }, extra || {});
+  }
+
+  // ---------- MediaPipe ----------
+  let visionMod = null, landmarker = null, lmKey = "";
+  async function loadVision() {
+    if (visionMod) return visionMod;
+    let lastErr;
+    for (const v of MP_VERSIONS) {
+      try {
+        const mod = await import(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${v}/vision_bundle.mjs`);
+        const files = await mod.FilesetResolver.forVisionTasks(`https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@${v}/wasm`);
+        visionMod = { mod, files }; return visionMod;
+      } catch (e) { lastErr = e; }
+    }
+    throw new Error("KI-Bibliothek konnte nicht geladen werden. Internetverbindung prüfen. (" + (lastErr && lastErr.message) + ")");
+  }
+  async function getLandmarker() {
+    const variant = $("s-model").value;
+    if (landmarker && lmKey === variant) return landmarker;
+    const { mod, files } = await loadVision();
+    if (landmarker) { try { landmarker.close(); } catch (e) {} }
+    const opts = (delegate) => ({ baseOptions: { modelAssetPath: MODEL_URL(variant), delegate }, runningMode: "VIDEO", numPoses: 1,
+      minPoseDetectionConfidence: 0.5, minPosePresenceConfidence: 0.5, minTrackingConfidence: 0.5 });
+    try { landmarker = await mod.PoseLandmarker.createFromOptions(files, opts("GPU")); }
+    catch (e) { landmarker = await mod.PoseLandmarker.createFromOptions(files, opts("CPU")); }
+    lmKey = variant; return landmarker;
+  }
+  function toFrame(res, w, h) {
+    const f = new Float32Array(99).fill(NaN);
+    if (res && res.landmarks && res.landmarks.length) {
+      res.landmarks[0].forEach((p, j) => { f[j * 3] = p.x * w; f[j * 3 + 1] = p.y * h; f[j * 3 + 2] = p.visibility == null ? 1 : p.visibility; });
+    }
+    return f;
+  }
+
+  // ---------- Zeichnen ----------
+  function drawPose(ctx, f, opt) {
+    if (!f || isNaN(f[23 * 3])) return;
+    const lw = Math.max(2, ctx.canvas.width / 400);
+    ctx.lineCap = "round"; ctx.lineWidth = lw; ctx.strokeStyle = opt && opt.color || "rgba(255,255,255,0.92)";
+    ctx.beginPath();
+    for (const [a, b] of SKEL) { ctx.moveTo(f[a * 3], f[a * 3 + 1]); ctx.lineTo(f[b * 3], f[b * 3 + 1]); }
+    ctx.stroke();
+    ctx.fillStyle = "rgba(255,255,255,0.95)";
+    for (const j of [0, 15, 16, 19, 20, 23, 24, 27, 28]) { ctx.beginPath(); ctx.arc(f[j * 3], f[j * 3 + 1], lw * 1.4, 0, 7); ctx.fill(); }
+  }
+  function drawOverlay(ctx, t, result) {
+    const W = ctx.canvas.width, H = ctx.canvas.height, s = result.series;
+    if (!s) return;
+    const f = s.lm[Math.max(0, Math.min(s.lm.length - 1, t))];
+    const [ga, gb] = s.ground, lw = Math.max(2, W / 400);
+    ctx.strokeStyle = "rgba(255,255,255,0.28)"; ctx.lineWidth = 1; ctx.setLineDash([8, 8]);
+    ctx.beginPath(); ctx.moveTo(0, gb); ctx.lineTo(W, ga * W + gb); ctx.stroke(); ctx.setLineDash([]);
+    drawPose(ctx, f);
+    const rep = repAt(result.reps, t);
+    if (rep) {
+      const [a, b] = rep._fenster2;
+      if (t >= a && t <= b) {
+        const col = rep.fehler2Overstep ? css("--bad") : "#3FB7FF";
+        ctx.strokeStyle = col; ctx.lineWidth = lw * 1.5; ctx.beginPath(); ctx.moveTo(rep._fingerX, 0); ctx.lineTo(rep._fingerX, H); ctx.stroke();
+        ctx.fillStyle = col; for (const j of [31, 32]) { ctx.beginPath(); ctx.arc(f[j * 3], f[j * 3 + 1], lw * 3, 0, 7); ctx.fill(); }
+      }
+      for (const [zs, ze] of rep._zusatz) if (t >= zs && t <= ze + 10) {
+        ctx.fillStyle = css("--bad"); ctx.font = `800 ${Math.round(H / 16)}px ${css("--f-display")}`;
+        ctx.fillText("ZUSATZSPRUNG", W * 0.03, H * 0.93);
+      }
+      const done = t >= rep._ende - 1 || (t >= b && rep.fehler2Overstep);
+      const txt = done ? `WDH ${rep.wdh} · ${rep.kiLabel === "korrekt" ? "KORREKT" : reasons(rep).toUpperCase()}` : `WDH ${rep.wdh} · WIRD GEPRÜFT`;
+      const col = done ? (rep.kiLabel === "korrekt" ? css("--ok") : css("--bad")) : "#FFC24A";
+      const fs = Math.round(H / 18);
+      ctx.font = `800 ${fs}px ${css("--f-display")}`;
+      const tw = ctx.measureText(txt).width;
+      ctx.fillStyle = "rgba(0,0,0,0.62)"; ctx.fillRect(W * 0.02, H * 0.03, tw + fs, fs * 1.5);
+      ctx.fillStyle = col; ctx.fillText(txt, W * 0.02 + fs / 2, H * 0.03 + fs * 1.1);
+    }
+  }
+  const repAt = (reps, t) => { let cur = null; for (const r of reps) if (t >= r.frameTiefpunkt - 15) cur = r; return cur; };
+  function reasons(r) {
+    const p = [];
+    if (r.fehler1Doppelsprung) p.push(r.anzahlZusatzspruenge > 1 ? `${r.anzahlZusatzspruenge}× Zusatzsprung` : "Doppelsprung");
+    if (r.fehler2Overstep) p.push(`Overstep ${fmt(r.overstepWert, true)} ${unit(r)}`);
+    return p.join(" + ");
+  }
+  const unit = (r) => r.einheit.startsWith("cm") ? "cm" : "px";
+  const fmt = (v, sign) => (v == null ? "–" : (sign && v > 0 ? "+" : "") + v.toLocaleString("de-DE", { maximumFractionDigits: 1, minimumFractionDigits: 1 }));
+
+  // ---------- Ergebnisse ----------
+  function evaluate() {
+    if (!state.frames.length) return;
+    state.result = BBJ.analyse(state.frames, state.fps, cfg(state.source === "demo" ? { pixelProCm: 4, koerpergroesseCm: null } : null));
+    renderResults();
+  }
+  function renderResults() {
+    const r = state.result, reps = r.reps;
+    $("st-n").textContent = reps.length;
+    $("st-ok").textContent = reps.filter((x) => x.kiLabel === "korrekt").length;
+    $("st-bad").textContent = reps.filter((x) => x.kiLabel !== "korrekt").length;
+    $("st-un").textContent = reps.filter((x) => x.unsicher).length;
+    $("r-source").textContent = state.source === "demo" ? "Beispiel · simulierte Daten" : state.source === "live" ? "Live-Aufnahme" : (state.file ? state.file.name : "Video");
+    $("notes").textContent = r.meta.hinweise.join(" ");
+    const ul = $("reps"); ul.innerHTML = "";
+    if (!reps.length) {
+      const li = document.createElement("li"); li.className = "status"; li.textContent = "Keine Wiederholung erkannt. Prüfe Kameraposition und ob die ganze Person im Bild ist."; ul.append(li);
+    }
+    for (const x of reps) {
+      const li = document.createElement("li");
+      const b = document.createElement("button"); b.type = "button"; b.className = "rep";
+      const pill = x.kiLabel === "korrekt" ? '<span class="pill ok">korrekt</span>' : '<span class="pill bad">fehlerhaft</span>';
+      const t = x.kiLabel === "korrekt" ? "Saubere Ausführung" : reasons(x);
+      b.innerHTML = `<span class="n">${x.wdh}</span><span class="t"></span>${pill}<span class="d"></span>`;
+      b.querySelector(".t").textContent = t;
+      const d = [`bei ${fmt(x.zeitS)} s`, `Zehe zu Fingerspitze ${fmt(x.overstepWert, true)} ${unit(x)}`];
+      if (x.sprungweite != null) d.push(`Sprung ${fmt(x.sprungweite)} ${unit(x)}`);
+      if (x.unsicher) d.push("unsicher");
+      if (x.hinweise) d.push(x.hinweise);
+      b.querySelector(".d").innerHTML = d.map((s) => `<span>${s.replace(/[<>&]/g, "")}</span>`).join("");
+      b.addEventListener("click", () => { seekFrame(Math.max(0, x.frameTiefpunkt - 15)); $("player").scrollIntoView({ behavior: "smooth", block: "center" }); });
+      li.append(b); ul.append(li);
+    }
+    const lane = $("lane"); lane.innerHTML = "";
+    const T = state.frames.length || 1;
+    for (const x of reps) { const i = document.createElement("i"); i.className = x.kiLabel === "korrekt" ? "k" : "f"; i.style.left = (x.frameTiefpunkt / T * 100) + "%"; lane.append(i); }
+    const cur = document.createElement("b"); cur.id = "lane-cur"; lane.append(cur);
+    setupPlayer();
+  }
+
+  // ---------- Player ----------
+  const pv = $("pv"), pbg = $("pbg"), pov = $("pov");
+  function setupPlayer() {
+    stopPlay();
+    if (state.source === "video" && state.videoURL) {
+      pv.hidden = false; pbg.hidden = true;
+      if (pv.src !== state.videoURL) pv.src = state.videoURL;
+      pov.width = state.w; pov.height = state.h;
+    } else {
+      pv.hidden = true; pbg.hidden = false;
+      pbg.width = pov.width = state.w; pbg.height = pov.height = state.h;
+    }
+    state.demoT = 0; paint();
+  }
+  const curFrame = () => state.source === "video" && !pv.hidden ? Math.round(pv.currentTime * state.fps) : Math.floor(state.demoT);
+  function seekFrame(f) {
+    if (!pv.hidden) pv.currentTime = f / state.fps; else state.demoT = f;
+    paint();
+  }
+  function paint() {
+    if (!state.result) return;
+    const T = state.frames.length, f = Math.min(T - 1, Math.max(0, curFrame()));
+    if (pv.hidden) {
+      const c = pbg.getContext("2d");
+      c.fillStyle = css("--stage"); c.fillRect(0, 0, pbg.width, pbg.height);
+      c.strokeStyle = css("--stage-line"); c.lineWidth = 1;
+      for (let x = 0; x < pbg.width; x += 100) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, pbg.height); c.stroke(); }
+    }
+    const o = pov.getContext("2d"); o.clearRect(0, 0, pov.width, pov.height);
+    drawOverlay(o, f, state.result);
+    $("seek").value = Math.round(f / Math.max(1, T - 1) * 1000);
+    $("ptime").textContent = fmt(f / state.fps) + " s";
+    const cur = $("lane-cur"); if (cur) cur.style.left = (f / Math.max(1, T - 1) * 100) + "%";
+  }
+  let raf = 0, lastTs = 0;
+  function loop(ts) {
+    if (!state.playing) return;
+    if (pv.hidden) {
+      const dt = lastTs ? (ts - lastTs) / 1000 : 0; lastTs = ts;
+      state.demoT += dt * state.fps;
+      if (state.demoT >= state.frames.length - 1) { state.demoT = state.frames.length - 1; stopPlay(); }
+    } else if (pv.ended) stopPlay();
+    paint(); raf = requestAnimationFrame(loop);
+  }
+  function startPlay() {
+    if (!state.result) return;
+    if (pv.hidden && state.demoT >= state.frames.length - 1) state.demoT = 0;
+    state.playing = true; lastTs = 0; $("ic-play").hidden = true; $("ic-pause").hidden = false; $("play").setAttribute("aria-label", "Pause");
+    if (!pv.hidden) pv.play().catch(() => {});
+    raf = requestAnimationFrame(loop);
+  }
+  function stopPlay() {
+    state.playing = false; cancelAnimationFrame(raf); $("ic-play").hidden = false; $("ic-pause").hidden = true; $("play").setAttribute("aria-label", "Abspielen");
+    if (!pv.hidden) pv.pause();
+  }
+  $("play").addEventListener("click", () => (state.playing ? stopPlay() : startPlay()));
+  $("seek").addEventListener("input", (e) => { seekFrame(Math.round(e.target.value / 1000 * (state.frames.length - 1))); });
+  $("lane").addEventListener("click", (e) => { const r = e.currentTarget.getBoundingClientRect(); seekFrame(Math.round((e.clientX - r.left) / r.width * (state.frames.length - 1))); });
+  pv.addEventListener("seeked", paint);
+
+  // ---------- Export ----------
+  const COLS = [["wdh", "wdh"], ["zeit_s", "zeitS"], ["ki_label", "kiLabel"], ["fehler1_doppelsprung", "fehler1Doppelsprung"], ["anzahl_zusatzspruenge", "anzahlZusatzspruenge"],
+    ["fehler2_overstep", "fehler2Overstep"], ["overstep_wert", "overstepWert"], ["einheit", "einheit"], ["sprung_erkannt", "sprungErkannt"], ["sprungweite", "sprungweite"],
+    ["einzelschritt_hinweis", "einzelschrittHinweis"], ["sichtbarkeit", "sichtbarkeit"], ["unsicher", "unsicher"], ["hinweise", "hinweise"]];
+  function table(sep) {
+    const name = state.source === "demo" ? "demo" : state.file ? state.file.name : "live";
+    const val = (v) => v === true ? "ja" : v === false ? "nein" : v == null ? "" : String(v).replace(/[;\t\n]/g, " ");
+    const lines = [["video", ...COLS.map((c) => c[0])].join(sep)];
+    for (const r of state.result.reps) lines.push([name, ...COLS.map((c) => val(r[c[1]]))].join(sep));
+    return lines.join("\n");
+  }
+  $("csv").addEventListener("click", () => {
+    const blob = new Blob(["﻿" + table(";")], { type: "text/csv;charset=utf-8" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
+    a.download = (state.file ? state.file.name.replace(/\.[^.]+$/, "") : "bbj_" + state.source) + "_ergebnis.csv";
+    document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  });
+  $("copy").addEventListener("click", async (e) => {
+    const b = e.currentTarget, txt = table("\t");
+    try { await navigator.clipboard.writeText(txt); b.textContent = "Kopiert"; }
+    catch (err) { b.textContent = "Kopieren nicht möglich"; }
+    setTimeout(() => (b.textContent = "Tabelle kopieren"), 1800);
+  });
+  $("reeval").addEventListener("click", evaluate);
+
+  // ---------- Modi ----------
+  function setMode(m) {
+    for (const k of ["live", "video", "demo"]) { $("m-" + k).setAttribute("aria-pressed", k === m); $("p-" + k).hidden = k !== m; }
+    if (m !== "live" && liveOn) stopLive();
+    if (m === "demo") loadDemo();
+  }
+  $("m-live").addEventListener("click", () => setMode("live"));
+  $("m-video").addEventListener("click", () => setMode("video"));
+  $("m-demo").addEventListener("click", () => setMode("demo"));
+
+  function loadDemo() {
+    const s = BBJ.synth();
+    Object.assign(state, { source: "demo", frames: s.frames, fps: s.fps, w: s.width, h: s.height, file: null });
+    evaluate();
+  }
+
+  // ---------- Video-Analyse ----------
+  let cancelled = false, wake = null;
+  async function keepAwake() { try { wake = await navigator.wakeLock.request("screen"); } catch (e) { wake = null; } }
+  function releaseAwake() { try { wake && wake.release(); } catch (e) {} wake = null; }
+  const drop = $("drop");
+  ["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); }));
+  ["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
+  drop.addEventListener("drop", (e) => { const f = e.dataTransfer.files[0]; if (f) analyseFile(f); });
+  $("file").addEventListener("change", (e) => { const f = e.target.files[0]; if (f) analyseFile(f); e.target.value = ""; });
+  $("v-cancel").addEventListener("click", () => { cancelled = true; });
+
+  function waitEvent(el, ev, ms) {
+    return new Promise((res, rej) => {
+      const t = setTimeout(() => { el.removeEventListener(ev, h); rej(new Error("Zeitüberschreitung beim Lesen des Videos")); }, ms);
+      const h = () => { clearTimeout(t); el.removeEventListener(ev, h); res(); };
+      el.addEventListener(ev, h);
+    });
+  }
+  async function analyseFile(file) {
+    cancelled = false;
+    $("v-prog").hidden = false; $("v-bar").style.width = "0%"; $("v-status").textContent = "Lade KI-Modell …";
+    const status = (t) => ($("v-status").textContent = t);
+    try {
+      await keepAwake();
+      const lmk = await getLandmarker();
+      const url = URL.createObjectURL(file);
+      const v = document.createElement("video");
+      v.muted = true; v.playsInline = true; v.preload = "auto"; v.src = url;
+      await waitEvent(v, "loadeddata", 20000);
+      const rate = parseInt($("s-rate").value, 10), dur = v.duration, n = Math.floor(dur * rate);
+      if (!isFinite(dur) || n < 5) throw new Error("Video ist zu kurz oder kann nicht gelesen werden.");
+      const W = v.videoWidth, H = v.videoHeight, frames = [];
+      const t0 = performance.now();
+      for (let i = 0; i < n; i++) {
+        if (cancelled) throw new Error("abgebrochen");
+        v.currentTime = Math.min(dur - 0.001, i / rate);
+        await waitEvent(v, "seeked", 8000);
+        frames.push(toFrame(lmk.detectForVideo(v, Math.round(i * 1000 / rate) + 1), W, H));
+        if (i % 5 === 0) {
+          const pct = (i + 1) / n, el = (performance.now() - t0) / 1000, rest = el / pct - el;
+          $("v-bar").style.width = (pct * 100).toFixed(1) + "%";
+          status(`Pose-Erkennung ${i + 1} / ${n} Bilder · noch ca. ${Math.max(1, Math.round(rest))} s`);
+        }
+      }
+      if (state.videoURL && state.source === "video") URL.revokeObjectURL(state.videoURL);
+      Object.assign(state, { source: "video", frames, fps: rate, w: W, h: H, videoURL: url, file });
+      $("v-bar").style.width = "100%"; status("Fertig");
+      evaluate();
+      $("results").scrollIntoView({ behavior: "smooth" });
+      setTimeout(() => ($("v-prog").hidden = true), 1200);
+    } catch (e) {
+      status(e.message === "abgebrochen" ? "Analyse abgebrochen." : "Fehler: " + e.message);
+    } finally { releaseAwake(); }
+  }
+
+  // ---------- Live ----------
+  const cam = $("cam"), camOv = $("cam-ov");
+  let liveOn = false, stream = null, liveFrames = [], liveTimes = [], announced = new Map(), liveRaf = 0, lastAnalyse = 0, audio = null;
+  const BUF_S = 20;
+  function beep(ok) {
+    try {
+      audio = audio || new (window.AudioContext || window.webkitAudioContext)();
+      const o = audio.createOscillator(), g = audio.createGain();
+      o.frequency.value = ok ? 880 : 220; o.type = ok ? "sine" : "square";
+      g.gain.setValueAtTime(0.0001, audio.currentTime); g.gain.exponentialRampToValueAtTime(0.25, audio.currentTime + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + (ok ? 0.18 : 0.45));
+      o.connect(g).connect(audio.destination); o.start(); o.stop(audio.currentTime + 0.5);
+    } catch (e) {}
+    try { navigator.vibrate && navigator.vibrate(ok ? 60 : [120, 60, 120]); } catch (e) {}
+  }
+  function say(t) {
+    if (!$("live-voice").checked || !window.speechSynthesis) return;
+    try { const u = new SpeechSynthesisUtterance(t); u.lang = "de-DE"; u.rate = 1.1; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) {}
+  }
+  function showBanner(n, ok, verdict, why) {
+    const b = $("banner"); b.hidden = false; b.className = "banner " + (ok == null ? "" : ok ? "ok" : "bad");
+    void b.offsetWidth; if (ok != null) b.classList.add("flash");
+    $("b-num").textContent = n; $("b-verdict").textContent = verdict; $("b-why").textContent = why;
+  }
+  async function startLive() {
+    $("live-load").hidden = false; $("live-status").textContent = "Lade KI-Modell …";
+    try {
+      try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume(); } catch (e) {} // Ton nach Nutzeraktion freischalten
+      if (window.speechSynthesis) { try { speechSynthesis.speak(new SpeechSynthesisUtterance("")); } catch (e) {} }
+      const lmk = await getLandmarker();
+      $("live-status").textContent = "Starte Kamera …";
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 60 } }, audio: false });
+      cam.srcObject = stream; await cam.play();
+      camOv.width = cam.videoWidth; camOv.height = cam.videoHeight;
+      liveOn = true; liveFrames = []; liveTimes = []; announced = new Map();
+      $("live-load").hidden = true; $("live-stage").hidden = false; $("live-start").hidden = true; $("live-stop").hidden = false;
+      showBanner("–", null, "Bereit", "Erster Burpee wird erwartet");
+      await keepAwake();
+      let lastVT = -1;
+      const tick = () => {
+        if (!liveOn) return;
+        if (cam.currentTime !== lastVT && cam.readyState >= 2) {
+          lastVT = cam.currentTime;
+          const now = performance.now();
+          const res = lmk.detectForVideo(cam, Math.round(now));
+          const f = toFrame(res, cam.videoWidth, cam.videoHeight);
+          liveFrames.push(f); liveTimes.push(now);
+          const maxN = Math.round(BUF_S * liveFps());
+          while (liveFrames.length > maxN) { liveFrames.shift(); liveTimes.shift(); }
+          const c = camOv.getContext("2d"); c.clearRect(0, 0, camOv.width, camOv.height); drawPose(c, f);
+          if (now - lastAnalyse > 400) { lastAnalyse = now; liveAnalyse(); }
+        }
+        liveRaf = requestAnimationFrame(tick);
+      };
+      liveRaf = requestAnimationFrame(tick);
+    } catch (e) {
+      $("live-status").textContent = e.name === "NotAllowedError" ? "Kamerazugriff wurde verweigert. Bitte in den Browser-Einstellungen erlauben." : "Fehler: " + e.message;
+      stopLive(true);
+    }
+  }
+  function liveFps() {
+    const n = liveTimes.length; if (n < 10) return 30;
+    const span = (liveTimes[n - 1] - liveTimes[Math.max(0, n - 120)]) / 1000;
+    return Math.max(5, Math.min(60, (Math.min(n, 120) - 1) / span));
+  }
+  // Wiederholungen werden über die Uhrzeit ihres Tiefpunkts wiedererkannt,
+  // weil sich die Bildindizes im gleitenden Puffer bei jeder Neuberechnung verschieben.
+  function findEntry(ms) {
+    for (const e of announced.values()) if (Math.abs(e.ms - ms) < 700) return e;
+    return null;
+  }
+  function liveAnalyse() {
+    const fps = liveFps();
+    $("cam-tag").textContent = Math.round(fps) + " fps";
+    if (liveFrames.length < fps * 1.5) return;
+    const r = BBJ.analyse(liveFrames, fps, cfg());
+    const T = liveFrames.length;
+    r.reps.forEach((rep, k) => {
+      const ms = liveTimes[rep.frameTiefpunkt];
+      let e = findEntry(ms);
+      const f2Known = T - 1 > rep._fenster2[1];                    // Hände haben abgehoben
+      const final = k + 1 < r.reps.length                          // nächster Burpee hat begonnen
+        || (T - 1 - rep._fenster2[1]) > fps * 2.5;                 // oder 2,5 s nach dem Aufrichten (Satzende)
+      if (!e) {
+        if (f2Known && rep.fehler2Overstep) {
+          e = { ms, n: announced.size + 1, final: false };
+          announced.set(ms, e);
+          showBanner(e.n, false, "Overstepping", `Zehe ${fmt(rep.overstepWert, true)} ${unit(rep)} vor den Fingerspitzen`);
+          beep(false); say("Fehler. Füße vor den Händen.");
+        } else if (final) {
+          e = { ms, n: announced.size + 1, final: true };
+          announced.set(ms, e);
+          report(e.n, rep);
+        }
+      } else {
+        e.ms = ms;
+        if (!e.final && final) {
+          e.final = true;
+          if (rep.fehler1Doppelsprung) { showBanner(e.n, false, "+ Doppelsprung", reasons(rep)); beep(false); say("Zusätzlich Doppelsprung."); }
+        }
+      }
+    });
+  }
+  function report(n, rep) {
+    if (rep.kiLabel === "korrekt") { showBanner(n, true, "Korrekt", rep.sprungweite != null ? `Sprung ${fmt(rep.sprungweite)} ${unit(rep)}` : "Saubere Ausführung"); beep(true); say("Gut."); }
+    else { showBanner(n, false, rep.fehler1Doppelsprung && rep.fehler2Overstep ? "2 Fehler" : rep.fehler1Doppelsprung ? "Doppelsprung" : "Overstepping", reasons(rep)); beep(false);
+      say(rep.fehler1Doppelsprung ? "Fehler. Doppelsprung." : "Fehler. Füße vor den Händen."); }
+  }
+  function stopLive(silent) {
+    liveOn = false; cancelAnimationFrame(liveRaf);
+    if (stream) stream.getTracks().forEach((t) => t.stop()); stream = null; cam.srcObject = null;
+    $("live-start").hidden = false; $("live-stop").hidden = true; $("live-stage").hidden = true;
+    releaseAwake();
+    if (!silent && liveFrames.length > 30) {
+      Object.assign(state, { source: "live", frames: liveFrames.slice(), fps: liveFps(), w: camOv.width, h: camOv.height, file: null });
+      evaluate();
+      $("results").scrollIntoView({ behavior: "smooth" });
+    }
+  }
+  $("live-start").addEventListener("click", startLive);
+  $("live-stop").addEventListener("click", () => stopLive(false));
+  document.addEventListener("visibilitychange", () => { if (document.hidden && liveOn) stopLive(false); });
+
+  loadDemo();
+})();
+</script>

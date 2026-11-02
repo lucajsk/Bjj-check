@@ -1,364 +1,539 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
 <title>BBJ Check</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#F1F3F6" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0C1016" media="(prefers-color-scheme: dark)">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="claude:viewport-fit-sides" content="cover">
 <meta name="description" content="Erkennt beim HYROX Burpee Broad Jump Doppelsprünge und Overstepping – live über die Kamera oder aus einem Video.">
+<meta name="theme-color" content="#0B0F14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BBJ Check">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
-/* Layout: eine schmale Spalte wie ein Messprotokoll; Kopf mit Moduswahl, darunter Arbeitsfläche, Ergebnisse als Bahn-Liste */
+/* Layout: App-Hülle mit schwebender Tab-Leiste unten; Live = Kamerabühne mit Ergebnis-Karte darüber, auf iPad quer zweispaltig mit Feed */
 :root {
-  --bg: #F1F3F6;
-  --surface: #FFFFFF;
-  --surface-2: #E8ECF1;
-  --ink: #0F1720;
-  --muted: #5A6575;
-  --line: #D8DEE6;
-  --accent: #F2531C;
-  --accent-ink: #FFFFFF;
-  --ok: #138A48;
-  --ok-soft: #DDF3E6;
-  --bad: #D42F35;
-  --bad-soft: #FBE2E2;
-  --warn: #A86A00;
-  --warn-soft: #FBEFD5;
-  --stage: #0E141B;
-  --stage-line: #2A3442;
-  --f-display: "Barlow Condensed", "Arial Narrow", "Roboto Condensed", system-ui, sans-serif;
-  --f-body: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-  --r: 14px;
+  --bg: #0B0F14;
+  --surface: #121821;
+  --raised: #19212C;
+  --line: #243041;
+  --ink: #EEF2F6;
+  --muted: #8C99AA;
+  --accent: #FF5B37;
+  --accent-ink: #1A0803;
+  --ok: #34D27F;
+  --ok-soft: rgba(52, 210, 127, 0.14);
+  --bad: #FF5468;
+  --bad-soft: rgba(255, 84, 104, 0.15);
+  --warn: #FFB648;
+  --warn-soft: rgba(255, 182, 72, 0.15);
+  --stage: #05080B;
+  --glass: rgba(14, 19, 26, 0.72);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --f-display: "Archivo", "Arial Narrow", system-ui, sans-serif;
+  --f-body: "Archivo", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --r-lg: 22px; --r: 16px; --r-sm: 12px;
+  color-scheme: dark;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0C1016; --surface: #151B23; --surface-2: #1C242E; --ink: #E8EDF3; --muted: #8E99A8;
-    --line: #26303C; --accent: #FF6634; --accent-ink: #160A04; --ok: #3DD083; --ok-soft: #12301F;
-    --bad: #FF6166; --bad-soft: #3A1517; --warn: #F2B544; --warn-soft: #33270D; --stage: #070A0E; --stage-line: #222B37;
-    color-scheme: dark;
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --bg: #EEF1F5; --surface: #FFFFFF; --raised: #F4F6F9; --line: #DCE2EA; --ink: #0E141B; --muted: #5B6778;
+    --accent: #E9471F; --accent-ink: #FFFFFF; --ok: #11914D; --ok-soft: rgba(17, 145, 77, 0.12);
+    --bad: #D7263D; --bad-soft: rgba(215, 38, 61, 0.1); --warn: #B26A00; --warn-soft: rgba(178, 106, 0, 0.12);
+    --stage: #0B0F14; --glass: rgba(255, 255, 255, 0.82); --shadow: 0 10px 30px rgba(20, 30, 45, 0.12);
+    color-scheme: light;
   }
 }
-:root[data-theme="dark"] {
-  --bg: #0C1016; --surface: #151B23; --surface-2: #1C242E; --ink: #E8EDF3; --muted: #8E99A8;
-  --line: #26303C; --accent: #FF6634; --accent-ink: #160A04; --ok: #3DD083; --ok-soft: #12301F;
-  --bad: #FF6166; --bad-soft: #3A1517; --warn: #F2B544; --warn-soft: #33270D; --stage: #070A0E; --stage-line: #222B37;
-  color-scheme: dark;
+:root[data-theme="light"] {
+  --bg: #EEF1F5; --surface: #FFFFFF; --raised: #F4F6F9; --line: #DCE2EA; --ink: #0E141B; --muted: #5B6778;
+  --accent: #E9471F; --accent-ink: #FFFFFF; --ok: #11914D; --ok-soft: rgba(17, 145, 77, 0.12);
+  --bad: #D7263D; --bad-soft: rgba(215, 38, 61, 0.1); --warn: #B26A00; --warn-soft: rgba(178, 106, 0, 0.12);
+  --stage: #0B0F14; --glass: rgba(255, 255, 255, 0.82); --shadow: 0 10px 30px rgba(20, 30, 45, 0.12);
+  color-scheme: light;
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
-html, body { background: var(--bg); color: var(--ink); }
+html { -webkit-text-size-adjust: 100%; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); }
 body {
-  margin: 0; font-family: var(--f-body); font-size: 16px; line-height: 1.5;
+  font-family: var(--f-body); font-size: 16px; line-height: 1.5; font-stretch: 100%;
   -webkit-font-smoothing: antialiased; -webkit-tap-highlight-color: transparent;
+  padding-top: env(safe-area-inset-top, 0px);
 }
-.wrap {
-  max-width: 760px; margin: 0 auto;
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 20px 48px;
-  display: flex; flex-direction: column; gap: 20px;
-}
-h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: 0.01em; }
-.eyebrow { font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); font-weight: 600; }
-.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
-button, input, select { font: inherit; color: inherit; }
-:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--bg); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 10px; }
+.num { font-variant-numeric: tabular-nums; }
+.mono { font-family: var(--f-mono); font-size: 0.8em; letter-spacing: 0.02em; }
 
 /* Kopf */
-header.top { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.brand { display: flex; flex-direction: column; gap: 2px; }
-.brand h1 { font-size: 40px; line-height: 0.95; font-weight: 800; text-transform: uppercase; }
-.brand h1 span { color: var(--accent); }
-.brand p { margin: 0; color: var(--muted); font-size: 15px; }
-.rulechip {
-  font-family: var(--f-mono); font-size: 12px; color: var(--muted); border: 1px solid var(--line);
-  padding: 4px 10px; border-radius: 999px; white-space: nowrap;
+.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  background: var(--bg);
+  background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--line);
 }
-
-/* Moduswahl */
-.modes { display: grid; grid-template-columns: repeat(3, 1fr); background: var(--surface-2); padding: 4px; border-radius: 12px; gap: 4px; }
-.modes button {
-  border: 0; background: transparent; padding: 10px 6px; border-radius: 9px; cursor: pointer;
-  font-family: var(--f-display); font-size: 18px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted);
+.top-in {
+  max-width: 1180px; margin: 0 auto; display: flex; align-items: center; gap: 12px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 10px;
 }
-.modes button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+.logo { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
+.logo-mark { width: 34px; height: 34px; border-radius: 10px; background: var(--accent); display: grid; place-items: center; }
+.logo-mark svg { width: 22px; height: 22px; }
+.logo b { white-space: nowrap; font-family: var(--f-display); font-weight: 850; font-stretch: 118%; font-size: 21px; letter-spacing: -0.01em; text-transform: uppercase; line-height: 1; }
+.logo b span { color: var(--accent); }
+.top .spacer { flex: 1; }
+.chip { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; padding: 6px 11px; border-radius: 999px; background: var(--raised); border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.chip i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.chip.ready i { background: var(--ok); } .chip.busy i { background: var(--warn); } .chip.err i { background: var(--bad); }
+.icon-btn { width: 42px; height: 42px; border-radius: 12px; border: 1px solid var(--line); background: var(--raised); display: grid; place-items: center; flex: none; }
+.icon-btn svg { width: 20px; height: 20px; }
 
-/* Flächen */
-.panel { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; display: flex; flex-direction: column; gap: 14px; }
-.panel h2 { font-size: 24px; font-weight: 700; text-transform: uppercase; }
-.lead { margin: 0; color: var(--muted); max-width: 62ch; }
+/* Hauptbereich */
+main {
+  max-width: 1180px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 18px calc(110px + env(safe-area-inset-bottom, 0px));
+}
+.view { display: flex; flex-direction: column; gap: 16px; animation: fade .25s ease-out; }
+@keyframes fade { from { opacity: 0.4; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+.view-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+h1, h2, h3 { margin: 0; font-family: var(--f-display); text-wrap: balance; }
+h1 { font-size: clamp(30px, 5vw, 44px); font-weight: 850; font-stretch: 112%; letter-spacing: -0.02em; line-height: 1; text-transform: uppercase; }
+h2 { font-size: 20px; font-weight: 750; font-stretch: 105%; letter-spacing: -0.01em; }
+h3 { font-size: 16px; font-weight: 700; }
+.sub { margin: 4px 0 0; color: var(--muted); max-width: 60ch; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 18px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.label { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
 .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 .btn {
-  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px;
-  padding: 0 20px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface);
-  font-weight: 600; cursor: pointer; text-decoration: none;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 20px;
+  border-radius: 14px; border: 1px solid var(--line); background: var(--raised); font-weight: 650; text-decoration: none; white-space: nowrap;
+  transition: transform .12s, background .2s;
 }
+.btn:active { transform: scale(0.97); }
+.btn svg { width: 20px; height: 20px; flex: none; }
 .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
-.btn.danger { background: var(--bad); border-color: var(--bad); color: #fff; }
+.btn.stop { background: var(--bad); border-color: var(--bad); color: #fff; }
+.btn.big { min-height: 58px; font-size: 18px; padding: 0 28px; border-radius: 18px; }
+.btn.ghost { background: transparent; }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn svg { width: 20px; height: 20px; }
-.drop {
-  border: 2px dashed var(--line); border-radius: var(--r); padding: 22px 16px; text-align: center;
-  display: flex; flex-direction: column; align-items: center; gap: 10px; transition: border-color .2s, background .2s;
+
+/* Live */
+.live-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: start; }
+@media (min-width: 900px) { .live-grid { grid-template-columns: minmax(0, 1.8fr) minmax(280px, 1fr); } }
+.stage { position: relative; background: var(--stage); border-radius: var(--r-lg); overflow: hidden; aspect-ratio: 16 / 9; max-width: 100%; box-shadow: var(--shadow); }
+.stage video, .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.stage .placeholder { position: absolute; inset: 0; display: grid; place-items: center; padding: 20px; }
+.stage-chips { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; gap: 8px; pointer-events: none; }
+.stage-chips .chip { background: rgba(0,0,0,0.55); border-color: rgba(255,255,255,0.12); color: #fff; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.counts { display: flex; gap: 6px; }
+.counts .chip b { color: #fff; }
+.verdict {
+  position: absolute; left: 12px; right: 12px; bottom: 12px; border-radius: var(--r);
+  background: var(--glass); backdrop-filter: blur(16px) saturate(1.3); -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  border: 1px solid rgba(255,255,255,0.1); padding: 12px 16px; display: grid; grid-template-columns: auto 1fr; gap: 0 14px; align-items: center;
 }
-.drop.over { border-color: var(--accent); background: var(--surface-2); }
+.verdict .vn { grid-row: span 2; font-family: var(--f-display); font-weight: 900; font-stretch: 80%; font-size: clamp(40px, 7vw, 64px); line-height: 0.9; font-variant-numeric: tabular-nums; min-width: 1.2ch; text-align: center; }
+.verdict .vt { font-family: var(--f-display); font-weight: 850; font-stretch: 112%; font-size: clamp(20px, 3.4vw, 30px); line-height: 1.05; text-transform: uppercase; letter-spacing: -0.01em; }
+.verdict .vw { color: var(--muted); font-size: 14px; }
+.verdict.ok { border-color: var(--ok); box-shadow: 0 0 0 1px var(--ok) inset; } .verdict.ok .vt, .verdict.ok .vn { color: var(--ok); }
+.verdict.bad { border-color: var(--bad); box-shadow: 0 0 0 1px var(--bad) inset; } .verdict.bad .vt, .verdict.bad .vn { color: var(--bad); }
+.verdict.pop { animation: pop .45s cubic-bezier(.2, 1.4, .4, 1); }
+@keyframes pop { from { transform: scale(0.94); } to { transform: none; } }
+.setup { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: center; }
+@media (min-width: 640px) { .setup { grid-template-columns: 200px minmax(0, 1fr); } }
+.stage .placeholder svg { width: 70%; max-width: 360px; height: auto; }
+.tips { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.tips li { display: grid; grid-template-columns: 28px 1fr; gap: 10px; align-items: start; color: var(--muted); font-size: 15px; }
+.tips li b { color: var(--ink); font-weight: 650; }
+.tips .n { width: 28px; height: 28px; border-radius: 9px; background: var(--raised); border: 1px solid var(--line); display: grid; place-items: center; font-weight: 800; font-size: 13px; color: var(--ink); }
+.toggles { display: flex; gap: 8px; flex-wrap: wrap; }
+.tog { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--line); background: var(--raised); font-size: 14px; font-weight: 600; }
+.tog input { width: 18px; height: 18px; accent-color: var(--accent); margin: 0; }
+.feed { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; max-height: 60vh; overflow-y: auto; }
+.feed li { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 12px; border-radius: var(--r-sm); background: var(--raised); border: 1px solid var(--line); animation: fade .3s ease-out; }
+.feed .fn { font-family: var(--f-display); font-weight: 900; font-stretch: 80%; font-size: 26px; text-align: center; color: var(--muted); font-variant-numeric: tabular-nums; }
+.feed .ft { font-weight: 650; font-size: 15px; min-width: 0; }
+.feed .ft small { display: block; color: var(--muted); font-weight: 500; font-size: 13px; }
+.empty { color: var(--muted); font-size: 14px; padding: 6px 2px; }
+
+/* Pills */
+.pill { font-size: 12px; font-weight: 750; letter-spacing: 0.04em; text-transform: uppercase; padding: 5px 10px; border-radius: 999px; white-space: nowrap; }
+.pill.ok { background: var(--ok-soft); color: var(--ok); } .pill.bad { background: var(--bad-soft); color: var(--bad); } .pill.warn { background: var(--warn-soft); color: var(--warn); }
+
+/* Video */
+.drop { border: 2px dashed var(--line); border-radius: var(--r-lg); padding: 34px 18px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; background: var(--surface); transition: border-color .2s, background .2s; }
+.drop.over { border-color: var(--accent); background: var(--raised); }
+.drop .ic { width: 56px; height: 56px; border-radius: 18px; background: var(--raised); border: 1px solid var(--line); display: grid; place-items: center; }
 .drop small { color: var(--muted); }
-.checklist { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
-.checklist li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; color: var(--muted); font-size: 15px; }
-.checklist li::before { content: ""; width: 8px; height: 8px; margin: 8px 0 0 6px; border-radius: 2px; background: var(--accent); }
+.progress { display: flex; flex-direction: column; gap: 10px; }
+.bar { height: 10px; border-radius: 999px; background: var(--raised); overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 60%, #FFC24A)); border-radius: 999px; transition: width .2s; }
+.status { color: var(--muted); font-size: 14px; }
+
+/* Auswertung */
+.summary { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: center; }
+.ring { width: 118px; height: 118px; position: relative; }
+.ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ring .rc { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; line-height: 1; }
+.ring .rc b { font-family: var(--f-display); font-size: 36px; font-weight: 900; font-stretch: 85%; }
+.ring .rc span { font-size: 11px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
+.stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.stat { padding: 10px 12px; border-radius: var(--r-sm); background: var(--raised); border: 1px solid var(--line); min-width: 0; }
+.stat b { display: block; font-family: var(--f-display); font-size: 28px; font-weight: 850; font-stretch: 90%; line-height: 1.05; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 12px; color: var(--muted); }
+.stat.ok b { color: var(--ok); } .stat.bad b { color: var(--bad); } .stat.warn b { color: var(--warn); }
+@media (max-width: 420px) { .summary { grid-template-columns: 1fr; justify-items: center; } .stats { width: 100%; } }
+.src { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.src .tag { font-family: var(--f-mono); font-size: 12px; padding: 4px 9px; border-radius: 8px; background: var(--raised); border: 1px solid var(--line); color: var(--muted); }
+.src .tag.example { color: var(--warn); border-color: var(--warn); }
+.player-ctl { display: flex; gap: 10px; align-items: center; }
+.player-ctl input[type=range] { flex: 1; min-width: 0; accent-color: var(--accent); }
+.lane { position: relative; height: 30px; border-radius: 10px; background: var(--raised); border: 1px solid var(--line); overflow: hidden; cursor: pointer; }
+.lane i { position: absolute; top: 6px; bottom: 6px; width: 8px; border-radius: 4px; transform: translateX(-4px); }
+.lane i.k { background: var(--ok); } .lane i.f { background: var(--bad); } .lane i.u { outline: 2px solid var(--warn); outline-offset: 1px; }
+.lane b { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ink); }
+.reps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+@media (min-width: 900px) { .reps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.rep { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 4px 12px; padding: 12px; border-radius: var(--r); background: var(--surface); border: 1px solid var(--line); }
+.rep .rn { grid-row: span 3; align-self: start; width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; font-family: var(--f-display); font-weight: 900; font-stretch: 85%; font-size: 24px; border: 0; background: var(--raised); color: var(--ink); font-variant-numeric: tabular-nums; }
+.rep .rn.ok { background: var(--ok-soft); color: var(--ok); } .rep .rn.bad { background: var(--bad-soft); color: var(--bad); }
+.rep .rh { display: flex; justify-content: space-between; gap: 8px; align-items: center; min-width: 0; }
+.rep .rt { font-weight: 700; min-width: 0; }
+.rep .rd { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 12px; }
+.rep .rc { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+.rep select { min-height: 36px; border-radius: 10px; border: 1px solid var(--line); background: var(--raised); padding: 0 10px; font-size: 14px; max-width: 100%; }
+.rep.corrected-ok { border-color: var(--ok); border-color: color-mix(in srgb, var(--ok) 55%, var(--line)); }
+.rep.corrected-bad { border-color: var(--warn); border-color: color-mix(in srgb, var(--warn) 70%, var(--line)); }
+.agree { font-size: 14px; color: var(--muted); }
+.agree b { color: var(--ink); }
+textarea { width: 100%; min-height: 70px; border-radius: var(--r-sm); border: 1px solid var(--line); background: var(--raised); padding: 10px 12px; resize: vertical; }
+.notes { margin: 0; padding: 12px 14px; border-radius: var(--r-sm); background: var(--warn-soft); color: var(--ink); font-size: 14px; }
+.notes:empty { display: none; }
+
+/* Info */
+.rules { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@media (min-width: 760px) { .rules { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.rule { padding: 16px; border-radius: var(--r); background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
+.rule .k { font-family: var(--f-mono); font-size: 12px; color: var(--accent); }
+.rule p { margin: 0; color: var(--muted); font-size: 15px; }
+.prose p { margin: 0 0 10px; color: var(--muted); max-width: 68ch; }
+.prose p:last-child { margin: 0; }
+
+/* Tab-Leiste */
+.tabs {
+  position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); z-index: 25;
+  display: flex; gap: 4px; padding: 6px; border-radius: 22px; background: var(--glass); border: 1px solid var(--line);
+  backdrop-filter: blur(18px) saturate(1.4); -webkit-backdrop-filter: blur(18px) saturate(1.4); box-shadow: var(--shadow);
+  width: min(460px, calc(100% - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px)));
+}
+.tabs button { flex: 1; min-width: 0; border: 0; background: transparent; border-radius: 16px; padding: 8px 4px 7px; display: flex; flex-direction: column; align-items: center; gap: 3px; color: var(--muted); font-size: 12px; font-weight: 650; }
+.tabs button svg { width: 22px; height: 22px; }
+.tabs button[aria-current="page"] { background: var(--raised); color: var(--ink); }
+.tabs button[aria-current="page"] svg { color: var(--accent); }
+.tabs .dot { position: absolute; }
 
 /* Einstellungen */
-details.settings { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); }
-details.settings summary {
-  list-style: none; cursor: pointer; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center;
-  font-family: var(--f-display); font-size: 20px; font-weight: 700; text-transform: uppercase;
-}
-details.settings summary::-webkit-details-marker { display: none; }
-details.settings summary::after { content: "+"; font-family: var(--f-mono); color: var(--muted); }
-details.settings[open] summary::after { content: "−"; }
-.grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; padding: 0 18px 18px; }
+dialog { border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface); color: var(--ink); padding: 0; width: min(560px, calc(100% - 24px)); max-height: calc(100% - 40px); box-shadow: var(--shadow); }
+dialog::backdrop { background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }
+.dlg-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 18px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--surface); z-index: 1; }
+.dlg-body { padding: 18px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+@media (max-width: 480px) { .dlg-body { grid-template-columns: minmax(0, 1fr); } }
 .field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.field label { font-size: 13px; font-weight: 600; color: var(--muted); }
-.field input, .field select {
-  min-height: 44px; border: 1px solid var(--line); background: var(--bg); border-radius: 10px; padding: 0 12px; width: 100%;
-}
+.field.wide { grid-column: 1 / -1; }
+.field label { font-size: 13px; font-weight: 650; color: var(--muted); }
+.field input, .field select { min-height: 46px; border-radius: 12px; border: 1px solid var(--line); background: var(--raised); padding: 0 12px; width: 100%; }
 .field .hint { font-size: 12px; color: var(--muted); }
-.switch { display: flex; align-items: center; gap: 10px; grid-column: 1 / -1; font-size: 15px; }
-.switch input { width: 22px; height: 22px; accent-color: var(--accent); }
-@media (max-width: 480px) { .grid { grid-template-columns: 1fr; } .brand h1 { font-size: 34px; } }
-
-/* Fortschritt */
-.progress { display: flex; flex-direction: column; gap: 8px; }
-.bar { height: 10px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
-.bar > i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
-.status { font-size: 14px; color: var(--muted); }
-
-/* Bühne (Video / Kamera) */
-.stage { position: relative; background: var(--stage); border-radius: var(--r); overflow: hidden; }
-.stage video, .stage canvas.bg { display: block; width: 100%; height: auto; max-width: 100%; }
-.stage canvas.ov { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-.stage .tag {
-  position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6); color: #fff; font-size: 12px;
-  padding: 4px 10px; border-radius: 999px; font-family: var(--f-mono);
-}
-.controls { display: flex; gap: 10px; align-items: center; }
-.controls input[type=range] { flex: 1; min-width: 0; accent-color: var(--accent); }
-.iconbtn { width: 48px; height: 48px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); display: grid; place-items: center; cursor: pointer; flex: none; }
-.iconbtn svg { width: 22px; height: 22px; }
-.lane { position: relative; height: 26px; background: var(--surface-2); border-radius: 8px; overflow: hidden; cursor: pointer; }
-.lane i { position: absolute; top: 4px; bottom: 4px; width: 6px; border-radius: 3px; transform: translateX(-3px); }
-.lane i.k { background: var(--ok); } .lane i.f { background: var(--bad); }
-.lane b { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ink); }
-
-/* Live-Anzeige */
-.banner {
-  border-radius: var(--r); padding: 16px 18px; display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; align-items: center;
-  background: var(--surface-2); border: 1px solid var(--line); transition: background .25s, border-color .25s;
-}
-.banner .num { grid-row: span 2; font-family: var(--f-display); font-weight: 800; font-size: 54px; line-height: 0.9; font-variant-numeric: tabular-nums; }
-.banner .verdict { font-family: var(--f-display); font-weight: 800; font-size: 30px; line-height: 1; text-transform: uppercase; }
-.banner .why { color: var(--muted); font-size: 15px; }
-.banner.ok { background: var(--ok-soft); border-color: var(--ok); } .banner.ok .verdict { color: var(--ok); }
-.banner.bad { background: var(--bad-soft); border-color: var(--bad); } .banner.bad .verdict { color: var(--bad); }
-.banner.flash { animation: flash .5s ease-out; }
-@keyframes flash { from { transform: scale(1.03); } to { transform: none; } }
-.livebar { display: flex; gap: 8px; flex-wrap: wrap; }
-
-/* Kennzahlen */
-.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
-.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; }
-.stat b { display: block; font-family: var(--f-display); font-size: 34px; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
-.stat span { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
-.stat.ok b { color: var(--ok); } .stat.bad b { color: var(--bad); } .stat.warn b { color: var(--warn); }
-@media (max-width: 420px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-
-/* Wiederholungen */
-.reps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
-.rep {
-  display: grid; grid-template-columns: 52px minmax(0, 1fr) auto; gap: 4px 12px; align-items: center;
-  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; cursor: pointer; text-align: left; width: 100%;
-}
-.rep:hover { border-color: var(--muted); }
-.rep .n { grid-row: span 2; font-family: var(--f-display); font-weight: 800; font-size: 30px; text-align: center; color: var(--muted); font-variant-numeric: tabular-nums; }
-.rep .t { font-weight: 600; }
-.rep .d { grid-column: 2 / 4; font-size: 13px; color: var(--muted); display: flex; gap: 6px 14px; flex-wrap: wrap; }
-.pill { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
-.pill.ok { background: var(--ok-soft); color: var(--ok); } .pill.bad { background: var(--bad-soft); color: var(--bad); } .pill.warn { background: var(--warn-soft); color: var(--warn); }
-.notes { margin: 0; padding: 12px 14px; border-radius: 12px; background: var(--warn-soft); color: var(--ink); font-size: 14px; }
-.notes:empty { display: none; }
-.example { font-size: 12px; font-family: var(--f-mono); color: var(--warn); }
-
-/* Regeln */
-.rules { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-.rule { border-top: 3px solid var(--accent); padding-top: 10px; }
-.rule h3 { font-size: 20px; text-transform: uppercase; }
-.rule p { margin: 4px 0 0; color: var(--muted); font-size: 15px; }
-@media (max-width: 560px) { .rules { grid-template-columns: 1fr; } }
-footer { color: var(--muted); font-size: 13px; display: flex; flex-direction: column; gap: 6px; }
-footer p { margin: 0; max-width: 70ch; }
+.check { display: flex; gap: 10px; align-items: center; font-size: 15px; grid-column: 1 / -1; }
+.check input { width: 20px; height: 20px; accent-color: var(--accent); margin: 0; }
+.dlg-sec { grid-column: 1 / -1; padding-top: 6px; border-top: 1px solid var(--line); }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom, 0px)); z-index: 40; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 12px; font-weight: 650; font-size: 14px; box-shadow: var(--shadow); max-width: calc(100% - 32px); }
+footer.foot { color: var(--muted); font-size: 13px; padding-top: 6px; }
+@media (max-width: 420px) { .logo b { font-size: 18px; } .chip#model-chip { max-width: 150px; overflow: hidden; text-overflow: ellipsis; } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
+</head>
+<body>
 
-<div class="wrap">
-  <header class="top">
-    <div class="brand">
-      <h1>BBJ <span>Check</span></h1>
-      <p>Fehlererkennung beim HYROX Burpee Broad Jump</p>
-    </div>
-    <span class="rulechip">Rulebook 26/27 · §8.4</span>
-  </header>
+<header class="top">
+  <div class="top-in">
+    <a class="logo" href="#live" aria-label="BBJ Check">
+      <span class="logo-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--accent-ink)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 17c3-7 6-10 9-10"/><path d="M13 7l3 3"/><path d="M16 10h4"/><path d="M4 20h16"/></svg>
+      </span>
+      <b>BBJ <span>Check</span></b>
+    </a>
+    <span class="spacer"></span>
+    <span class="chip" id="model-chip"><i></i><span id="model-txt">KI nicht geladen</span></span>
+    <button class="icon-btn" id="open-settings" type="button" aria-label="Einstellungen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+    </button>
+  </div>
+</header>
 
-  <nav class="modes" aria-label="Modus">
-    <button type="button" id="m-live" aria-pressed="false">Live</button>
-    <button type="button" id="m-video" aria-pressed="false">Video</button>
-    <button type="button" id="m-demo" aria-pressed="true">Demo</button>
-  </nav>
-
+<main>
   <!-- LIVE -->
-  <section class="panel" id="p-live" hidden>
-    <h2>Live-Erkennung</h2>
-    <p class="lead">Die Kamera verfolgt jede Wiederholung und meldet Fehler sofort. Overstepping kommt beim Aufrichten, Doppelsprung oder „korrekt“ beim Aufsetzen der Hände für den nächsten Burpee.</p>
-    <ul class="checklist">
-      <li>Handy quer auf ein Stativ, seitlich zur Sprungrichtung, etwa 3–5 m entfernt</li>
-      <li>Ganze Person inklusive Hände und Füße über die ganze Strecke im Bild</li>
-      <li>Gutes Licht, keine weiteren Personen im Bild</li>
-    </ul>
-    <div class="row">
-      <button type="button" class="btn primary" id="live-start">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 10l5-3v10l-5-3z"/><rect x="3" y="6" width="12" height="12" rx="2"/></svg>
-        Kamera starten
-      </button>
-      <button type="button" class="btn danger" id="live-stop" hidden>Stoppen</button>
-      <label class="switch" style="grid-column:auto"><input type="checkbox" id="live-voice" checked> Sprachansage</label>
+  <section class="view" id="v-live" hidden>
+    <div class="view-head">
+      <div>
+        <h1>Live</h1>
+        <p class="sub">Die Kamera prüft jede Wiederholung und meldet das Ergebnis sofort.</p>
+      </div>
+      <div class="row">
+        <button class="btn primary big" id="live-start" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M15 10l5-3v10l-5-3z"/><rect x="3" y="6" width="12" height="12" rx="3"/></svg>
+          Kamera starten
+        </button>
+        <button class="btn stop big" id="live-stop" type="button" hidden>
+          <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+          Stoppen &amp; auswerten
+        </button>
+      </div>
     </div>
-    <div class="progress" id="live-load" hidden><div class="status" id="live-status">Lade KI-Modell …</div></div>
-    <div class="banner" id="banner" hidden>
-      <div class="num mono" id="b-num">–</div>
-      <div class="verdict" id="b-verdict">Bereit</div>
-      <div class="why" id="b-why">Erster Burpee wird erwartet</div>
-    </div>
-    <div class="stage" id="live-stage" hidden>
-      <video id="cam" playsinline muted autoplay></video>
-      <canvas class="ov" id="cam-ov"></canvas>
-      <span class="tag" id="cam-tag">– fps</span>
-    </div>
-  </section>
 
-  <!-- VIDEO -->
-  <section class="panel" id="p-video" hidden>
-    <h2>Video analysieren</h2>
-    <p class="lead">Video aus der Galerie wählen oder neu aufnehmen. Die Auswertung läuft komplett auf diesem Gerät, das Video wird nirgendwo hochgeladen.</p>
-    <div class="drop" id="drop">
-      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg>
-      <label class="btn primary" for="file">Video auswählen</label>
-      <input type="file" id="file" accept="video/*" hidden>
-      <small>MP4 oder MOV · Seitenansicht · am besten 60 fps</small>
-    </div>
-    <div class="progress" id="v-prog" hidden>
-      <div class="bar"><i id="v-bar"></i></div>
-      <div class="row" style="justify-content:space-between">
-        <span class="status" id="v-status">Starte …</span>
-        <button type="button" class="btn" id="v-cancel">Abbrechen</button>
+    <div class="live-grid">
+      <div class="card" style="padding:12px">
+        <div class="stage" id="live-stage">
+          <video id="cam" playsinline muted autoplay hidden></video>
+          <canvas id="cam-ov"></canvas>
+          <div class="placeholder" id="live-ph">
+            <svg viewBox="0 0 220 150" aria-label="Kamera seitlich zur Sprungbahn, 3 bis 5 Meter Abstand">
+                <rect x="10" y="20" width="200" height="40" rx="8" fill="none" stroke="#5B6778" stroke-dasharray="5 5"/>
+                <text x="110" y="15" fill="#8C99AA" font-size="11" text-anchor="middle" font-family="IBM Plex Mono, monospace">Sprungbahn</text>
+                <g fill="#FF5B37"><circle cx="40" cy="40" r="6"/><circle cx="85" cy="40" r="6" opacity=".6"/><circle cx="130" cy="40" r="6" opacity=".35"/></g>
+                <path d="M150 40h40" stroke="#FF5B37" stroke-width="2.5" marker-end="url(#ar)"/>
+                <defs><marker id="ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" fill="#FF5B37"/></marker></defs>
+                <line x1="110" y1="64" x2="110" y2="112" stroke="#8C99AA" stroke-width="1.5" stroke-dasharray="3 4"/>
+                <text x="118" y="92" fill="#8C99AA" font-size="11" font-family="IBM Plex Mono, monospace">3–5 m</text>
+                <rect x="94" y="114" width="32" height="22" rx="5" fill="#EEF2F6"/>
+                <circle cx="110" cy="125" r="6" fill="#0B0F14"/>
+                <path d="M60 140 L110 125 L160 140" fill="none" stroke="#8C99AA" stroke-width="1" opacity=".5"/>
+              </svg>
+          </div>
+          <div class="stage-chips" id="live-chips" hidden>
+            <span class="chip" id="fps-chip">– fps</span>
+            <span class="counts"><span class="chip">✓ <b id="c-ok">0</b></span><span class="chip">✗ <b id="c-bad">0</b></span></span>
+          </div>
+          <div class="verdict" id="verdict" hidden>
+            <div class="vn num" id="vn">–</div>
+            <div class="vt" id="vt">Bereit</div>
+            <div class="vw" id="vw">Erster Burpee wird erwartet</div>
+          </div>
+        </div>
+        <ul class="tips" id="live-tips">
+                <li><span class="n">1</span><span><b>Gerät quer aufs Stativ</b>, seitlich zur Sprungrichtung</span></li>
+                <li><span class="n">2</span><span><b>Ganze Person im Bild</b>, Hände und Füße über die ganze Strecke</span></li>
+                <li><span class="n">3</span><span><b>Gutes Licht</b>, keine weiteren Personen im Bild</span></li>
+              </ul>
+        <div class="row" style="justify-content:space-between">
+          <div class="toggles">
+            <label class="tog"><input type="checkbox" id="t-voice" checked> Sprachansage</label>
+            <label class="tog"><input type="checkbox" id="t-sound" checked> Ton</label>
+            <label class="tog"><input type="checkbox" id="t-skel" checked> Skelett</label>
+          </div>
+          <button class="btn ghost" id="cam-switch" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-3l-2-3H9L7 7H4v13h16z"/><path d="M9 13a3 3 0 015-2M15 14a3 3 0 01-5 2"/></svg>
+            <span id="cam-label">Rückkamera</span>
+          </button>
+        </div>
+        <div class="status" id="live-status" hidden></div>
+      </div>
+
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <h2>Wiederholungen</h2>
+          <span class="label" id="feed-count">0</span>
+        </div>
+        <ul class="feed" id="feed"><li class="empty" style="display:block;border:0;background:none;padding:0">Noch keine Wiederholung. Nach dem Start erscheint hier jede Meldung.</li></ul>
       </div>
     </div>
   </section>
 
-  <!-- DEMO -->
-  <section class="panel" id="p-demo">
-    <h2>Demo</h2>
-    <p class="lead">Simulierter Ablauf mit sechs Wiederholungen und bekannten Fehlern. So sieht die Auswertung aus, bevor du ein eigenes Video lädst.</p>
+  <!-- VIDEO -->
+  <section class="view" id="v-video" hidden>
+    <div class="view-head">
+      <div>
+        <h1>Video</h1>
+        <p class="sub">Aufnahme aus der Galerie oder neu filmen. Die Auswertung läuft komplett auf diesem Gerät, nichts wird hochgeladen.</p>
+      </div>
+    </div>
+    <label class="drop" id="drop" for="file">
+      <span class="ic"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3"/></svg></span>
+      <span class="btn primary">Video auswählen</span>
+      <small>MP4 oder MOV · Seitenansicht · am besten 60 fps</small>
+      <input type="file" id="file" accept="video/*" hidden>
+    </label>
+    <div class="card progress" id="v-prog" hidden>
+      <div class="row" style="justify-content:space-between"><h2 id="v-name">Analyse</h2><button class="btn" id="v-cancel" type="button">Abbrechen</button></div>
+      <div class="bar"><i id="v-bar"></i></div>
+      <div class="status" id="v-status">Starte …</div>
+    </div>
   </section>
 
-  <details class="settings" id="settings">
-    <summary>Einstellungen</summary>
-    <div class="grid">
-      <div class="field"><label for="s-height">Körpergröße (cm)</label><input id="s-height" type="number" inputmode="decimal" placeholder="z. B. 182"><span class="hint">Für Werte in cm (Schätzung)</span></div>
-      <div class="field"><label for="s-pxcm">Pixel pro cm</label><input id="s-pxcm" type="number" inputmode="decimal" step="0.01" placeholder="leer = aus"><span class="hint">Genauer: aus 1-m-Markierung am Boden</span></div>
-      <div class="field"><label for="s-tol">Overstep-Toleranz (cm)</label><input id="s-tol" type="number" inputmode="decimal" step="0.5" value="0"></div>
-      <div class="field"><label for="s-air">Flug-Schwelle (cm)</label><input id="s-air" type="number" inputmode="decimal" step="0.5" value="4"></div>
-      <div class="field"><label for="s-dir">Sprungrichtung</label><select id="s-dir"><option value="auto">Automatisch</option><option value="rechts">nach rechts</option><option value="links">nach links</option></select></div>
-      <div class="field"><label for="s-model">KI-Modell</label><select id="s-model"><option value="lite">Lite (schnell)</option><option value="full" selected>Full (ausgewogen)</option><option value="heavy">Heavy (genau, langsam)</option></select></div>
-      <div class="field"><label for="s-rate">Analyse-Rate (Video)</label><select id="s-rate"><option value="30" selected>30 Bilder/s</option><option value="60">60 Bilder/s</option></select></div>
-      <label class="switch"><input type="checkbox" id="s-step"> Einzelnen Nachschritt mit einem Fuß als Fehler werten</label>
+  <!-- AUSWERTUNG -->
+  <section class="view" id="v-results" hidden>
+    <div class="view-head">
+      <div>
+        <h1>Auswertung</h1>
+        <div class="src" style="margin-top:8px"><span class="tag" id="r-src">–</span><span class="tag" id="r-meta">–</span></div>
+      </div>
+      <div class="row">
+        <button class="btn primary" id="export" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0-12l-4 4m4-4l4 4"/><path d="M5 13v6a1 1 0 001 1h12a1 1 0 001-1v-6"/></svg>
+          Daten teilen
+        </button>
+      </div>
     </div>
-  </details>
 
-  <!-- ERGEBNISSE -->
-  <section class="panel" id="results">
-    <div class="row" style="justify-content:space-between">
-      <h2>Auswertung</h2>
-      <span class="example" id="r-source">Beispiel · simulierte Daten</span>
+    <div class="live-grid">
+      <div class="card" style="padding:12px">
+        <div class="stage" id="player">
+          <video id="pv" playsinline muted hidden></video>
+          <canvas id="pbg"></canvas>
+          <canvas id="pov"></canvas>
+        </div>
+        <div class="player-ctl">
+          <button class="icon-btn" id="play" type="button" aria-label="Abspielen">
+            <svg id="ic-play" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5v14l12-7z"/></svg>
+            <svg id="ic-pause" viewBox="0 0 24 24" fill="currentColor" hidden><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
+          </button>
+          <input type="range" id="seek" min="0" max="1000" value="0" aria-label="Position">
+          <span class="mono status num" id="ptime">0,0 s</span>
+        </div>
+        <div class="lane" id="lane" aria-hidden="true"></div>
+      </div>
+
+      <div class="card">
+        <div class="summary">
+          <div class="ring" aria-hidden="true">
+            <svg viewBox="0 0 42 42"><circle cx="21" cy="21" r="16" fill="none" stroke="var(--raised)" stroke-width="5"/><circle id="ring-ok" cx="21" cy="21" r="16" fill="none" stroke="var(--ok)" stroke-width="5" stroke-dasharray="0 100" pathLength="100" stroke-linecap="butt"/><circle id="ring-bad" cx="21" cy="21" r="16" fill="none" stroke="var(--bad)" stroke-width="5" stroke-dasharray="0 100" pathLength="100"/></svg>
+            <div class="rc"><div><b class="num" id="st-n">0</b><br><span>Wdh</span></div></div>
+          </div>
+          <div class="stats">
+            <div class="stat ok"><b class="num" id="st-ok">0</b><span>korrekt</span></div>
+            <div class="stat bad"><b class="num" id="st-bad">0</b><span>fehlerhaft</span></div>
+            <div class="stat warn"><b class="num" id="st-un">0</b><span>unsicher</span></div>
+          </div>
+        </div>
+        <p class="notes" id="notes"></p>
+        <div class="agree" id="agree">Trag bei jeder Wiederholung ein, was wirklich passiert ist. So sehen wir, wo die KI danebenliegt.</div>
+        <div class="row">
+          <button class="btn" id="missing" type="button">+ Übersehene Wdh</button>
+          <span class="status" id="missing-n"></span>
+        </div>
+      </div>
     </div>
-    <div class="stats">
-      <div class="stat"><b id="st-n">0</b><span>Wdh</span></div>
-      <div class="stat ok"><b id="st-ok">0</b><span>korrekt</span></div>
-      <div class="stat bad"><b id="st-bad">0</b><span>fehlerhaft</span></div>
-      <div class="stat warn"><b id="st-un">0</b><span>unsicher</span></div>
-    </div>
-    <div class="stage" id="player">
-      <video id="pv" playsinline muted hidden></video>
-      <canvas class="bg" id="pbg" hidden></canvas>
-      <canvas class="ov" id="pov"></canvas>
-    </div>
-    <div class="controls">
-      <button type="button" class="iconbtn" id="play" aria-label="Abspielen">
-        <svg id="ic-play" viewBox="0 0 24 24" fill="currentColor"><path d="M7 5v14l12-7z"/></svg>
-        <svg id="ic-pause" viewBox="0 0 24 24" fill="currentColor" hidden><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>
-      </button>
-      <input type="range" id="seek" min="0" max="1000" value="0" aria-label="Position">
-      <span class="mono status" id="ptime">0,0 s</span>
-    </div>
-    <div class="lane" id="lane" aria-hidden="true"></div>
-    <p class="notes" id="notes"></p>
+
     <ul class="reps" id="reps"></ul>
-    <div class="row">
-      <button type="button" class="btn" id="csv">CSV herunterladen</button>
-      <button type="button" class="btn" id="copy">Tabelle kopieren</button>
-      <button type="button" class="btn" id="reeval">Mit Einstellungen neu bewerten</button>
+
+    <div class="card">
+      <h2>Notiz zur Aufnahme</h2>
+      <textarea id="note" placeholder="z. B. Person, Kameraposition, was absichtlich falsch gemacht wurde"></textarea>
+      <div class="row">
+        <button class="btn" id="csv" type="button">CSV herunterladen</button>
+        <button class="btn" id="copy" type="button">Tabelle kopieren</button>
+        <button class="btn" id="reeval" type="button">Mit Einstellungen neu bewerten</button>
+        <label class="btn" for="import">Datei öffnen</label>
+        <input type="file" id="import" accept=".json,application/json" hidden>
+      </div>
     </div>
   </section>
 
-  <section class="panel">
-    <h2>Was geprüft wird</h2>
+  <!-- INFO -->
+  <section class="view" id="v-info" hidden>
+    <div class="view-head"><div><h1>Info</h1><p class="sub">Geprüft wird nach dem HYROX Single Rulebook 26/27, Abschnitt 8.4.</p></div></div>
     <div class="rules">
-      <div class="rule"><h3>Fehler 1 · Doppelsprung</h3><p>Beide Füße heben nach der Landung des Broad Jumps erneut ab, bevor die Hände für den nächsten Burpee aufsetzen.</p></div>
-      <div class="rule"><h3>Fehler 2 · Overstepping</h3><p>Die Zehenspitze steht beim Herausspringen aus dem Burpee vor der Linie der Fingerspitzen.</p></div>
+      <div class="rule"><span class="k">FEHLER 1</span><h3>Doppelsprung</h3><p>Die Füße heben nach der Landung des Broad Jumps erneut ab, bevor die Hände für den nächsten Burpee aufsetzen.</p><span class="pill ok" style="align-self:flex-start">wird erkannt</span></div>
+      <div class="rule"><span class="k">FEHLER 2</span><h3>Overstepping</h3><p>Die Zehenspitze steht beim Herausspringen aus dem Burpee vor der Linie der Fingerspitzen.</p><span class="pill ok" style="align-self:flex-start">wird erkannt</span></div>
+      <div class="rule"><span class="k">FEHLER 3</span><h3>Kein Brustkontakt</h3><p>Die Brustwarzenlinie berührt am tiefsten Punkt des Burpees nicht klar den Boden.</p><span class="pill warn" style="align-self:flex-start">noch nicht erkannt</span></div>
     </div>
+    <div class="card prose">
+      <h2>So hilfst du beim Verbessern</h2>
+      <p>Nach jeder Aufnahme in der Auswertung bei jeder Wiederholung eintragen, was wirklich passiert ist, und übersehene Wiederholungen mit „+ Übersehene Wdh“ zählen.</p>
+      <p>Dann auf „Daten teilen“ tippen und die Datei weitergeben. Sie enthält nur die erkannten Körperpunkte und deine Korrekturen, kein Video.</p>
+    </div>
+    <div class="card prose">
+      <h2>Grenzen</h2>
+      <p>Die Körperpunkte werden von Google MediaPipe geschätzt und sind typischerweise einige Zentimeter ungenau. Werte nahe an der Grenze werden deshalb als Grenzfall markiert. Bei verdeckter Körperseite nutzt die App automatisch die zur Kamera gewandte Seite.</p>
+      <p>Forschungsprototyp für eine Pilotstudie. Ergebnisse immer mit einer menschlichen Bewertung abgleichen.</p>
+    </div>
+    <footer class="foot" id="ver">Version</footer>
   </section>
+</main>
 
-  <footer>
-    <p>Forschungsprototyp für eine Pilotstudie. Die Körperpunkte werden von Google MediaPipe geschätzt und sind typischerweise einige Zentimeter ungenau. Grenzfälle im Zentimeterbereich sind deshalb nicht zuverlässig. Ergebnisse immer mit einer menschlichen Bewertung abgleichen.</p>
-    <p>Version 0.1 · Analyse läuft lokal im Browser.</p>
-  </footer>
-</div>
+<nav class="tabs" aria-label="Bereiche">
+  <button type="button" data-tab="live"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M15 10l5-3v10l-5-3z"/><rect x="3" y="6" width="12" height="12" rx="3"/></svg>Live</button>
+  <button type="button" data-tab="video"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M10 9l5 3-5 3z"/></svg>Video</button>
+  <button type="button" data-tab="results"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 20V10M12 20V4M19 20v-7"/></svg>Auswertung</button>
+  <button type="button" data-tab="info"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>Info</button>
+</nav>
+
+<dialog id="settings">
+  <div class="dlg-head"><h2>Einstellungen</h2><button class="icon-btn" id="close-settings" type="button" aria-label="Schließen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <div class="dlg-body">
+    <div class="field"><label for="s-height">Körpergröße (cm)</label><input id="s-height" type="number" inputmode="decimal" placeholder="z. B. 182"><span class="hint">Damit werden Werte in cm angezeigt</span></div>
+    <div class="field"><label for="s-pxcm">Pixel pro cm</label><input id="s-pxcm" type="number" inputmode="decimal" step="0.01" placeholder="leer = aus"><span class="hint">Genauer, aus 1-m-Markierung am Boden</span></div>
+    <div class="field"><label for="s-dir">Sprungrichtung</label><select id="s-dir"><option value="auto">Automatisch</option><option value="rechts">nach rechts</option><option value="links">nach links</option></select><span class="hint">Live am besten festlegen</span></div>
+    <div class="field"><label for="s-side">Zur Kamera gewandte Seite</label><select id="s-side"><option value="auto">Automatisch</option><option value="L">linke Körperseite</option><option value="R">rechte Körperseite</option><option value="beide">beide verwenden</option></select></div>
+    <div class="dlg-sec label">Erkennung</div>
+    <div class="field"><label for="s-tol">Overstep-Toleranz (cm)</label><input id="s-tol" type="number" inputmode="decimal" step="0.5" value="0"><span class="hint">Regelwerk: 0</span></div>
+    <div class="field"><label for="s-air">Flug-Schwelle (cm)</label><input id="s-air" type="number" inputmode="decimal" step="0.5" value="4"><span class="hint">Ab dieser Fußhöhe zählt ein Sprung</span></div>
+    <label class="check"><input type="checkbox" id="s-step"> Nachschritt mit nur einem Fuß als Fehler werten</label>
+    <div class="dlg-sec label">KI</div>
+    <div class="field"><label for="s-model">Modell</label><select id="s-model"><option value="lite">Lite · schnell</option><option value="full" selected>Full · ausgewogen</option><option value="heavy">Heavy · genau, langsam</option></select><span class="hint">Unter 15 fps im Live-Modus: Lite wählen</span></div>
+    <div class="field"><label for="s-rate">Analyse-Rate bei Videos</label><select id="s-rate"><option value="30" selected>30 Bilder/s</option><option value="60">60 Bilder/s</option></select></div>
+    <div class="field"><label for="s-theme">Darstellung</label><select id="s-theme"><option value="">System</option><option value="dark">Dunkel</option><option value="light">Hell</option></select></div>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" hidden></div>
 
 <script>
-/* BBJ-Analyse – Erkennungskern (Port von bbj_analyse.py, gleiche Logik).
-   Eingabe: frames = Array von Float32Array(99) [x_px, y_px, sichtbarkeit] × 33, NaN = keine Person. */
+/* BBJ-Analyse – Erkennungskern v0.2
+   Eingabe: frames = Array von Float32Array(99) [x_px, y_px, sichtbarkeit] × 33 MediaPipe-Punkte, NaN = keine Person.
+
+   Änderungen gegenüber v0.1 (gegen Falschalarme, übersehene Fehler, Zählfehler):
+   - Burpee zählt nur, wenn der Rumpf waagerecht UND die Schultern nah am Boden sind; Mindestabstand zwischen Wdh.
+   - Die besser sichtbare Körperseite wird bevorzugt (die verdeckte Seite wird von MediaPipe nur geraten).
+   - Overstepping zählt nur, wenn die Zehe über mehrere Bilder hinweg vor den Fingerspitzen steht (Einzelbild-Ausreißer zählen nicht).
+   - Grenzfälle (nahe an der Toleranz) werden markiert.
+   - Doppelsprung: nur Flugphasen in aufrechter Haltung mit Händen oben; das Fenster endet, sobald der nächste Burpee beginnt
+     (verhindert, dass das Zurückspringen in den Liegestütz als Zusatzsprung zählt). Flugerkennung mit Hysterese. */
 (function (root) {
   "use strict";
+  const VERSION = "0.2.0";
   const NOSE = 0, LSH = 11, RSH = 12, LWR = 15, RWR = 16, LIX = 19, RIX = 20,
-    LHIP = 23, RHIP = 24, LANK = 27, RANK = 28, LHEEL = 29, RHEEL = 30, LTOE = 31, RTOE = 32;
+    LHIP = 23, RHIP = 24, LKNEE = 25, RKNEE = 26, LANK = 27, RANK = 28, LHEEL = 29, RHEEL = 30, LTOE = 31, RTOE = 32;
 
   const DEFAULTS = {
     pixelProCm: null, koerpergroesseCm: null,
     overstepToleranzCm: 0, overstepToleranzPx: 0,
-    flugSchwelleCm: 4, flugSchwelleRel: 0.025, minFlugzeitS: 0.05,
+    grenzfallCm: 3, grenzfallRel: 0.018,
+    overstepHaltS: 0.1,
+    flugSchwelleCm: 4, flugSchwelleRel: 0.025, minFlugzeitS: 0.06,
     einzelschrittCm: 8, einzelschrittAlsFehler: false,
-    torsoHorizontalGrad: 60, minBurpeeS: 0.2, haendeBodenRel: 0.07,
-    minSichtbarkeit: 0.5, richtung: "auto", glaettungFrames: 5,
+    torsoHorizontalGrad: 60, schulterTiefRel: 0.3, minBurpeeS: 0.2, minWdhAbstandS: 1.2,
+    haendeBodenRel: 0.07, haendeObenRel: 0.25, aufrechtGrad: 40,
+    minSichtbarkeit: 0.5, richtung: "auto", seite: "auto", glaettungFrames: 5,
   };
 
   const median = (a) => {
-    const s = Float64Array.from(a).sort();
-    const n = s.length; if (!n) return NaN;
+    const s = Float64Array.from(a).sort(); const n = s.length; if (!n) return NaN;
     return n % 2 ? s[(n - 1) / 2] : (s[n / 2 - 1] + s[n / 2]) / 2;
   };
-  const percentile = (a, p) => {           // wie numpy (linear)
-    const s = Float64Array.from(a).sort(); const n = s.length;
-    if (!n) return NaN; const r = (p / 100) * (n - 1), lo = Math.floor(r), hi = Math.ceil(r);
+  const percentile = (a, p) => {
+    const s = Float64Array.from(a).sort(); const n = s.length; if (!n) return NaN;
+    const r = (p / 100) * (n - 1), lo = Math.floor(r), hi = Math.ceil(r);
     return s[lo] + (s[hi] - s[lo]) * (r - lo);
   };
   function runs(mask, minLen = 1) {
@@ -367,6 +542,11 @@ footer p { margin: 0; max-width: 70ch; }
       if (mask[t]) { const s = t; while (t < n && mask[t]) t++; if (t - s >= minLen) out.push([s, t - 1]); }
       else t++;
     }
+    return out;
+  }
+  function hysteresis(sig, hi, lo) {
+    const out = new Array(sig.length); let on = false;
+    for (let i = 0; i < sig.length; i++) { on = on ? sig[i] > lo : sig[i] > hi; out[i] = on; }
     return out;
   }
   function polyfit1(x, y) {
@@ -378,10 +558,10 @@ footer p { margin: 0; max-width: 70ch; }
     const x = [], y = [];
     for (let i = 0; i < xs.length; i++) if (!isNaN(xs[i]) && !isNaN(ys[i])) { x.push(xs[i]); y.push(ys[i]); }
     if (x.length < 10) return [0, y.length ? Math.max(...y) : 0];
-    const mn = Math.min(...x), mx = Math.max(...x) + 1e-6, bx = [], by = [];
+    let mn = Infinity, mx = -Infinity; for (const v of x) { if (v < mn) mn = v; if (v > mx) mx = v; } mx += 1e-6;
+    const bx = [], by = [];
     for (let k = 0; k < 10; k++) {
-      const a = mn + (mx - mn) * k / 10, b = mn + (mx - mn) * (k + 1) / 10;
-      const sx = [], sy = [];
+      const a = mn + (mx - mn) * k / 10, b = mn + (mx - mn) * (k + 1) / 10, sx = [], sy = [];
       for (let i = 0; i < x.length; i++) if (x[i] >= a && x[i] < b) { sx.push(x[i]); sy.push(y[i]); }
       if (sx.length >= 5) { bx.push(median(sx)); by.push(percentile(sy, 90)); }
     }
@@ -409,37 +589,45 @@ footer p { margin: 0; max-width: 70ch; }
       }
       for (let t = 0; t < T; t++) if (isNaN(lm[t][j * 3 + 2])) lm[t][j * 3 + 2] = 0;
     }
-    // Medianfilter über die Zeit
     k = k % 2 ? k : k + 1; const h = k >> 1;
-    if (k > 1) {
-      const out = lm.map((f) => Float32Array.from(f)), buf = new Float64Array(k);
-      for (let j = 0; j < 33; j++) for (let c = 0; c < 2; c++) {
-        const o = j * 3 + c;
-        for (let t = 0; t < T; t++) {
-          for (let q = -h; q <= h; q++) buf[q + h] = lm[Math.min(T - 1, Math.max(0, t + q))][o];
-          buf.sort();
-          out[t][o] = buf[h];
-        }
+    if (k <= 1) return lm;
+    const out = lm.map((f) => Float32Array.from(f)), buf = new Float64Array(k);
+    for (let j = 0; j < 33; j++) for (let c = 0; c < 2; c++) {
+      const o = j * 3 + c;
+      for (let t = 0; t < T; t++) {
+        for (let q = -h; q <= h; q++) buf[q + h] = lm[Math.min(T - 1, Math.max(0, t + q))][o];
+        buf.sort(); out[t][o] = buf[h];
       }
-      return out;
     }
-    return lm;
+    return out;
   }
 
   function analyse(raw, fps, userCfg) {
     const cfg = Object.assign({}, DEFAULTS, userCfg || {});
     const T = raw.length, hinweise = [];
-    if (!T) return { reps: [], meta: { hinweise: ["Keine Bilder."] }, series: null };
+    if (T < 5) return { reps: [], meta: { hinweise: ["Zu wenige Bilder."], version: VERSION }, series: null };
     const valid = raw.map((f) => !isNaN(f[LHIP * 3]));
     const validFrac = valid.filter(Boolean).length / T;
     if (validFrac < 0.5) hinweise.push(`Person nur in ${Math.round(validFrac * 100)} % der Bilder erkannt – Ergebnisse unzuverlässig.`);
     const lm = prepare(raw, cfg.glaettungFrames);
     const X = (t, j) => lm[t][j * 3], Y = (t, j) => lm[t][j * 3 + 1];
     const sec = (s) => Math.max(1, Math.round(s * fps));
-    const range = (n) => Array.from({ length: n }, (_, i) => i);
-    const ts = range(T);
+    const ts = Array.from({ length: T }, (_, i) => i);
 
-    // Richtung
+    // --- Sichtbare Körperseite --------------------------------------------
+    const sidePts = { L: [LWR, LIX, LHIP, LKNEE, LANK, LHEEL, LTOE], R: [RWR, RIX, RHIP, RKNEE, RANK, RHEEL, RTOE] };
+    const meanVis = (pts) => { let s = 0, n = 0; for (const f of raw) for (const j of pts) { const v = f[j * 3 + 2]; if (!isNaN(v)) { s += v; n++; } } return n ? s / n : 0; };
+    const visL = meanVis(sidePts.L), visR = meanVis(sidePts.R);
+    let seite = cfg.seite;
+    if (seite === "auto") seite = Math.abs(visL - visR) < 0.08 ? "beide" : (visL > visR ? "L" : "R");
+    // pick(t, Lj, Rj, agg): bei "beide" Kombination beider Seiten, sonst nur sichtbare Seite
+    const pick = (t, Lj, Rj, agg, getter) => {
+      if (seite === "L") return getter(t, Lj);
+      if (seite === "R") return getter(t, Rj);
+      return agg(getter(t, Lj), getter(t, Rj));
+    };
+
+    // --- Richtung -------------------------------------------------------------
     const hipX = ts.map((t) => (X(t, LHIP) + X(t, RHIP)) / 2);
     let d;
     if (cfg.richtung === "rechts") d = 1; else if (cfg.richtung === "links") d = -1;
@@ -448,36 +636,27 @@ footer p { margin: 0; max-width: 70ch; }
       const diff = median(hipX.slice(T - n10)) - median(hipX.slice(0, n10));
       d = diff >= 0 ? 1 : -1;
       let mnx = Infinity, mxx = -Infinity;
-      for (const f of lm) for (let j = 0; j < 33; j++) { const v = f[j * 3]; if (v < mnx) mnx = v; if (v > mxx) mxx = v; }
-      if (Math.abs(diff) < 0.05 * (mxx - mnx + 1e-6)) hinweise.push("Bewegungsrichtung kaum erkennbar – ggf. Richtung in den Einstellungen festlegen.");
+      for (const v of hipX) { if (v < mnx) mnx = v; if (v > mxx) mxx = v; }
+      if (Math.abs(diff) < 0.3 * (mxx - mnx + 1e-6) || mxx - mnx < 1) hinweise.push("Sprungrichtung unsicher – in den Einstellungen festlegen.");
     }
 
-    // Rumpfwinkel
-    const shY = ts.map((t) => (Y(t, LSH) + Y(t, RSH)) / 2);
-    const torso = ts.map((t) => {
-      const vx = (X(t, LSH) + X(t, RSH)) / 2 - hipX[t], vy = shY[t] - (Y(t, LHIP) + Y(t, RHIP)) / 2;
-      return Math.atan2(Math.abs(vx), -vy) * 180 / Math.PI;
-    });
-    const torsoLen = ts.map((t) => {
-      const vx = (X(t, LSH) + X(t, RSH)) / 2 - hipX[t], vy = shY[t] - (Y(t, LHIP) + Y(t, RHIP)) / 2;
-      return Math.hypot(vx, vy);
-    });
+    // --- Rumpf ----------------------------------------------------------------
+    const shX = ts.map((t) => (X(t, LSH) + X(t, RSH)) / 2), shY = ts.map((t) => (Y(t, LSH) + Y(t, RSH)) / 2);
+    const hpY = ts.map((t) => (Y(t, LHIP) + Y(t, RHIP)) / 2);
+    const torso = ts.map((t) => Math.atan2(Math.abs(shX[t] - hipX[t]), -(shY[t] - hpY[t])) * 180 / Math.PI);
+    const torsoLen = ts.map((t) => Math.hypot(shX[t] - hipX[t], shY[t] - hpY[t]));
 
-    // Bodenlinie
+    // --- Boden ----------------------------------------------------------------
     const feet = [LHEEL, RHEEL, LTOE, RTOE], lowX = [], lowY = [];
-    for (let t = 0; t < T; t++) {
-      let bj = feet[0];
-      for (const j of feet) if (Y(t, j) > Y(t, bj)) bj = j;
-      lowX.push(X(t, bj)); lowY.push(Y(t, bj));
-    }
+    for (let t = 0; t < T; t++) { let bj = feet[0]; for (const j of feet) if (Y(t, j) > Y(t, bj)) bj = j; lowX.push(X(t, bj)); lowY.push(Y(t, bj)); }
     const [ga, gb] = fitGround(lowX, lowY);
     const ground = (x) => ga * x + gb;
 
-    // Körperhöhe & Maßstab
+    // --- Körperhöhe & Maßstab -------------------------------------------------
     const noseH = [];
     for (let t = 0; t < T; t++) if (torso[t] < 20) noseH.push(ground(X(t, NOSE)) - Y(t, NOSE));
     let bodyPx;
-    if (noseH.length >= 5) bodyPx = median(noseH) / 0.93;
+    if (noseH.length >= 5) bodyPx = percentile(noseH, 75) / 0.93;
     else { bodyPx = median(torsoLen) * 3.3; hinweise.push("Keine aufrechte Phase gefunden – Körperhöhe geschätzt."); }
     bodyPx = Math.max(bodyPx, 50);
 
@@ -487,73 +666,103 @@ footer p { margin: 0; max-width: 70ch; }
     const toPx = pxCm ? (cm) => cm * pxCm : null;
     const flugThr = toPx ? toPx(cfg.flugSchwelleCm) : cfg.flugSchwelleRel * bodyPx;
     const overTol = toPx ? toPx(cfg.overstepToleranzCm) : cfg.overstepToleranzPx;
+    const grenzPx = toPx ? toPx(cfg.grenzfallCm) : cfg.grenzfallRel * bodyPx;
     const stepThr = toPx ? toPx(cfg.einzelschrittCm) : 0.05 * bodyPx;
-    const handThr = cfg.haendeBodenRel * bodyPx;
+    const handThr = cfg.haendeBodenRel * bodyPx, handUp = cfg.haendeObenRel * bodyPx;
     const conv = pxCm ? (px) => px / pxCm : (px) => px;
 
-    // Hände am Boden
-    const handsDown = ts.map((t) => Math.min(ground(X(t, LWR)) - Y(t, LWR), ground(X(t, RWR)) - Y(t, RWR)) < handThr);
+    // --- Signale ----------------------------------------------------------------
+    const gx = (t, j) => ground(X(t, j)) - Y(t, j);                       // Höhe über Boden
+    const wristClear = ts.map((t) => pick(t, LWR, RWR, Math.min, gx));
+    const shH = ts.map((t) => ground(shX[t]) - shY[t]);
+    const handsDown = wristClear.map((c) => c < handThr);
     const hdRuns = runs(handsDown, sec(0.08));
-
-    // Füße in der Luft
-    const footClear = (t, heel, toe) => {
-      const hy = Y(t, heel), ty = Y(t, toe);
-      return hy >= ty ? ground(X(t, heel)) - hy : ground(X(t, toe)) - ty;
-    };
-    const clear = ts.map((t) => Math.min(footClear(t, LHEEL, LTOE), footClear(t, RHEEL, RTOE)));
-    const airborne = clear.map((c) => c > flugThr);
+    const footClear = (t, heel, toe) => { const hy = Y(t, heel), ty = Y(t, toe); return hy >= ty ? ground(X(t, heel)) - hy : ground(X(t, toe)) - ty; };
+    const clear = ts.map((t) => seite === "beide" ? Math.min(footClear(t, LHEEL, LTOE), footClear(t, RHEEL, RTOE))
+      : seite === "L" ? footClear(t, LHEEL, LTOE) : footClear(t, RHEEL, RTOE));
+    const feetMid = ts.map((t) => d * pick(t, LANK, RANK, (a, b) => (a + b) / 2, X));
+    const toeFront = ts.map((t) => pick(t, LTOE, RTOE, Math.max, (tt, j) => d * X(tt, j)));
+    const fingerFront = ts.map((t) => pick(t, LIX, RIX, Math.max, (tt, j) => d * X(tt, j)));
     const minAir = Math.max(2, sec(cfg.minFlugzeitS));
-    const feetMid = ts.map((t) => d * (X(t, LANK) + X(t, RANK)) / 2);
-    const toeFront = ts.map((t) => Math.max(d * X(t, LTOE), d * X(t, RTOE)));
-    const fingerFront = ts.map((t) => Math.max(d * X(t, LIX), d * X(t, RIX)));
+    const holdK = Math.max(2, sec(cfg.overstepHaltS));
 
-    // Burpee-Tiefpunkte
-    const horiz = runs(torso.map((a) => a > cfg.torsoHorizontalGrad), sec(cfg.minBurpeeS));
+    // --- Burpee-Tiefpunkte ------------------------------------------------------
+    const lowMask = ts.map((t) => torso[t] > cfg.torsoHorizontalGrad && shH[t] < cfg.schulterTiefRel * bodyPx);
+    const segs = runs(lowMask, sec(cfg.minBurpeeS));
     const merged = [];
-    for (const [s, e] of horiz) {
-      if (merged.length && s - merged[merged.length - 1][1] <= sec(0.3)) merged[merged.length - 1][1] = e;
+    for (const [s, e] of segs) {
+      if (merged.length && s - merged[merged.length - 1][1] <= sec(0.4)) merged[merged.length - 1][1] = e;
       else merged.push([s, e]);
     }
-    const bottoms = merged.map(([s, e]) => { let b = s; for (let t = s; t <= e; t++) if (shY[t] > shY[b]) b = t; return b; });
+    let bottoms = merged.map(([s, e]) => { let b = s; for (let t = s; t <= e; t++) if (shH[t] < shH[b]) b = t; return { b, s, e }; });
+    // Mindestabstand: zu dicht aufeinanderfolgende Tiefpunkte zusammenfassen
+    const minGap = sec(cfg.minWdhAbstandS), kept = [];
+    for (const x of bottoms) {
+      const last = kept[kept.length - 1];
+      if (last && x.b - last.b < minGap) { last.e = x.e; if (shH[x.b] < shH[last.b]) last.b = x.b; }
+      else kept.push(x);
+    }
+    bottoms = kept;
     if (!bottoms.length) hinweise.push("Kein Burpee erkannt (Kamera seitlich? ganze Person im Bild?).");
 
-    const regions = bottoms.map((b, i) => {
-      for (const [s, e] of hdRuns) if (s - sec(0.1) <= b && b <= e + sec(0.1)) return [s, e];
-      return merged[i];
+    const regions = bottoms.map(({ b, s, e }) => {
+      for (const [hs, he] of hdRuns) if (hs - sec(0.15) <= b && b <= he + sec(0.15)) return [Math.min(hs, s), Math.max(he, e)];
+      return [s, e];
     });
 
-    const keyPts = [LIX, RIX, LTOE, RTOE, LHEEL, RHEEL, LWR, RWR];
-    const reps = bottoms.map((b, k) => {
+    const keyPts = seite === "L" ? [LIX, LTOE, LHEEL, LWR] : seite === "R" ? [RIX, RTOE, RHEEL, RWR] : [LIX, RIX, LTOE, RTOE, LHEEL, RHEEL, LWR, RWR];
+    const r1 = (v) => Math.round(v * 10) / 10;
+
+    const reps = bottoms.map(({ b }, k) => {
       const [hs, he] = regions[k], notes = [];
-      const fsEnd = Math.max(hs, he - Math.max(1, Math.floor(0.15 * (he - hs))));
-      const finger = median(fingerFront.slice(hs, fsEnd + 1));
 
+      // ---- Fehler 2: Overstepping ----
+      const n = he - hs + 1;
+      const fs0 = hs + Math.floor(0.1 * n), fs1 = Math.max(fs0, he - Math.max(1, Math.floor(0.15 * n)));
+      const finger = median(fingerFront.slice(fs0, fs1 + 1));
       const w2s = b, w2e = Math.min(T - 1, he + sec(0.1));
-      let overMax = -Infinity, overFrame = w2s;
-      for (let t = w2s; t <= w2e; t++) { const o = toeFront[t] - finger; if (o > overMax) { overMax = o; overFrame = t; } }
-      const f2 = overMax > overTol;
+      const over = []; for (let t = w2s; t <= w2e; t++) over.push(toeFront[t] - finger);
+      // anhaltende Überschreitung: höchster Wert, der für holdK Bilder am Stück gehalten wird
+      let held = -Infinity, heldAt = w2s, rawMax = -Infinity;
+      for (let i = 0; i < over.length; i++) {
+        if (over[i] > rawMax) rawMax = over[i];
+        if (i + holdK <= over.length) {
+          let m = Infinity; for (let q = 0; q < holdK; q++) m = Math.min(m, over[i + q]);
+          if (m > held) { held = m; heldAt = w2s + i; }
+        }
+      }
+      if (held === -Infinity) held = rawMax;
+      const f2 = held > overTol;
+      const grenz2 = Math.abs(held - overTol) <= grenzPx;
+      if (grenz2) notes.push("Overstep-Grenzfall");
 
+      // ---- Fehler 1: Doppelsprung ----
       const nxt = k + 1 < regions.length ? regions[k + 1][0] : T;
-      const w1s = he, w1e = Math.max(he, nxt - 1);
-      // Bodenhöhe lokal nachjustieren: Füße stehen den Großteil des Fensters am Boden
-      const base = w1e - w1s >= 5 ? percentile(clear.slice(w1s, w1e + 1), 25) : 0;
-      const airLocal = clear.slice(w1s, w1e + 1).map((c) => c - base > flugThr);
-      for (let t = w1s; t <= w1e; t++) airborne[t] = airLocal[t - w1s];
-      const airRuns = runs(airLocal, minAir).map(([s, e]) => [w1s + s, w1s + e]);
+      const w1s = he, w1e0 = Math.max(he, nxt - 1);
+      const seg = clear.slice(w1s, w1e0 + 1);
+      const base = seg.length >= 6 ? percentile(seg, 25) : 0;
+      const air = hysteresis(seg.map((c) => c - base), flugThr, flugThr * 0.5);
+      let airRuns = runs(air, minAir).map(([s, e]) => [w1s + s, w1s + e]);
+      const upright = (s, e) => median(torso.slice(s, e + 1)) < cfg.aufrechtGrad;
+      const handsHigh = (s, e) => { let m = Infinity; for (let t = s; t <= e; t++) m = Math.min(m, wristClear[t]); return m > handUp; };
+      airRuns = airRuns.filter(([s, e]) => upright(s, e) && handsHigh(s, e));
       const disp = airRuns.map(([s, e]) => feetMid[Math.min(T - 1, e + 2)] - feetMid[Math.max(0, s - 2)]);
-      let sprung = false, weite = null, zusatz = [], landing = null;
-      if (airRuns.length && Math.max(...disp) > 0.1 * bodyPx) {
+      let sprung = false, weite = null, zusatz = [], landing = null, w1e = w1e0;
+      if (airRuns.length && Math.max(...disp) > 0.15 * bodyPx) {
         const j = disp.indexOf(Math.max(...disp));
-        sprung = true; weite = conv(disp[j]); zusatz = airRuns.slice(j + 1); landing = airRuns[j][1];
+        sprung = true; weite = conv(disp[j]); landing = airRuns[j][1];
+        // Fenster endet, sobald der nächste Burpee beginnt (Oberkörper kippt oder Hände gehen Richtung Boden)
+        for (let t = landing + 1; t <= w1e0; t++) if (torso[t] > 45 || wristClear[t] < handUp) { w1e = t - 1; break; }
+        zusatz = airRuns.slice(j + 1).filter(([s, e]) => e <= w1e);
       } else notes.push("Broad Jump nicht eindeutig erkannt");
       let f1 = zusatz.length > 0;
 
       let einzel = false;
       if (landing !== null) {
-        const a = landing + sec(0.15), e = w1e;
-        if (e - a > 2) for (const toe of [LTOE, RTOE]) {
+        const a = landing + sec(0.15);
+        if (w1e - a > 2) for (const toe of (seite === "L" ? [LTOE] : seite === "R" ? [RTOE] : [LTOE, RTOE])) {
           let mn = Infinity, mx = -Infinity;
-          for (let t = a; t <= e; t++) { const v = d * X(t, toe); if (v < mn) mn = v; if (v > mx) mx = v; }
+          for (let t = a; t <= w1e; t++) { const v = d * X(t, toe); if (v < mn) mn = v; if (v > mx) mx = v; }
           if (mx - mn > stepThr) einzel = true;
         }
         if (einzel && !f1) notes.push("möglicher Nachschritt mit einem Fuß");
@@ -561,65 +770,62 @@ footer p { margin: 0; max-width: 70ch; }
       if (cfg.einzelschrittAlsFehler && einzel) f1 = true;
 
       let vs = 0, vn = 0, vf = 0;
-      for (let t = b; t <= w1e; t++) {
-        if (valid[t]) vf++;
-        for (const j of keyPts) { const v = raw[t][j * 3 + 2]; if (!isNaN(v)) { vs += v; vn++; } }
-      }
-      const vis = vn ? vs / vn : 0, validW = (w1e >= b) ? vf / (w1e - b + 1) : 0;
-      let unsicher = vis < cfg.minSichtbarkeit || !sprung;
-      if (vis < cfg.minSichtbarkeit) notes.push(`geringe Sichtbarkeit der Hände/Füße (${vis.toFixed(2)})`);
+      for (let t = b; t <= w1e; t++) { if (valid[t]) vf++; for (const j of keyPts) { const v = raw[t][j * 3 + 2]; if (!isNaN(v)) { vs += v; vn++; } } }
+      const vis = vn ? vs / vn : 0, validW = w1e >= b ? vf / (w1e - b + 1) : 0;
+      let unsicher = vis < cfg.minSichtbarkeit || !sprung || grenz2;
+      if (vis < cfg.minSichtbarkeit) notes.push(`Hände/Füße schlecht sichtbar (${vis.toFixed(2)})`);
       if (validW < 0.8) { unsicher = true; notes.push(`Person nur in ${Math.round(validW * 100)} % der Bilder erkannt`); }
 
-      const r1 = (v) => Math.round(v * 10) / 10;
       return {
         wdh: k + 1, frameTiefpunkt: b, zeitS: Math.round(b / fps * 100) / 100,
         kiLabel: f1 || f2 ? "fehlerhaft" : "korrekt",
         fehler1Doppelsprung: f1, anzahlZusatzspruenge: zusatz.length,
-        fehler2Overstep: f2, overstepWert: r1(conv(overMax)), einheit,
+        fehler2Overstep: f2, overstepWert: r1(conv(held)), overstepMaxEinzelbild: r1(conv(rawMax)), grenzfall: grenz2, einheit,
         sprungErkannt: sprung, sprungweite: weite === null ? null : r1(weite),
         einzelschrittHinweis: einzel, sichtbarkeit: Math.round(vis * 100) / 100,
         unsicher, hinweise: notes.join("; "),
-        _fenster2: [w2s, w2e], _fingerX: d * finger, _ende: w1e, _zusatz: zusatz, _overFrame: overFrame,
+        _fenster2: [w2s, w2e], _fingerX: d * finger, _ende: w1e, _zusatz: zusatz, _overFrame: heldAt, _haende: [hs, he],
       };
     });
 
     return {
       reps,
-      meta: {
-        frames: T, fps, richtung: d > 0 ? "rechts" : "links", koerperhoehePx: r(bodyPx),
-        pixelProCm: pxCm, einheit, boden: [ga, gb], hinweise,
-      },
-      series: { lm, ground: [ga, gb], airborne },
+      meta: { version: VERSION, frames: T, fps, richtung: d > 0 ? "rechts" : "links", seite,
+        sichtbarkeit: { links: Math.round(visL * 100) / 100, rechts: Math.round(visR * 100) / 100 },
+        koerperhoehePx: r1(bodyPx), pixelProCm: pxCm, einheit, boden: [ga, gb], hinweise },
+      series: { lm, ground: [ga, gb], seite },
     };
-    function r(v) { return Math.round(v * 10) / 10; }
   }
 
-  // Synthetische Demo-Daten (Seitenansicht, 6 Wiederholungen, bekannte Fehler)
-  function synth() {
+  // ---------- Synthetische Testdaten (Seitenansicht) ----------
+  function synth(opts) {
+    opts = Object.assign({ seq: null, noise: 1.5, spikes: 0, seed: 7, hideFar: false, farBias: 0 }, opts || {});
     const S = 4, G = 950, FPS = 30;
-    let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+    let seed = opts.seed; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
     const gauss = () => Math.sqrt(-2 * Math.log(rnd() + 1e-12)) * Math.cos(2 * Math.PI * rnd());
-    const IDX = { nose: [0], sh: [11, 12], wr: [15, 16], ix: [19, 20], hip: [23, 24], ank: [27, 28], heel: [29, 30], toe: [31, 32] };
-    const P = (o) => o;
-    const stand = (x, l = 0) => P({ nose: [x + 5, 163 + l], sh: [x, 145 + l], wr: [x, 85 + l], ix: [x + 2, 78 + l], hip: [x, 95 + l], ank: [x, 8 + l], heel: [x - 5, l], toe: [x + 20, l] });
-    const crouch = (x, l = 0) => P({ nose: [x + 35, 120 + l], sh: [x + 20, 105 + l], wr: [x - 15, 60 + l], ix: [x - 12, 52 + l], hip: [x - 10, 60 + l], ank: [x, 8 + l], heel: [x - 5, l], toe: [x + 20, l] });
-    const hdown = (x, hx) => P({ nose: [hx + 10, 75], sh: [hx - 5, 60], wr: [hx, 4], ix: [hx + 10, 0], hip: [x - 10, 60], ank: [x, 8], heel: [x - 5, 0], toe: [x + 20, 0] });
-    const plank = (hx, lf = 0, fx = null) => { fx = fx === null ? hx - 150 : fx; return P({ nose: [hx + 12, 8], sh: [hx - 5, 6], wr: [hx, 4], ix: [hx + 10, 0], hip: [hx - 70, 14 + lf * 0.6], ank: [fx, 8 + lf], heel: [fx - 5, 2 + lf], toe: [fx + 15, lf] }); };
-    const feetIn = (hx, tx) => { const ax = tx - 20; return P({ nose: [hx + 15, 70], sh: [hx - 3, 55], wr: [hx, 4], ix: [hx + 10, 0], hip: [ax - 10, 50], ank: [ax, 8], heel: [ax - 5, 0], toe: [tx, 0] }); };
-    function rep(x, over, hops) {
+    const IDX = { nose: [0], sh: [11, 12], wr: [15, 16], ix: [19, 20], hip: [23, 24], knee: [25, 26], ank: [27, 28], heel: [29, 30], toe: [31, 32] };
+    const stand = (x, l = 0) => ({ nose: [x + 5, 163 + l], sh: [x, 145 + l], wr: [x, 85 + l], ix: [x + 2, 78 + l], hip: [x, 95 + l], knee: [x + 2, 50 + l], ank: [x, 8 + l], heel: [x - 5, l], toe: [x + 20, l] });
+    const crouch = (x, l = 0) => ({ nose: [x + 35, 120 + l], sh: [x + 20, 105 + l], wr: [x - 15, 60 + l], ix: [x - 12, 52 + l], hip: [x - 10, 60 + l], knee: [x + 20, 40 + l], ank: [x, 8 + l], heel: [x - 5, l], toe: [x + 20, l] });
+    const hdown = (x, hx) => ({ nose: [hx + 10, 45], sh: [hx - 5, 32], wr: [hx, 4], ix: [hx + 10, 0], hip: [x - 10, 60], knee: [x + 15, 30], ank: [x, 8], heel: [x - 5, 0], toe: [x + 20, 0] });
+    const plank = (hx, lf = 0, fx = null) => { fx = fx === null ? hx - 150 : fx; return { nose: [hx + 12, 8], sh: [hx - 5, 6], wr: [hx, 4], ix: [hx + 10, 0], hip: [hx - 70, 14 + lf * 0.6], knee: [hx - 110, 8 + lf * 0.8], ank: [fx, 8 + lf], heel: [fx - 5, 2 + lf], toe: [fx + 15, lf] }; };
+    const feetIn = (hx, tx) => { const ax = tx - 20; return { nose: [hx + 15, 45], sh: [hx - 3, 30], wr: [hx, 4], ix: [hx + 10, 0], hip: [ax - 10, 50], knee: [ax + 15, 30], ank: [ax, 8], heel: [ax - 5, 0], toe: [tx, 0] }; };
+    const knees = (x) => ({ nose: [x + 45, 115], sh: [x + 32, 105], wr: [x + 22, 50], ix: [x + 26, 44], hip: [x - 5, 88], knee: [x + 15, 48], ank: [x, 8], heel: [x - 5, 0], toe: [x + 20, 0] });
+    function rep(x, over, hops, jumpBackEarly, rest) {
       const hx = x + 35, tl = hx + 10 + over;
-      const kf = [[0, stand(x)], [0.35, hdown(x, hx)], [0.6, plank(hx)], [0.95, plank(hx)],
-        [1.05, plank(hx, 25, (hx - 150 + tl - 15) / 2)], [1.2, feetIn(hx, tl)], [1.35, feetIn(hx, tl)]];
+      const kf = [[0, stand(x)], [0.35, hdown(x, hx)]];
+      if (jumpBackEarly) kf.push([0.42, Object.assign(hdown(x, hx), { wr: [hx, 18], ix: [hx + 10, 14], ank: [x - 40, 25], heel: [x - 45, 18], toe: [x - 25, 17] })]);
+      kf.push([0.6, plank(hx)], [0.95, plank(hx)], [1.05, plank(hx, 25, (hx - 150 + tl - 15) / 2)], [1.2, feetIn(hx, tl)], [1.35, feetIn(hx, tl)]);
       const ax = tl - 20;
       kf.push([1.75, stand(ax)], [1.95, crouch(ax)], [2.05, crouch(ax + 10, 5)], [2.25, stand(ax + 60, 30)], [2.45, crouch(ax + 120)], [2.75, stand(ax + 120)]);
       let t = 2.75, x2 = ax + 120;
       for (let i = 0; i < hops; i++) { kf.push([t + 0.15, crouch(x2)], [t + 0.3, stand(x2 + 8, 12)], [t + 0.45, crouch(x2 + 15)], [t + 0.7, stand(x2 + 15)]); t += 0.7; x2 += 15; }
       kf.push([t + 0.3, stand(x2)]);
+      if (rest) { kf.push([t + 0.7, knees(x2)], [t + 2.2, knees(x2)], [t + 2.6, stand(x2)]); t += 2.3; }
       return [kf, x2, t + 0.3];
     }
-    const seq = [[-5, 0], [10, 0], [-5, 1], [3, 0], [-3, 2], [-8, 0]];
+    const seq = opts.seq || [[-5, 0], [10, 0], [-5, 1], [3, 0], [-3, 2], [-8, 0]];
     const all = [[0, stand(40)]]; let x = 40, t0 = 0.5;
-    for (const [o, h] of seq) { const [kf, nx, dur] = rep(x, o, h); for (const [t, p] of kf) all.push([t0 + t, p]); x = nx; t0 += dur; }
+    for (const [o, h, jb, rs] of seq) { const [kf, nx, dur] = rep(x, o, h, jb, rs); for (const [t, p] of kf) all.push([t0 + t, p]); x = nx; t0 += dur; }
     all.push([t0 + 0.5, stand(x)]);
     const T = Math.floor(all[all.length - 1][0] * FPS), frames = [], times = all.map((a) => a[0]);
     for (let f = 0; f < T; f++) {
@@ -628,15 +834,20 @@ footer p { margin: 0; max-width: 70ch; }
       const A = all[i][1], B = all[i + 1][1], fr = new Float32Array(99).fill(NaN);
       for (const k in IDX) IDX[k].forEach((j, s) => {
         const px = (1 - a) * A[k][0] + a * B[k][0], py = (1 - a) * A[k][1] + a * B[k][1];
-        fr[j * 3] = px * S + s * 1.8 + gauss() * 1.5; fr[j * 3 + 1] = G - py * S + gauss() * 1.5; fr[j * 3 + 2] = 0.95;
+        const far = s === 1;
+        const nz = opts.noise * (far && opts.hideFar ? 6 : 1);
+        const bias = far && opts.farBias && [28, 30, 32].includes(j) ? opts.farBias : 0;
+        fr[j * 3] = px * S + s * 1.8 + bias + gauss() * nz; fr[j * 3 + 1] = G - py * S + gauss() * nz;
+        fr[j * 3 + 2] = far && (opts.hideFar || opts.farBias) ? 0.35 : 0.95;
       });
+      if (opts.spikes && rnd() < opts.spikes) { const j = [31, 32, 19, 20, 29, 30][Math.floor(rnd() * 6)]; fr[j * 3] += (rnd() - 0.5) * 120; fr[j * 3 + 1] += (rnd() - 0.5) * 60; }
       for (let j = 0; j < 33; j++) if (isNaN(fr[j * 3])) { fr[j * 3] = fr[0]; fr[j * 3 + 1] = fr[1]; fr[j * 3 + 2] = 0.95; }
       frames.push(fr);
     }
-    return { frames, fps: FPS, width: 2400, height: 1000, pixelProCm: S, erwartet: ["korrekt", "Overstep", "Doppelsprung", "Overstep", "Doppelsprung", "korrekt"] };
+    return { frames, fps: FPS, width: 2400, height: 1000, pixelProCm: S };
   }
 
-  root.BBJ = { analyse, synth, DEFAULTS };
+  root.BBJ = { analyse, synth, DEFAULTS, VERSION };
   if (typeof module !== "undefined") module.exports = root.BBJ;
 })(typeof window !== "undefined" ? window : globalThis);
 
@@ -645,34 +856,48 @@ footer p { margin: 0; max-width: 70ch; }
 (function () {
   "use strict";
   const $ = (id) => document.getElementById(id);
+  const APP_VERSION = "0.2.0";
   const MP_VERSIONS = ["0.10.14", "0.10.18", "0.10.21"];
   const MODEL_URL = (v) => `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_${v}/float16/latest/pose_landmarker_${v}.task`;
   const SKEL = [[11,12],[11,13],[13,15],[12,14],[14,16],[15,19],[16,20],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],[27,29],[29,31],[27,31],[28,30],[30,32],[28,32]];
   const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const fmt = (v, sign, dig = 1) => v == null || !isFinite(v) ? "–" : (sign && v > 0 ? "+" : "") + Number(v).toLocaleString("de-DE", { minimumFractionDigits: dig, maximumFractionDigits: dig });
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  $("ver").textContent = `Version ${APP_VERSION} · Erkennung ${BBJ.VERSION} · Analyse lokal im Browser`;
 
-  const state = { source: "demo", frames: [], fps: 30, w: 0, h: 0, result: null, videoURL: null, file: null, playing: false, demoT: 0 };
+  let toastT = 0;
+  function toast(t) { const el = $("toast"); el.textContent = t; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => (el.hidden = true), 2400); }
 
-  // ---------- Einstellungen ----------
-  const LS = "bbj-settings";
-  const fields = ["s-height", "s-pxcm", "s-tol", "s-air", "s-dir", "s-model", "s-rate", "s-step"];
-  try {
-    const saved = JSON.parse(localStorage.getItem(LS) || "{}");
-    for (const id of fields) if (id in saved) { const el = $(id); if (el.type === "checkbox") el.checked = saved[id]; else el.value = saved[id]; }
-  } catch (e) {}
-  for (const id of fields) $(id).addEventListener("change", () => {
-    try { const o = {}; for (const f of fields) { const el = $(f); o[f] = el.type === "checkbox" ? el.checked : el.value; } localStorage.setItem(LS, JSON.stringify(o)); } catch (e) {}
-  });
-  const num = (id) => { const v = parseFloat($(id).value.replace(",", ".")); return isFinite(v) && v > 0 ? v : null; };
+  // ---------------- Einstellungen ----------------
+  const LS = "bbj-settings-v2";
+  const FIELDS = ["s-height", "s-pxcm", "s-dir", "s-side", "s-tol", "s-air", "s-step", "s-model", "s-rate", "s-theme", "t-voice", "t-sound", "t-skel"];
+  const store = { get(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
+  const saved = store.get(LS) || {};
+  for (const id of FIELDS) if (id in saved) { const el = $(id); if (el.type === "checkbox") el.checked = saved[id]; else el.value = saved[id]; }
+  function saveSettings() { const o = {}; for (const id of FIELDS) { const el = $(id); o[id] = el.type === "checkbox" ? el.checked : el.value; } store.set(LS, o); }
+  FIELDS.forEach((id) => $(id).addEventListener("change", saveSettings));
+  function applyTheme() { const v = $("s-theme").value; if (v) document.documentElement.setAttribute("data-theme", v); else document.documentElement.removeAttribute("data-theme"); }
+  $("s-theme").addEventListener("change", () => { applyTheme(); paint(); });
+  applyTheme();
+  const num = (id) => { const v = parseFloat(String($(id).value).replace(",", ".")); return isFinite(v) && v > 0 ? v : null; };
   function cfg(extra) {
     return Object.assign({
       pixelProCm: num("s-pxcm"), koerpergroesseCm: num("s-height"),
       overstepToleranzCm: parseFloat($("s-tol").value) || 0, flugSchwelleCm: parseFloat($("s-air").value) || 4,
-      richtung: $("s-dir").value, einzelschrittAlsFehler: $("s-step").checked,
+      richtung: $("s-dir").value, seite: $("s-side").value, einzelschrittAlsFehler: $("s-step").checked,
     }, extra || {});
   }
+  $("open-settings").addEventListener("click", () => { const d = $("settings"); if (d.showModal) d.showModal(); else d.setAttribute("open", ""); });
+  $("close-settings").addEventListener("click", () => { const d = $("settings"); if (d.close) d.close(); else d.removeAttribute("open"); });
+  $("settings").addEventListener("click", (e) => { if (e.target === e.currentTarget && e.currentTarget.close) e.currentTarget.close(); });
+  ["s-model"].forEach((id) => $(id).addEventListener("change", () => { landmarker = null; setModel("idle"); }));
 
-  // ---------- MediaPipe ----------
+  // ---------------- MediaPipe ----------------
   let visionMod = null, landmarker = null, lmKey = "";
+  function setModel(st, txt) {
+    const chip = $("model-chip"); chip.className = "chip " + ({ ready: "ready", busy: "busy", err: "err" }[st] || "");
+    $("model-txt").textContent = txt || ({ ready: "KI bereit", busy: "Lade KI …", err: "KI-Fehler", idle: "KI nicht geladen" }[st]);
+  }
   async function loadVision() {
     if (visionMod) return visionMod;
     let lastErr;
@@ -688,215 +913,255 @@ footer p { margin: 0; max-width: 70ch; }
   async function getLandmarker() {
     const variant = $("s-model").value;
     if (landmarker && lmKey === variant) return landmarker;
-    const { mod, files } = await loadVision();
-    if (landmarker) { try { landmarker.close(); } catch (e) {} }
-    const opts = (delegate) => ({ baseOptions: { modelAssetPath: MODEL_URL(variant), delegate }, runningMode: "VIDEO", numPoses: 1,
-      minPoseDetectionConfidence: 0.5, minPosePresenceConfidence: 0.5, minTrackingConfidence: 0.5 });
-    try { landmarker = await mod.PoseLandmarker.createFromOptions(files, opts("GPU")); }
-    catch (e) { landmarker = await mod.PoseLandmarker.createFromOptions(files, opts("CPU")); }
-    lmKey = variant; return landmarker;
+    setModel("busy");
+    try {
+      const { mod, files } = await loadVision();
+      if (landmarker) { try { landmarker.close(); } catch (e) {} }
+      const opts = (delegate) => ({ baseOptions: { modelAssetPath: MODEL_URL(variant), delegate }, runningMode: "VIDEO", numPoses: 1,
+        minPoseDetectionConfidence: 0.5, minPosePresenceConfidence: 0.5, minTrackingConfidence: 0.5 });
+      let dev = "GPU";
+      try { landmarker = await mod.PoseLandmarker.createFromOptions(files, opts("GPU")); }
+      catch (e) { dev = "CPU"; landmarker = await mod.PoseLandmarker.createFromOptions(files, opts("CPU")); }
+      lmKey = variant; setModel("ready", `KI bereit · ${variant} · ${dev}`); return landmarker;
+    } catch (e) { setModel("err"); throw e; }
   }
   function toFrame(res, w, h) {
     const f = new Float32Array(99).fill(NaN);
-    if (res && res.landmarks && res.landmarks.length) {
-      res.landmarks[0].forEach((p, j) => { f[j * 3] = p.x * w; f[j * 3 + 1] = p.y * h; f[j * 3 + 2] = p.visibility == null ? 1 : p.visibility; });
-    }
+    if (res && res.landmarks && res.landmarks.length) res.landmarks[0].forEach((p, j) => { f[j * 3] = p.x * w; f[j * 3 + 1] = p.y * h; f[j * 3 + 2] = p.visibility == null ? 1 : p.visibility; });
     return f;
   }
 
-  // ---------- Zeichnen ----------
-  function drawPose(ctx, f, opt) {
+  // ---------------- Zeichnen ----------------
+  function drawPose(ctx, f, alpha) {
     if (!f || isNaN(f[23 * 3])) return;
-    const lw = Math.max(2, ctx.canvas.width / 400);
-    ctx.lineCap = "round"; ctx.lineWidth = lw; ctx.strokeStyle = opt && opt.color || "rgba(255,255,255,0.92)";
-    ctx.beginPath();
-    for (const [a, b] of SKEL) { ctx.moveTo(f[a * 3], f[a * 3 + 1]); ctx.lineTo(f[b * 3], f[b * 3 + 1]); }
-    ctx.stroke();
-    ctx.fillStyle = "rgba(255,255,255,0.95)";
-    for (const j of [0, 15, 16, 19, 20, 23, 24, 27, 28]) { ctx.beginPath(); ctx.arc(f[j * 3], f[j * 3 + 1], lw * 1.4, 0, 7); ctx.fill(); }
-  }
-  function drawOverlay(ctx, t, result) {
-    const W = ctx.canvas.width, H = ctx.canvas.height, s = result.series;
-    if (!s) return;
-    const f = s.lm[Math.max(0, Math.min(s.lm.length - 1, t))];
-    const [ga, gb] = s.ground, lw = Math.max(2, W / 400);
-    ctx.strokeStyle = "rgba(255,255,255,0.28)"; ctx.lineWidth = 1; ctx.setLineDash([8, 8]);
-    ctx.beginPath(); ctx.moveTo(0, gb); ctx.lineTo(W, ga * W + gb); ctx.stroke(); ctx.setLineDash([]);
-    drawPose(ctx, f);
-    const rep = repAt(result.reps, t);
-    if (rep) {
-      const [a, b] = rep._fenster2;
-      if (t >= a && t <= b) {
-        const col = rep.fehler2Overstep ? css("--bad") : "#3FB7FF";
-        ctx.strokeStyle = col; ctx.lineWidth = lw * 1.5; ctx.beginPath(); ctx.moveTo(rep._fingerX, 0); ctx.lineTo(rep._fingerX, H); ctx.stroke();
-        ctx.fillStyle = col; for (const j of [31, 32]) { ctx.beginPath(); ctx.arc(f[j * 3], f[j * 3 + 1], lw * 3, 0, 7); ctx.fill(); }
-      }
-      for (const [zs, ze] of rep._zusatz) if (t >= zs && t <= ze + 10) {
-        ctx.fillStyle = css("--bad"); ctx.font = `800 ${Math.round(H / 16)}px ${css("--f-display")}`;
-        ctx.fillText("ZUSATZSPRUNG", W * 0.03, H * 0.93);
-      }
-      const done = t >= rep._ende - 1 || (t >= b && rep.fehler2Overstep);
-      const txt = done ? `WDH ${rep.wdh} · ${rep.kiLabel === "korrekt" ? "KORREKT" : reasons(rep).toUpperCase()}` : `WDH ${rep.wdh} · WIRD GEPRÜFT`;
-      const col = done ? (rep.kiLabel === "korrekt" ? css("--ok") : css("--bad")) : "#FFC24A";
-      const fs = Math.round(H / 18);
-      ctx.font = `800 ${fs}px ${css("--f-display")}`;
-      const tw = ctx.measureText(txt).width;
-      ctx.fillStyle = "rgba(0,0,0,0.62)"; ctx.fillRect(W * 0.02, H * 0.03, tw + fs, fs * 1.5);
-      ctx.fillStyle = col; ctx.fillText(txt, W * 0.02 + fs / 2, H * 0.03 + fs * 1.1);
-    }
+    const lw = Math.max(2, ctx.canvas.width / 380);
+    ctx.save(); ctx.globalAlpha = alpha == null ? 1 : alpha;
+    ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.lineWidth = lw; ctx.strokeStyle = "rgba(255,255,255,0.9)";
+    ctx.beginPath(); for (const [a, b] of SKEL) { ctx.moveTo(f[a * 3], f[a * 3 + 1]); ctx.lineTo(f[b * 3], f[b * 3 + 1]); } ctx.stroke();
+    ctx.fillStyle = "#fff"; for (const j of [0, 15, 16, 23, 24, 27, 28]) { ctx.beginPath(); ctx.arc(f[j * 3], f[j * 3 + 1], lw * 1.3, 0, 7); ctx.fill(); }
+    ctx.fillStyle = "#3FB7FF"; for (const j of [19, 20]) { ctx.beginPath(); ctx.arc(f[j * 3], f[j * 3 + 1], lw * 1.8, 0, 7); ctx.fill(); }
+    ctx.fillStyle = css("--accent") || "#FF5B37"; for (const j of [31, 32]) { ctx.beginPath(); ctx.arc(f[j * 3], f[j * 3 + 1], lw * 1.8, 0, 7); ctx.fill(); }
+    ctx.restore();
   }
   const repAt = (reps, t) => { let cur = null; for (const r of reps) if (t >= r.frameTiefpunkt - 15) cur = r; return cur; };
+  const unit = (r) => (r.einheit || "").startsWith("cm") ? "cm" : "px";
   function reasons(r) {
     const p = [];
     if (r.fehler1Doppelsprung) p.push(r.anzahlZusatzspruenge > 1 ? `${r.anzahlZusatzspruenge}× Zusatzsprung` : "Doppelsprung");
     if (r.fehler2Overstep) p.push(`Overstep ${fmt(r.overstepWert, true)} ${unit(r)}`);
     return p.join(" + ");
   }
-  const unit = (r) => r.einheit.startsWith("cm") ? "cm" : "px";
-  const fmt = (v, sign) => (v == null ? "–" : (sign && v > 0 ? "+" : "") + v.toLocaleString("de-DE", { maximumFractionDigits: 1, minimumFractionDigits: 1 }));
+  function drawOverlay(ctx, t, result) {
+    const W = ctx.canvas.width, H = ctx.canvas.height, s = result.series;
+    if (!s) return;
+    const f = s.lm[Math.max(0, Math.min(s.lm.length - 1, t))];
+    const [ga, gb] = s.ground, lw = Math.max(2, W / 380);
+    ctx.strokeStyle = "rgba(255,255,255,0.25)"; ctx.lineWidth = 1.5; ctx.setLineDash([10, 10]);
+    ctx.beginPath(); ctx.moveTo(0, gb); ctx.lineTo(W, ga * W + gb); ctx.stroke(); ctx.setLineDash([]);
+    drawPose(ctx, f);
+    const rep = repAt(result.reps, t);
+    if (!rep) return;
+    const [a, b] = rep._fenster2;
+    if (t >= a && t <= b) {
+      const col = rep.fehler2Overstep ? css("--bad") : "#3FB7FF";
+      ctx.strokeStyle = col; ctx.lineWidth = lw * 1.4; ctx.setLineDash([lw * 4, lw * 3]);
+      ctx.beginPath(); ctx.moveTo(rep._fingerX, 0); ctx.lineTo(rep._fingerX, H); ctx.stroke(); ctx.setLineDash([]);
+    }
+    for (const [zs, ze] of rep._zusatz) if (t >= zs && t <= ze + 10) {
+      ctx.fillStyle = css("--bad"); ctx.font = `900 ${Math.round(H / 14)}px ${css("--f-display")}`; ctx.fillText("ZUSATZSPRUNG", W * 0.03, H * 0.92);
+    }
+    const done = t >= rep._ende - 1 || (t >= b && rep.fehler2Overstep);
+    const txt = done ? `WDH ${rep.wdh} · ${rep.kiLabel === "korrekt" ? "KORREKT" : reasons(rep).toUpperCase()}` : `WDH ${rep.wdh} · WIRD GEPRÜFT`;
+    const col = done ? (rep.kiLabel === "korrekt" ? css("--ok") : css("--bad")) : "#FFB648";
+    const fs = Math.round(H / 17); ctx.font = `850 ${fs}px ${css("--f-display")}`;
+    const tw = ctx.measureText(txt).width, x0 = W * 0.025, y0 = H * 0.04, ph = fs * 1.55;
+    ctx.fillStyle = "rgba(0,0,0,0.6)"; roundRect(ctx, x0, y0, tw + fs, ph, ph / 2); ctx.fill();
+    ctx.fillStyle = col; ctx.fillText(txt, x0 + fs / 2, y0 + fs * 1.1);
+  }
+  function roundRect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
 
-  // ---------- Ergebnisse ----------
+  // ---------------- Sitzung & Ergebnisse ----------------
+  const S = { source: "demo", name: "Beispiel", frames: [], fps: 30, w: 0, h: 0, result: null, videoURL: null, korr: {}, missing: 0, created: new Date().toISOString(), playing: false, t: 0 };
+  function setSession(o) { Object.assign(S, { korr: {}, missing: 0, created: new Date().toISOString() }, o); $("note").value = o.note || ""; evaluate(); }
   function evaluate() {
-    if (!state.frames.length) return;
-    state.result = BBJ.analyse(state.frames, state.fps, cfg(state.source === "demo" ? { pixelProCm: 4, koerpergroesseCm: null } : null));
+    if (!S.frames.length) return;
+    S.result = BBJ.analyse(S.frames, S.fps, cfg(S.source === "demo" ? { pixelProCm: 4, koerpergroesseCm: null, richtung: "auto", seite: "auto" } : null));
     renderResults();
   }
+  const KORR = [["", "– Was war wirklich? –"], ["korrekt", "Korrekt"], ["F1", "Doppelsprung"], ["F2", "Overstepping"], ["F3", "Kein Brustkontakt"], ["mehrere", "Mehrere Fehler"], ["keine", "Keine echte Wdh"]];
+  function kiBinary(r) { return r.kiLabel === "korrekt" ? "korrekt" : "fehlerhaft"; }
+  function truthBinary(v) { return v === "korrekt" ? "korrekt" : v === "keine" ? "keine" : "fehlerhaft"; }
   function renderResults() {
-    const r = state.result, reps = r.reps;
-    $("st-n").textContent = reps.length;
-    $("st-ok").textContent = reps.filter((x) => x.kiLabel === "korrekt").length;
-    $("st-bad").textContent = reps.filter((x) => x.kiLabel !== "korrekt").length;
-    $("st-un").textContent = reps.filter((x) => x.unsicher).length;
-    $("r-source").textContent = state.source === "demo" ? "Beispiel · simulierte Daten" : state.source === "live" ? "Live-Aufnahme" : (state.file ? state.file.name : "Video");
-    $("notes").textContent = r.meta.hinweise.join(" ");
+    const r = S.result, reps = r.reps;
+    const ok = reps.filter((x) => x.kiLabel === "korrekt").length, bad = reps.length - ok, un = reps.filter((x) => x.unsicher).length;
+    $("st-n").textContent = reps.length; $("st-ok").textContent = ok; $("st-bad").textContent = bad; $("st-un").textContent = un;
+    const pOk = reps.length ? ok / reps.length * 100 : 0, pBad = reps.length ? bad / reps.length * 100 : 0;
+    $("ring-ok").setAttribute("stroke-dasharray", `${pOk} ${100 - pOk}`);
+    $("ring-bad").setAttribute("stroke-dasharray", `${pBad} ${100 - pBad}`); $("ring-bad").setAttribute("stroke-dashoffset", `${-pOk}`);
+    const src = $("r-src"); src.textContent = S.source === "demo" ? "Beispiel · simulierte Daten" : S.name; src.className = "tag" + (S.source === "demo" ? " example" : "");
+    $("r-meta").textContent = `${fmt(S.frames.length / S.fps, false)} s · ${Math.round(S.fps)} fps · Seite ${({ L: "links", R: "rechts", beide: "beide" })[r.meta.seite] || "–"} · Richtung ${r.meta.richtung || "–"}`;
+    $("notes").textContent = (r.meta.hinweise || []).join(" ");
     const ul = $("reps"); ul.innerHTML = "";
-    if (!reps.length) {
-      const li = document.createElement("li"); li.className = "status"; li.textContent = "Keine Wiederholung erkannt. Prüfe Kameraposition und ob die ganze Person im Bild ist."; ul.append(li);
-    }
+    if (!reps.length) { const li = document.createElement("li"); li.className = "empty"; li.textContent = "Keine Wiederholung erkannt. Prüfe, ob die Kamera seitlich steht und die ganze Person im Bild ist."; ul.append(li); }
     for (const x of reps) {
-      const li = document.createElement("li");
-      const b = document.createElement("button"); b.type = "button"; b.className = "rep";
-      const pill = x.kiLabel === "korrekt" ? '<span class="pill ok">korrekt</span>' : '<span class="pill bad">fehlerhaft</span>';
-      const t = x.kiLabel === "korrekt" ? "Saubere Ausführung" : reasons(x);
-      b.innerHTML = `<span class="n">${x.wdh}</span><span class="t"></span>${pill}<span class="d"></span>`;
-      b.querySelector(".t").textContent = t;
-      const d = [`bei ${fmt(x.zeitS)} s`, `Zehe zu Fingerspitze ${fmt(x.overstepWert, true)} ${unit(x)}`];
-      if (x.sprungweite != null) d.push(`Sprung ${fmt(x.sprungweite)} ${unit(x)}`);
-      if (x.unsicher) d.push("unsicher");
-      if (x.hinweise) d.push(x.hinweise);
-      b.querySelector(".d").innerHTML = d.map((s) => `<span>${s.replace(/[<>&]/g, "")}</span>`).join("");
-      b.addEventListener("click", () => { seekFrame(Math.max(0, x.frameTiefpunkt - 15)); $("player").scrollIntoView({ behavior: "smooth", block: "center" }); });
-      li.append(b); ul.append(li);
+      const li = document.createElement("li"); li.className = "rep";
+      const cls = x.kiLabel === "korrekt" ? "ok" : "bad";
+      const title = x.kiLabel === "korrekt" ? "Saubere Ausführung" : reasons(x);
+      const det = [`${fmt(x.zeitS)} s`, `Zehe → Finger ${fmt(x.overstepWert, true)} ${unit(x)}`];
+      if (x.sprungweite != null) det.push(`Sprung ${fmt(x.sprungweite, false, 0)} ${unit(x)}`);
+      if (x.hinweise) det.push(x.hinweise);
+      li.innerHTML = `<button type="button" class="rn ${cls}" aria-label="Zu Wiederholung ${x.wdh} springen">${x.wdh}</button>
+        <div class="rh"><span class="rt">${esc(title)}</span>${x.unsicher ? '<span class="pill warn">unsicher</span>' : `<span class="pill ${cls}">${x.kiLabel}</span>`}</div>
+        <div class="rd">${det.map((d) => `<span>${esc(d)}</span>`).join("")}</div>
+        <div class="rc"><select aria-label="Tatsächliches Ergebnis Wiederholung ${x.wdh}">${KORR.map(([v, t]) => `<option value="${v}">${t}</option>`).join("")}</select></div>`;
+      const sel = li.querySelector("select"); sel.value = S.korr[x.wdh] || "";
+      const mark = () => { li.classList.remove("corrected-ok", "corrected-bad"); const v = sel.value; if (!v) return; li.classList.add(truthBinary(v) === kiBinary(x) ? "corrected-ok" : "corrected-bad"); };
+      sel.addEventListener("change", () => { if (sel.value) S.korr[x.wdh] = sel.value; else delete S.korr[x.wdh]; mark(); renderAgree(); });
+      mark();
+      li.querySelector(".rn").addEventListener("click", () => { seekFrame(Math.max(0, x.frameTiefpunkt - 15)); $("player").scrollIntoView({ behavior: "smooth", block: "center" }); });
+      ul.append(li);
     }
-    const lane = $("lane"); lane.innerHTML = "";
-    const T = state.frames.length || 1;
-    for (const x of reps) { const i = document.createElement("i"); i.className = x.kiLabel === "korrekt" ? "k" : "f"; i.style.left = (x.frameTiefpunkt / T * 100) + "%"; lane.append(i); }
+    const lane = $("lane"); lane.innerHTML = ""; const T = S.frames.length || 1;
+    for (const x of reps) { const i = document.createElement("i"); i.className = (x.kiLabel === "korrekt" ? "k" : "f") + (x.unsicher ? " u" : ""); i.style.left = (x.frameTiefpunkt / T * 100) + "%"; lane.append(i); }
     const cur = document.createElement("b"); cur.id = "lane-cur"; lane.append(cur);
-    setupPlayer();
+    renderAgree(); setupPlayer();
   }
+  function renderAgree() {
+    const reps = S.result ? S.result.reps : [];
+    const rated = reps.filter((x) => S.korr[x.wdh]);
+    const same = rated.filter((x) => truthBinary(S.korr[x.wdh]) === kiBinary(x)).length;
+    $("missing-n").textContent = S.missing ? `${S.missing} übersehen` : "";
+    if (!rated.length && !S.missing) { $("agree").innerHTML = "Trag bei jeder Wiederholung ein, was wirklich passiert ist. So sehen wir, wo die KI danebenliegt."; return; }
+    $("agree").innerHTML = `KI stimmt bei <b>${same} von ${rated.length}</b> bewerteten Wdh mit dir überein` + (S.missing ? ` · <b>${S.missing}</b> Wdh übersehen` : "");
+  }
+  $("missing").addEventListener("click", () => { S.missing++; renderAgree(); toast("Übersehene Wiederholung gezählt"); });
+  $("missing").addEventListener("contextmenu", (e) => { e.preventDefault(); S.missing = Math.max(0, S.missing - 1); renderAgree(); });
+  $("reeval").addEventListener("click", () => { evaluate(); toast("Neu bewertet"); });
 
-  // ---------- Player ----------
+  // ---------------- Player ----------------
   const pv = $("pv"), pbg = $("pbg"), pov = $("pov");
   function setupPlayer() {
     stopPlay();
-    if (state.source === "video" && state.videoURL) {
-      pv.hidden = false; pbg.hidden = true;
-      if (pv.src !== state.videoURL) pv.src = state.videoURL;
-      pov.width = state.w; pov.height = state.h;
-    } else {
-      pv.hidden = true; pbg.hidden = false;
-      pbg.width = pov.width = state.w; pbg.height = pov.height = state.h;
-    }
-    state.demoT = 0; paint();
+    const hasVid = S.source === "video" && S.videoURL;
+    pv.hidden = !hasVid; pbg.hidden = !!hasVid;
+    if (hasVid && pv.src !== S.videoURL) pv.src = S.videoURL;
+    pov.width = pbg.width = S.w || 1280; pov.height = pbg.height = S.h || 720;
+    $("player").style.aspectRatio = `${pov.width} / ${pov.height}`;
+    S.t = 0; paint();
   }
-  const curFrame = () => state.source === "video" && !pv.hidden ? Math.round(pv.currentTime * state.fps) : Math.floor(state.demoT);
-  function seekFrame(f) {
-    if (!pv.hidden) pv.currentTime = f / state.fps; else state.demoT = f;
-    paint();
-  }
+  const curFrame = () => !pv.hidden ? Math.round(pv.currentTime * S.fps) : Math.floor(S.t);
+  function seekFrame(f) { if (!pv.hidden) pv.currentTime = f / S.fps; else S.t = f; paint(); }
   function paint() {
-    if (!state.result) return;
-    const T = state.frames.length, f = Math.min(T - 1, Math.max(0, curFrame()));
+    if (!S.result) return;
+    const T = S.frames.length, f = Math.min(T - 1, Math.max(0, curFrame()));
     if (pv.hidden) {
-      const c = pbg.getContext("2d");
-      c.fillStyle = css("--stage"); c.fillRect(0, 0, pbg.width, pbg.height);
-      c.strokeStyle = css("--stage-line"); c.lineWidth = 1;
-      for (let x = 0; x < pbg.width; x += 100) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, pbg.height); c.stroke(); }
+      const c = pbg.getContext("2d"); c.fillStyle = "#06090D"; c.fillRect(0, 0, pbg.width, pbg.height);
+      c.strokeStyle = "rgba(255,255,255,0.05)"; c.lineWidth = 1; const step = pbg.width / 24;
+      for (let x = 0; x < pbg.width; x += step) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, pbg.height); c.stroke(); }
     }
-    const o = pov.getContext("2d"); o.clearRect(0, 0, pov.width, pov.height);
-    drawOverlay(o, f, state.result);
-    $("seek").value = Math.round(f / Math.max(1, T - 1) * 1000);
-    $("ptime").textContent = fmt(f / state.fps) + " s";
+    const o = pov.getContext("2d"); o.clearRect(0, 0, pov.width, pov.height); drawOverlay(o, f, S.result);
+    $("seek").value = Math.round(f / Math.max(1, T - 1) * 1000); $("ptime").textContent = fmt(f / S.fps) + " s";
     const cur = $("lane-cur"); if (cur) cur.style.left = (f / Math.max(1, T - 1) * 100) + "%";
   }
   let raf = 0, lastTs = 0;
   function loop(ts) {
-    if (!state.playing) return;
-    if (pv.hidden) {
-      const dt = lastTs ? (ts - lastTs) / 1000 : 0; lastTs = ts;
-      state.demoT += dt * state.fps;
-      if (state.demoT >= state.frames.length - 1) { state.demoT = state.frames.length - 1; stopPlay(); }
-    } else if (pv.ended) stopPlay();
+    if (!S.playing) return;
+    if (pv.hidden) { const dt = lastTs ? (ts - lastTs) / 1000 : 0; lastTs = ts; S.t += dt * S.fps; if (S.t >= S.frames.length - 1) { S.t = S.frames.length - 1; stopPlay(); } }
+    else if (pv.ended) stopPlay();
     paint(); raf = requestAnimationFrame(loop);
   }
   function startPlay() {
-    if (!state.result) return;
-    if (pv.hidden && state.demoT >= state.frames.length - 1) state.demoT = 0;
-    state.playing = true; lastTs = 0; $("ic-play").hidden = true; $("ic-pause").hidden = false; $("play").setAttribute("aria-label", "Pause");
-    if (!pv.hidden) pv.play().catch(() => {});
-    raf = requestAnimationFrame(loop);
+    if (!S.result) return; if (pv.hidden && S.t >= S.frames.length - 1) S.t = 0;
+    S.playing = true; lastTs = 0; $("ic-play").hidden = true; $("ic-pause").hidden = false; $("play").setAttribute("aria-label", "Pause");
+    if (!pv.hidden) pv.play().catch(() => {}); raf = requestAnimationFrame(loop);
   }
-  function stopPlay() {
-    state.playing = false; cancelAnimationFrame(raf); $("ic-play").hidden = false; $("ic-pause").hidden = true; $("play").setAttribute("aria-label", "Abspielen");
-    if (!pv.hidden) pv.pause();
-  }
-  $("play").addEventListener("click", () => (state.playing ? stopPlay() : startPlay()));
-  $("seek").addEventListener("input", (e) => { seekFrame(Math.round(e.target.value / 1000 * (state.frames.length - 1))); });
-  $("lane").addEventListener("click", (e) => { const r = e.currentTarget.getBoundingClientRect(); seekFrame(Math.round((e.clientX - r.left) / r.width * (state.frames.length - 1))); });
+  function stopPlay() { S.playing = false; cancelAnimationFrame(raf); $("ic-play").hidden = false; $("ic-pause").hidden = true; $("play").setAttribute("aria-label", "Abspielen"); if (!pv.hidden) pv.pause(); }
+  $("play").addEventListener("click", () => (S.playing ? stopPlay() : startPlay()));
+  $("seek").addEventListener("input", (e) => seekFrame(Math.round(e.target.value / 1000 * (S.frames.length - 1))));
+  $("lane").addEventListener("click", (e) => { const r = e.currentTarget.getBoundingClientRect(); seekFrame(Math.round((e.clientX - r.left) / r.width * (S.frames.length - 1))); });
   pv.addEventListener("seeked", paint);
 
-  // ---------- Export ----------
+  // ---------------- Export / Import ----------------
+  function encodeFrames(frames) {
+    const a = new Int16Array(frames.length * 99);
+    frames.forEach((f, i) => { for (let j = 0; j < 33; j++) {
+      const x = f[j * 3], y = f[j * 3 + 1], v = f[j * 3 + 2], o = i * 99 + j * 3;
+      a[o] = isNaN(x) ? -32768 : Math.max(-32767, Math.min(32767, Math.round(x)));
+      a[o + 1] = isNaN(y) ? -32768 : Math.max(-32767, Math.min(32767, Math.round(y)));
+      a[o + 2] = isNaN(v) ? -32768 : Math.round(v * 1000);
+    } });
+    const bytes = new Uint8Array(a.buffer); let bin = ""; const CH = 0x8000;
+    for (let i = 0; i < bytes.length; i += CH) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + CH));
+    return btoa(bin);
+  }
+  function decodeFrames(b64, n) {
+    const bin = atob(b64), bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const a = new Int16Array(bytes.buffer), out = [];
+    for (let i = 0; i < n; i++) { const f = new Float32Array(99); for (let j = 0; j < 99; j++) { const v = a[i * 99 + j]; f[j] = v === -32768 ? NaN : (j % 3 === 2 ? v / 1000 : v); } out.push(f); }
+    return out;
+  }
+  const cleanRep = (r) => { const o = {}; for (const k in r) if (k[0] !== "_") o[k] = r[k]; return o; };
+  function sessionJSON() {
+    return {
+      format: "bbj-check-session", formatVersion: 1, app: APP_VERSION, erkennung: BBJ.VERSION, erstellt: S.created, exportiert: new Date().toISOString(),
+      quelle: S.source, name: S.name, fps: S.fps, breite: S.w, hoehe: S.h, bilder: S.frames.length, einstellungen: cfg(),
+      geraet: navigator.userAgent, notiz: $("note").value, uebersehen: S.missing,
+      ki: S.result ? S.result.reps.map(cleanRep) : [], meta: S.result ? S.result.meta : null,
+      korrekturen: Object.entries(S.korr).map(([wdh, wert]) => ({ wdh: +wdh, wert })),
+      punkte: { kodierung: "int16-base64 [x_px, y_px, sichtbarkeit*1000] × 33 je Bild, -32768 = fehlt", daten: encodeFrames(S.frames) },
+    };
+  }
+  function fileBase() { const d = new Date(S.created); const p = (n) => String(n).padStart(2, "0"); return `bbj_${S.source}_${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}`; }
+  async function shareOrDownload(blob, filename) {
+    const file = new File([blob], filename, { type: blob.type });
+    try { if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: filename }); return "geteilt"; } }
+    catch (e) { if (e && e.name === "AbortError") return "abgebrochen"; }
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename; document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000); return "gespeichert";
+  }
+  $("export").addEventListener("click", async () => {
+    if (!S.result) return;
+    const blob = new Blob([JSON.stringify(sessionJSON())], { type: "application/json" });
+    const r = await shareOrDownload(blob, fileBase() + ".json");
+    if (r !== "abgebrochen") toast(r === "geteilt" ? "Daten geteilt" : "Datei gespeichert");
+  });
   const COLS = [["wdh", "wdh"], ["zeit_s", "zeitS"], ["ki_label", "kiLabel"], ["fehler1_doppelsprung", "fehler1Doppelsprung"], ["anzahl_zusatzspruenge", "anzahlZusatzspruenge"],
-    ["fehler2_overstep", "fehler2Overstep"], ["overstep_wert", "overstepWert"], ["einheit", "einheit"], ["sprung_erkannt", "sprungErkannt"], ["sprungweite", "sprungweite"],
+    ["fehler2_overstep", "fehler2Overstep"], ["overstep_wert", "overstepWert"], ["grenzfall", "grenzfall"], ["einheit", "einheit"], ["sprung_erkannt", "sprungErkannt"], ["sprungweite", "sprungweite"],
     ["einzelschritt_hinweis", "einzelschrittHinweis"], ["sichtbarkeit", "sichtbarkeit"], ["unsicher", "unsicher"], ["hinweise", "hinweise"]];
   function table(sep) {
-    const name = state.source === "demo" ? "demo" : state.file ? state.file.name : "live";
     const val = (v) => v === true ? "ja" : v === false ? "nein" : v == null ? "" : String(v).replace(/[;\t\n]/g, " ");
-    const lines = [["video", ...COLS.map((c) => c[0])].join(sep)];
-    for (const r of state.result.reps) lines.push([name, ...COLS.map((c) => val(r[c[1]]))].join(sep));
+    const lines = [["quelle", ...COLS.map((c) => c[0]), "korrektur"].join(sep)];
+    for (const r of S.result.reps) lines.push([S.name, ...COLS.map((c) => val(r[c[1]])), S.korr[r.wdh] || ""].join(sep));
     return lines.join("\n");
   }
-  $("csv").addEventListener("click", () => {
-    const blob = new Blob(["﻿" + table(";")], { type: "text/csv;charset=utf-8" });
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
-    a.download = (state.file ? state.file.name.replace(/\.[^.]+$/, "") : "bbj_" + state.source) + "_ergebnis.csv";
-    document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  $("csv").addEventListener("click", async () => { if (!S.result) return; const r = await shareOrDownload(new Blob(["﻿" + table(";")], { type: "text/csv" }), fileBase() + ".csv"); if (r !== "abgebrochen") toast("CSV " + r); });
+  $("copy").addEventListener("click", async () => { try { await navigator.clipboard.writeText(table("\t")); toast("Tabelle kopiert"); } catch (e) { toast("Kopieren nicht möglich"); } });
+  $("import").addEventListener("change", async (e) => {
+    const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+    try {
+      const j = JSON.parse(await f.text()); if (j.format !== "bbj-check-session") throw new Error("Keine BBJ-Check-Datei");
+      const frames = decodeFrames(j.punkte.daten, j.bilder);
+      setSession({ source: j.quelle === "demo" ? "demo" : "datei", name: j.name || f.name, frames, fps: j.fps, w: j.breite, h: j.hoehe, videoURL: null, note: j.notiz || "" });
+      S.created = j.erstellt || S.created; S.missing = j.uebersehen || 0; for (const k of j.korrekturen || []) S.korr[k.wdh] = k.wert;
+      renderResults(); toast("Datei geladen");
+    } catch (err) { toast("Datei konnte nicht gelesen werden: " + err.message); }
   });
-  $("copy").addEventListener("click", async (e) => {
-    const b = e.currentTarget, txt = table("\t");
-    try { await navigator.clipboard.writeText(txt); b.textContent = "Kopiert"; }
-    catch (err) { b.textContent = "Kopieren nicht möglich"; }
-    setTimeout(() => (b.textContent = "Tabelle kopieren"), 1800);
-  });
-  $("reeval").addEventListener("click", evaluate);
 
-  // ---------- Modi ----------
-  function setMode(m) {
-    for (const k of ["live", "video", "demo"]) { $("m-" + k).setAttribute("aria-pressed", k === m); $("p-" + k).hidden = k !== m; }
-    if (m !== "live" && liveOn) stopLive();
-    if (m === "demo") loadDemo();
+  // ---------------- Navigation ----------------
+  const VIEWS = ["live", "video", "results", "info"];
+  function go(tab, push) {
+    if (!VIEWS.includes(tab)) tab = "live";
+    for (const v of VIEWS) $("v-" + v).hidden = v !== tab;
+    document.querySelectorAll(".tabs button").forEach((b) => b.setAttribute("aria-current", b.dataset.tab === tab ? "page" : "false"));
+    if (tab !== "live" && liveOn) stopLive(false);
+    if (tab === "results") requestAnimationFrame(paint);
+    if (push !== false && location.hash !== "#" + tab) history.replaceState(null, "", "#" + tab);
+    window.scrollTo({ top: 0 });
   }
-  $("m-live").addEventListener("click", () => setMode("live"));
-  $("m-video").addEventListener("click", () => setMode("video"));
-  $("m-demo").addEventListener("click", () => setMode("demo"));
+  document.querySelectorAll(".tabs button").forEach((b) => b.addEventListener("click", () => go(b.dataset.tab)));
+  window.addEventListener("hashchange", () => go(location.hash.slice(1), false));
 
-  function loadDemo() {
-    const s = BBJ.synth();
-    Object.assign(state, { source: "demo", frames: s.frames, fps: s.fps, w: s.width, h: s.height, file: null });
-    evaluate();
-  }
-
-  // ---------- Video-Analyse ----------
+  // ---------------- Video-Analyse ----------------
   let cancelled = false, wake = null;
   async function keepAwake() { try { wake = await navigator.wakeLock.request("screen"); } catch (e) { wake = null; } }
   function releaseAwake() { try { wake && wake.release(); } catch (e) {} wake = null; }
@@ -904,176 +1169,170 @@ footer p { margin: 0; max-width: 70ch; }
   ["dragenter", "dragover"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add("over"); }));
   ["dragleave", "drop"].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove("over"); }));
   drop.addEventListener("drop", (e) => { const f = e.dataTransfer.files[0]; if (f) analyseFile(f); });
-  $("file").addEventListener("change", (e) => { const f = e.target.files[0]; if (f) analyseFile(f); e.target.value = ""; });
+  $("file").addEventListener("change", (e) => { const f = e.target.files[0]; e.target.value = ""; if (f) analyseFile(f); });
   $("v-cancel").addEventListener("click", () => { cancelled = true; });
-
   function waitEvent(el, ev, ms) {
     return new Promise((res, rej) => {
       const t = setTimeout(() => { el.removeEventListener(ev, h); rej(new Error("Zeitüberschreitung beim Lesen des Videos")); }, ms);
-      const h = () => { clearTimeout(t); el.removeEventListener(ev, h); res(); };
-      el.addEventListener(ev, h);
+      const h = () => { clearTimeout(t); el.removeEventListener(ev, h); res(); }; el.addEventListener(ev, h);
     });
   }
   async function analyseFile(file) {
-    cancelled = false;
-    $("v-prog").hidden = false; $("v-bar").style.width = "0%"; $("v-status").textContent = "Lade KI-Modell …";
-    const status = (t) => ($("v-status").textContent = t);
+    cancelled = false; $("v-prog").hidden = false; $("v-name").textContent = file.name; $("v-bar").style.width = "0%";
+    const status = (t) => ($("v-status").textContent = t); status("Lade KI-Modell …");
     try {
       await keepAwake();
       const lmk = await getLandmarker();
-      const url = URL.createObjectURL(file);
-      const v = document.createElement("video");
+      const url = URL.createObjectURL(file), v = document.createElement("video");
       v.muted = true; v.playsInline = true; v.preload = "auto"; v.src = url;
       await waitEvent(v, "loadeddata", 20000);
       const rate = parseInt($("s-rate").value, 10), dur = v.duration, n = Math.floor(dur * rate);
       if (!isFinite(dur) || n < 5) throw new Error("Video ist zu kurz oder kann nicht gelesen werden.");
-      const W = v.videoWidth, H = v.videoHeight, frames = [];
-      const t0 = performance.now();
+      const W = v.videoWidth, H = v.videoHeight, frames = [], t0 = performance.now();
       for (let i = 0; i < n; i++) {
         if (cancelled) throw new Error("abgebrochen");
-        v.currentTime = Math.min(dur - 0.001, i / rate);
-        await waitEvent(v, "seeked", 8000);
+        v.currentTime = Math.min(dur - 0.001, i / rate); await waitEvent(v, "seeked", 8000);
         frames.push(toFrame(lmk.detectForVideo(v, Math.round(i * 1000 / rate) + 1), W, H));
-        if (i % 5 === 0) {
-          const pct = (i + 1) / n, el = (performance.now() - t0) / 1000, rest = el / pct - el;
-          $("v-bar").style.width = (pct * 100).toFixed(1) + "%";
-          status(`Pose-Erkennung ${i + 1} / ${n} Bilder · noch ca. ${Math.max(1, Math.round(rest))} s`);
-        }
+        if (i % 5 === 0) { const pct = (i + 1) / n, el = (performance.now() - t0) / 1000, rest = el / pct - el; $("v-bar").style.width = (pct * 100).toFixed(1) + "%"; status(`Bild ${i + 1} von ${n} · noch ca. ${Math.max(1, Math.round(rest))} s`); }
       }
-      if (state.videoURL && state.source === "video") URL.revokeObjectURL(state.videoURL);
-      Object.assign(state, { source: "video", frames, fps: rate, w: W, h: H, videoURL: url, file });
-      $("v-bar").style.width = "100%"; status("Fertig");
-      evaluate();
-      $("results").scrollIntoView({ behavior: "smooth" });
-      setTimeout(() => ($("v-prog").hidden = true), 1200);
-    } catch (e) {
-      status(e.message === "abgebrochen" ? "Analyse abgebrochen." : "Fehler: " + e.message);
-    } finally { releaseAwake(); }
+      if (S.videoURL) URL.revokeObjectURL(S.videoURL);
+      setSession({ source: "video", name: file.name, frames, fps: rate, w: W, h: H, videoURL: url });
+      $("v-bar").style.width = "100%"; status("Fertig"); setTimeout(() => ($("v-prog").hidden = true), 800); go("results");
+    } catch (e) { status(e.message === "abgebrochen" ? "Analyse abgebrochen." : "Fehler: " + e.message); }
+    finally { releaseAwake(); }
   }
 
-  // ---------- Live ----------
+  // ---------------- Live ----------------
   const cam = $("cam"), camOv = $("cam-ov");
-  let liveOn = false, stream = null, liveFrames = [], liveTimes = [], announced = new Map(), liveRaf = 0, lastAnalyse = 0, audio = null;
-  const BUF_S = 20;
+  let liveOn = false, stream = null, buf = [], bufT = [], all = [], allT = [], announced = [], liveRaf = 0, lastAnalyse = 0, audio = null, facing = store.get("bbj-facing") || "environment";
+  const BUF_S = 20, MAX_ALL = 60 * 60 * 15;
+  $("cam-label").textContent = facing === "environment" ? "Rückkamera" : "Frontkamera";
+  $("cam-switch").addEventListener("click", async () => {
+    facing = facing === "environment" ? "user" : "environment"; store.set("bbj-facing", facing);
+    $("cam-label").textContent = facing === "environment" ? "Rückkamera" : "Frontkamera";
+    if (liveOn) { try { await openCamera(); } catch (e) { liveStatus("Kamera konnte nicht gewechselt werden."); } }
+  });
+  function liveStatus(t) { const el = $("live-status"); el.hidden = !t; el.textContent = t || ""; }
   function beep(ok) {
+    if (!$("t-sound").checked) return;
     try {
       audio = audio || new (window.AudioContext || window.webkitAudioContext)();
-      const o = audio.createOscillator(), g = audio.createGain();
-      o.frequency.value = ok ? 880 : 220; o.type = ok ? "sine" : "square";
-      g.gain.setValueAtTime(0.0001, audio.currentTime); g.gain.exponentialRampToValueAtTime(0.25, audio.currentTime + 0.02);
-      g.gain.exponentialRampToValueAtTime(0.0001, audio.currentTime + (ok ? 0.18 : 0.45));
-      o.connect(g).connect(audio.destination); o.start(); o.stop(audio.currentTime + 0.5);
+      const o = audio.createOscillator(), g = audio.createGain(), t = audio.currentTime;
+      o.type = ok ? "sine" : "square"; o.frequency.setValueAtTime(ok ? 880 : 240, t); if (ok) o.frequency.setValueAtTime(1320, t + 0.09);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.22, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + (ok ? 0.22 : 0.5));
+      o.connect(g).connect(audio.destination); o.start(); o.stop(t + 0.55);
     } catch (e) {}
-    try { navigator.vibrate && navigator.vibrate(ok ? 60 : [120, 60, 120]); } catch (e) {}
+    try { navigator.vibrate && navigator.vibrate(ok ? 50 : [120, 60, 120]); } catch (e) {}
   }
   function say(t) {
-    if (!$("live-voice").checked || !window.speechSynthesis) return;
+    if (!$("t-voice").checked || !window.speechSynthesis) return;
     try { const u = new SpeechSynthesisUtterance(t); u.lang = "de-DE"; u.rate = 1.1; speechSynthesis.cancel(); speechSynthesis.speak(u); } catch (e) {}
   }
-  function showBanner(n, ok, verdict, why) {
-    const b = $("banner"); b.hidden = false; b.className = "banner " + (ok == null ? "" : ok ? "ok" : "bad");
-    void b.offsetWidth; if (ok != null) b.classList.add("flash");
-    $("b-num").textContent = n; $("b-verdict").textContent = verdict; $("b-why").textContent = why;
+  function showVerdict(n, ok, title, why) {
+    const v = $("verdict"); v.hidden = false; v.className = "verdict" + (ok == null ? "" : ok ? " ok" : " bad");
+    void v.offsetWidth; if (ok != null) v.classList.add("pop");
+    $("vn").textContent = n; $("vt").textContent = title; $("vw").textContent = why;
+  }
+  function addFeed(e) {
+    const ul = $("feed"); if (ul.querySelector(".empty")) ul.innerHTML = "";
+    let li = ul.querySelector(`[data-n="${e.n}"]`);
+    if (!li) { li = document.createElement("li"); li.dataset.n = e.n; ul.prepend(li); }
+    const cls = e.ok ? "ok" : "bad";
+    li.innerHTML = `<span class="fn">${e.n}</span><span class="ft">${esc(e.title)}<small>${esc(e.why)}</small></span><span class="pill ${cls}">${e.ok ? "korrekt" : "fehler"}</span>`;
+    const okN = announced.filter((a) => a.ok).length; $("c-ok").textContent = okN; $("c-bad").textContent = announced.length - okN; $("feed-count").textContent = announced.length;
+  }
+  async function openCamera() {
+    if (stream) stream.getTracks().forEach((t) => t.stop());
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing, width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 60 } }, audio: false });
+    cam.srcObject = stream; cam.hidden = false; await cam.play();
+    camOv.width = cam.videoWidth; camOv.height = cam.videoHeight;
+    $("live-stage").style.aspectRatio = `${cam.videoWidth} / ${cam.videoHeight}`;
   }
   async function startLive() {
-    $("live-load").hidden = false; $("live-status").textContent = "Lade KI-Modell …";
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { liveStatus("Dieser Browser erlaubt keinen Kamerazugriff. Bitte Safari oder Chrome über den https-Link verwenden."); return; }
+    $("live-start").disabled = true; liveStatus("Lade KI-Modell …");
     try {
-      try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume(); } catch (e) {} // Ton nach Nutzeraktion freischalten
-      if (window.speechSynthesis) { try { speechSynthesis.speak(new SpeechSynthesisUtterance("")); } catch (e) {} }
+      try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume(); } catch (e) {}
+      if (window.speechSynthesis) { try { speechSynthesis.speak(new SpeechSynthesisUtterance(" ")); } catch (e) {} }
       const lmk = await getLandmarker();
-      $("live-status").textContent = "Starte Kamera …";
-      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 60 } }, audio: false });
-      cam.srcObject = stream; await cam.play();
-      camOv.width = cam.videoWidth; camOv.height = cam.videoHeight;
-      liveOn = true; liveFrames = []; liveTimes = []; announced = new Map();
-      $("live-load").hidden = true; $("live-stage").hidden = false; $("live-start").hidden = true; $("live-stop").hidden = false;
-      showBanner("–", null, "Bereit", "Erster Burpee wird erwartet");
+      liveStatus("Starte Kamera …"); await openCamera();
+      liveOn = true; buf = []; bufT = []; all = []; allT = []; announced = [];
+      $("feed").innerHTML = '<li class="empty" style="display:block;border:0;background:none;padding:0">Warte auf den ersten Burpee …</li>';
+      $("c-ok").textContent = "0"; $("c-bad").textContent = "0"; $("feed-count").textContent = "0";
+      $("live-ph").hidden = true; $("live-tips").hidden = true; $("live-chips").hidden = false; $("live-start").hidden = true; $("live-stop").hidden = false; liveStatus("");
+      showVerdict("–", null, "Bereit", "Erster Burpee wird erwartet");
       await keepAwake();
       let lastVT = -1;
       const tick = () => {
         if (!liveOn) return;
         if (cam.currentTime !== lastVT && cam.readyState >= 2) {
-          lastVT = cam.currentTime;
-          const now = performance.now();
-          const res = lmk.detectForVideo(cam, Math.round(now));
-          const f = toFrame(res, cam.videoWidth, cam.videoHeight);
-          liveFrames.push(f); liveTimes.push(now);
-          const maxN = Math.round(BUF_S * liveFps());
-          while (liveFrames.length > maxN) { liveFrames.shift(); liveTimes.shift(); }
-          const c = camOv.getContext("2d"); c.clearRect(0, 0, camOv.width, camOv.height); drawPose(c, f);
-          if (now - lastAnalyse > 400) { lastAnalyse = now; liveAnalyse(); }
+          lastVT = cam.currentTime; const now = performance.now();
+          const f = toFrame(lmk.detectForVideo(cam, Math.round(now)), cam.videoWidth, cam.videoHeight);
+          buf.push(f); bufT.push(now); if (all.length < MAX_ALL) { all.push(f); allT.push(now); }
+          const maxN = Math.round(BUF_S * liveFps()); while (buf.length > maxN) { buf.shift(); bufT.shift(); }
+          const c = camOv.getContext("2d"); c.clearRect(0, 0, camOv.width, camOv.height); if ($("t-skel").checked) drawPose(c, f);
+          if (now - lastAnalyse > 350) { lastAnalyse = now; liveAnalyse(); }
         }
         liveRaf = requestAnimationFrame(tick);
       };
       liveRaf = requestAnimationFrame(tick);
     } catch (e) {
-      $("live-status").textContent = e.name === "NotAllowedError" ? "Kamerazugriff wurde verweigert. Bitte in den Browser-Einstellungen erlauben." : "Fehler: " + e.message;
+      liveStatus(e && e.name === "NotAllowedError" ? "Kamerazugriff wurde verweigert. In den Einstellungen des Browsers für diese Seite erlauben." : "Fehler: " + (e && e.message));
       stopLive(true);
-    }
+    } finally { $("live-start").disabled = false; }
   }
-  function liveFps() {
-    const n = liveTimes.length; if (n < 10) return 30;
-    const span = (liveTimes[n - 1] - liveTimes[Math.max(0, n - 120)]) / 1000;
-    return Math.max(5, Math.min(60, (Math.min(n, 120) - 1) / span));
-  }
-  // Wiederholungen werden über die Uhrzeit ihres Tiefpunkts wiedererkannt,
-  // weil sich die Bildindizes im gleitenden Puffer bei jeder Neuberechnung verschieben.
-  function findEntry(ms) {
-    for (const e of announced.values()) if (Math.abs(e.ms - ms) < 700) return e;
-    return null;
-  }
+  function liveFps() { const n = bufT.length; if (n < 10) return 30; const k = Math.min(n, 120); return Math.max(5, Math.min(60, (k - 1) / ((bufT[n - 1] - bufT[n - k]) / 1000))); }
+  const findEntry = (ms) => announced.find((e) => Math.abs(e.ms - ms) < 700) || null;
   function liveAnalyse() {
-    const fps = liveFps();
-    $("cam-tag").textContent = Math.round(fps) + " fps";
-    if (liveFrames.length < fps * 1.5) return;
-    const r = BBJ.analyse(liveFrames, fps, cfg());
-    const T = liveFrames.length;
+    const fps = liveFps(); $("fps-chip").textContent = Math.round(fps) + " fps" + (fps < 15 ? " · zu langsam" : "");
+    if (buf.length < fps * 1.5) return;
+    const r = BBJ.analyse(buf, fps, cfg()), T = buf.length;
     r.reps.forEach((rep, k) => {
-      const ms = liveTimes[rep.frameTiefpunkt];
-      let e = findEntry(ms);
-      const f2Known = T - 1 > rep._fenster2[1];                    // Hände haben abgehoben
-      const final = k + 1 < r.reps.length                          // nächster Burpee hat begonnen
-        || (T - 1 - rep._fenster2[1]) > fps * 2.5;                 // oder 2,5 s nach dem Aufrichten (Satzende)
+      const ms = bufT[rep.frameTiefpunkt]; let e = findEntry(ms);
+      const f2Known = T - 1 > rep._fenster2[1];
+      const final = k + 1 < r.reps.length || (T - 1 - rep._fenster2[1]) > fps * 2.5;
       if (!e) {
         if (f2Known && rep.fehler2Overstep) {
-          e = { ms, n: announced.size + 1, final: false };
-          announced.set(ms, e);
-          showBanner(e.n, false, "Overstepping", `Zehe ${fmt(rep.overstepWert, true)} ${unit(rep)} vor den Fingerspitzen`);
-          beep(false); say("Fehler. Füße vor den Händen.");
+          e = { ms, n: announced.length + 1, final: false, ok: false, title: "Overstepping", why: `Zehe ${fmt(rep.overstepWert, true)} ${unit(rep)} vor den Fingerspitzen` + (rep.grenzfall ? " · Grenzfall" : "") };
+          announced.push(e); showVerdict(e.n, false, e.title, e.why); addFeed(e); beep(false); say("Fehler. Füße vor den Händen.");
         } else if (final) {
-          e = { ms, n: announced.size + 1, final: true };
-          announced.set(ms, e);
-          report(e.n, rep);
+          const ok = rep.kiLabel === "korrekt";
+          e = { ms, n: announced.length + 1, final: true, ok,
+            title: ok ? "Korrekt" : rep.fehler1Doppelsprung && rep.fehler2Overstep ? "2 Fehler" : rep.fehler1Doppelsprung ? "Doppelsprung" : "Overstepping",
+            why: ok ? (rep.sprungweite != null ? `Sprung ${fmt(rep.sprungweite, false, 0)} ${unit(rep)}` : "Saubere Ausführung") : reasons(rep) };
+          announced.push(e); showVerdict(e.n, ok, e.title, e.why); addFeed(e); beep(ok);
+          say(ok ? "Gut." : rep.fehler1Doppelsprung ? "Fehler. Doppelsprung." : "Fehler. Füße vor den Händen.");
         }
       } else {
         e.ms = ms;
         if (!e.final && final) {
           e.final = true;
-          if (rep.fehler1Doppelsprung) { showBanner(e.n, false, "+ Doppelsprung", reasons(rep)); beep(false); say("Zusätzlich Doppelsprung."); }
+          if (rep.fehler1Doppelsprung) { e.title = "Overstepping + Doppelsprung"; e.why = reasons(rep); showVerdict(e.n, false, "+ Doppelsprung", reasons(rep)); addFeed(e); beep(false); say("Zusätzlich Doppelsprung."); }
         }
       }
     });
   }
-  function report(n, rep) {
-    if (rep.kiLabel === "korrekt") { showBanner(n, true, "Korrekt", rep.sprungweite != null ? `Sprung ${fmt(rep.sprungweite)} ${unit(rep)}` : "Saubere Ausführung"); beep(true); say("Gut."); }
-    else { showBanner(n, false, rep.fehler1Doppelsprung && rep.fehler2Overstep ? "2 Fehler" : rep.fehler1Doppelsprung ? "Doppelsprung" : "Overstepping", reasons(rep)); beep(false);
-      say(rep.fehler1Doppelsprung ? "Fehler. Doppelsprung." : "Fehler. Füße vor den Händen."); }
-  }
   function stopLive(silent) {
     liveOn = false; cancelAnimationFrame(liveRaf);
-    if (stream) stream.getTracks().forEach((t) => t.stop()); stream = null; cam.srcObject = null;
-    $("live-start").hidden = false; $("live-stop").hidden = true; $("live-stage").hidden = true;
+    if (stream) stream.getTracks().forEach((t) => t.stop()); stream = null; cam.srcObject = null; cam.hidden = true;
+    $("live-start").hidden = false; $("live-stop").hidden = true; $("live-chips").hidden = true; $("verdict").hidden = true; $("live-ph").hidden = false; $("live-tips").hidden = false;
+    const c = camOv.getContext("2d"); c.clearRect(0, 0, camOv.width, camOv.height);
     releaseAwake();
-    if (!silent && liveFrames.length > 30) {
-      Object.assign(state, { source: "live", frames: liveFrames.slice(), fps: liveFps(), w: camOv.width, h: camOv.height, file: null });
-      evaluate();
-      $("results").scrollIntoView({ behavior: "smooth" });
+    if (!silent && all.length > 30) {
+      const span = (allT[allT.length - 1] - allT[0]) / 1000, fps = Math.max(5, Math.min(60, (all.length - 1) / span));
+      setSession({ source: "live", name: "Live-Aufnahme " + new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }), frames: all.slice(), fps, w: camOv.width, h: camOv.height, videoURL: null });
+      go("results"); toast("Aufnahme ausgewertet. Trag jetzt ein, was wirklich passiert ist.");
     }
   }
   $("live-start").addEventListener("click", startLive);
   $("live-stop").addEventListener("click", () => stopLive(false));
   document.addEventListener("visibilitychange", () => { if (document.hidden && liveOn) stopLive(false); });
 
-  loadDemo();
+  // ---------------- Start ----------------
+  const demo = BBJ.synth();
+  setSession({ source: "demo", name: "Beispiel", frames: demo.frames, fps: demo.fps, w: demo.width, h: demo.height });
+  go(location.hash.slice(1) || "live", false);
 })();
 </script>
+</body>
+</html>

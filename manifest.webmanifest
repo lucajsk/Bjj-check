@@ -1,0 +1,22 @@
+{
+ "name": "BBJ Check",
+ "short_name": "BBJ Check",
+ "start_url": "./#live",
+ "display": "standalone",
+ "background_color": "#0B0F14",
+ "theme_color": "#0B0F14",
+ "orientation": "any",
+ "lang": "de",
+ "icons": [
+  {
+   "src": "icon-180.png",
+   "sizes": "180x180",
+   "type": "image/png"
+  },
+  {
+   "src": "icon-512.png",
+   "sizes": "512x512",
+   "type": "image/png"
+  }
+ ]
+}

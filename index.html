@@ -786,10 +786,14 @@ dialog { border-radius: 10px; }
     <div class="field"><label for="s-p1">Doppelsprung</label><input id="s-p1" type="number" min="0" max="20" value="2"></div>
     <div class="field"><label for="s-p2">Overstepping</label><input id="s-p2" type="number" min="0" max="20" value="2"></div>
     <div class="field"><label for="s-p3">Kein Brustkontakt</label><input id="s-p3" type="number" min="0" max="20" value="1"><span class="hint">Wird von der KI nicht geprüft, aber erfasst</span></div>
+    <div class="dlg-sec label">Feintuning</div>
+    <div class="field wide"><span class="status" id="tuning-info">Standardwerte der Erkennung</span>
+      <div class="row" style="margin-top:6px"><label class="btn" for="tuning-file">Feintuning laden</label><input type="file" id="tuning-file" accept=".json,application/json" hidden><button class="btn" id="tuning-reset" type="button" hidden>Auf Standard zurücksetzen</button></div>
+      <span class="hint">Datei bbj_feintuning.json aus dem Feintuning-Skript. Danach unter „Probanden“ „KI neu berechnen“ tippen, damit alte Aufnahmen mit den neuen Werten bewertet werden.</span></div>
     <div class="dlg-sec label">Offline</div>
     <div class="field wide"><span class="status" id="offline-info">–</span><button class="btn" id="offline-prep" type="button" style="align-self:flex-start;margin-top:6px">Für offline vorbereiten</button><span class="hint">Lädt die gewählten KI-Modelle einmal herunter, danach läuft die App auch ohne Internet.</span></div>
     <div class="dlg-sec label">KI</div>
-    <div class="field wide"><label for="s-pose">Skelett</label><select id="s-pose"><option value="mediapipe">MediaPipe · 33 Punkte · schnell</option><option value="rtmw">RTMW · 133 Punkte · präzise Hände und Füße</option></select><span class="hint" id="pose-hint">RTMW lädt beim ersten Mal ein größeres Modell und läuft am besten mit WebGPU. MediaPipe wird weiterhin für die Personen-Box genutzt.</span></div>
+    <div class="field wide"><label for="s-pose">Skelett</label><select id="s-pose"><option value="rtmw" selected>RTMW · 133 Punkte · präzise Hände und Füße (empfohlen)</option><option value="mediapipe">MediaPipe · 33 Punkte · schnell</option></select><span class="hint" id="pose-hint">RTMW lädt beim ersten Mal ein größeres Modell und läuft am besten mit WebGPU. MediaPipe wird weiterhin für die Personen-Box genutzt.</span></div>
     <div class="field wide" id="rtmw-file-row"><label for="s-rtmw-file">RTMW-Modelldatei (nur falls der Download scheitert)</label><input id="s-rtmw-file" type="file" accept=".onnx"><span class="hint">Datei rtmw-m.onnx, wird auf dem Gerät gespeichert</span></div>
     <div class="field"><label for="s-model">MediaPipe-Modell</label><select id="s-model"><option value="lite">Lite · schnell</option><option value="full" selected>Full · ausgewogen</option><option value="heavy">Heavy · genau, langsam</option></select><span class="hint">Unter 15 fps im Live-Modus: Lite wählen</span></div>
     <div class="field"><label for="s-rate">Analyse-Rate bei Videos</label><select id="s-rate"><option value="30" selected>30 Bilder/s</option><option value="60">60 Bilder/s</option></select></div>
@@ -1119,7 +1123,7 @@ dialog { border-radius: 10px; }
 
   // ---------- Synthetische Testdaten (Seitenansicht) ----------
   function synth(opts) {
-    opts = Object.assign({ seq: null, noise: 1.5, spikes: 0, seed: 7, hideFar: false, farBias: 0 }, opts || {});
+    opts = Object.assign({ seq: null, noise: 1.5, spikes: 0, seed: 7, hideFar: false, farBias: 0, hopLift: 12, toeBias: 0 }, opts || {});
     const S = 4, G = 950, FPS = 30;
     let seed = opts.seed; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
     const gauss = () => Math.sqrt(-2 * Math.log(rnd() + 1e-12)) * Math.cos(2 * Math.PI * rnd());
@@ -1139,7 +1143,7 @@ dialog { border-radius: 10px; }
       if (noJump) { kf.push([1.75, stand(ax)], [3.5, stand(ax)]); return [kf, ax, 3.5]; }
       kf.push([1.75, stand(ax)], [1.95, crouch(ax)], [2.05, crouch(ax + 10, 5)], [2.25, stand(ax + 60, 30)], [2.45, crouch(ax + 120)], [2.75, stand(ax + 120)]);
       let t = 2.75, x2 = ax + 120;
-      for (let i = 0; i < hops; i++) { kf.push([t + 0.15, crouch(x2)], [t + 0.3, stand(x2 + 8, 12)], [t + 0.45, crouch(x2 + 15)], [t + 0.7, stand(x2 + 15)]); t += 0.7; x2 += 15; }
+      for (let i = 0; i < hops; i++) { kf.push([t + 0.15, crouch(x2)], [t + 0.3, stand(x2 + 8, opts.hopLift)], [t + 0.45, crouch(x2 + 15)], [t + 0.7, stand(x2 + 15)]); t += 0.7; x2 += 15; }
       kf.push([t + 0.3, stand(x2)]);
       if (rest) { kf.push([t + 0.7, knees(x2)], [t + 2.2, knees(x2)], [t + 2.6, stand(x2)]); t += 2.3; }
       return [kf, x2, t + 0.3];
@@ -1157,7 +1161,7 @@ dialog { border-radius: 10px; }
         const px = (1 - a) * A[k][0] + a * B[k][0], py = (1 - a) * A[k][1] + a * B[k][1];
         const far = s === 1;
         const nz = opts.noise * (far && opts.hideFar ? 6 : 1);
-        const bias = far && opts.farBias && [28, 30, 32].includes(j) ? opts.farBias : 0;
+        const bias = (far && opts.farBias && [28, 30, 32].includes(j) ? opts.farBias : 0) + ((j === 31 || j === 32) ? opts.toeBias : 0);
         fr[j * 3] = px * S + s * 1.8 + bias + gauss() * nz; fr[j * 3 + 1] = G - py * S + gauss() * nz;
         fr[j * 3 + 2] = far && (opts.hideFar || opts.farBias) ? 0.35 : 0.95;
       });
@@ -1414,7 +1418,7 @@ dialog { border-radius: 10px; }
 (function () {
   "use strict";
   const $ = (id) => document.getElementById(id);
-  const APP_VERSION = "0.6.0";
+  const APP_VERSION = "0.6.1";
   const MP_VERSIONS = ["0.10.14", "0.10.18", "0.10.21"];
   const MODEL_URL = (v) => `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_${v}/float16/latest/pose_landmarker_${v}.task`;
   const SKEL = [[11,12],[11,13],[13,15],[12,14],[14,16],[15,19],[16,20],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],[27,29],[29,31],[27,31],[28,30],[30,32],[28,32]];
@@ -1455,7 +1459,18 @@ dialog { border-radius: 10px; }
       pixelProCm: num("s-pxcm"), koerpergroesseCm: ph || num("s-height"),
       overstepToleranzCm: parseFloat($("s-tol").value) || 0, flugSchwelleCm: parseFloat($("s-air").value) || 4,
       richtung: $("s-dir").value, seite: $("s-side").value, einzelschrittAlsFehler: $("s-step").checked,
-    }, extra || {});
+    }, tuningParams(), extra || {});
+  }
+  // Feintuning-Datei (aus feintuning.py): zusätzliche Schwellenwerte der Erkennung
+  function tuningParams() {
+    const t = store.get("bbj-tuning"); if (!t || !t.app) return {};
+    const o = Object.assign({}, t.app); delete o.overstepToleranzCm; delete o.flugSchwelleCm;   // diese beiden stehen als Felder in den Einstellungen
+    return o;
+  }
+  function tuningInfo() {
+    const t = store.get("bbj-tuning"), el = $("tuning-info"); if (!el) return;
+    el.textContent = t ? `Feintuning aktiv · ${t.probanden} Probanden, ${t.wiederholungen} Wdh · geladen ${new Date(t.geladen).toLocaleDateString("de-DE")}${t.empfohlen ? "" : " · laut Bericht keine verlässliche Verbesserung"}` : "Standardwerte der Erkennung";
+    $("tuning-reset").hidden = !t;
   }
   $("open-settings").addEventListener("click", () => { const d = $("settings"); if (d.showModal) d.showModal(); else d.setAttribute("open", ""); });
   $("close-settings").addEventListener("click", () => { const d = $("settings"); if (d.close) d.close(); else d.removeAttribute("open"); });
@@ -1510,7 +1525,7 @@ dialog { border-radius: 10px; }
     try {
       await RTMW.load((p, t) => setModel("busy", `RTMW ${p ? Math.round(p * 100) + " % · " : ""}${t || ""}`));
       setModel("ready", `KI bereit · RTMW · ${RTMW.ep === "webgpu" ? "WebGPU" : "CPU (langsam)"}`);
-    } catch (e) { setModel("err", "RTMW-Fehler"); throw e; }
+    } catch (e) { setModel("ready", "KI bereit · MediaPipe (RTMW nicht verfügbar)"); toast("RTMW konnte nicht geladen werden, MediaPipe wird verwendet"); }
     return lmk;
   }
   async function detectFrame(source, w, h, tsMs) {
@@ -1754,6 +1769,20 @@ dialog { border-radius: 10px; }
     });
     toast("Kalibrierung: Kamera nicht bewegen");
   }
+  $("tuning-file").addEventListener("change", async (e) => {
+    const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+    try {
+      const j = JSON.parse(await f.text());
+      if (j.format !== "bbj-check-feintuning" || !j.app) throw new Error("Keine Feintuning-Datei");
+      store.set("bbj-tuning", { app: j.app, probanden: j.probanden, wiederholungen: j.wiederholungen, empfohlen: j.empfohlen, geladen: new Date().toISOString() });
+      if (j.app.overstepToleranzCm != null) $("s-tol").value = j.app.overstepToleranzCm;
+      if (j.app.flugSchwelleCm != null) $("s-air").value = j.app.flugSchwelleCm;
+      saveSettings(); tuningInfo(); evaluate(); toast(j.empfohlen ? "Feintuning geladen" : "Geladen, laut Bericht aber keine verlässliche Verbesserung");
+    } catch (err) { toast("Datei konnte nicht geladen werden: " + err.message); }
+  });
+  $("tuning-reset").addEventListener("click", () => {
+    store.set("bbj-tuning", null); $("s-tol").value = "0"; $("s-air").value = "4"; saveSettings(); tuningInfo(); evaluate(); toast("Erkennung auf Standardwerte zurückgesetzt");
+  });
   $("calib-reset").addEventListener("click", () => { $("s-pxcm").value = ""; store.set("bbj-calib-res", null); saveSettings(); calibInfo(); toast("Kalibrierung gelöscht"); });
   $("s-pxcm").addEventListener("change", () => { store.set("bbj-calib-res", null); calibInfo(); });
   $("calib-video").addEventListener("click", () => startCalib($("player"), S.w, S.h, (v) => { S.pxcm = v; evaluate(); queueSave(); }));
@@ -2611,7 +2640,7 @@ dialog { border-radius: 10px; }
   if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
     navigator.serviceWorker.register("sw.js").then(() => offlineInfo()).catch(() => {});
   }
-  $("open-settings").addEventListener("click", () => { calibInfo(); offlineInfo(); });
+  $("open-settings").addEventListener("click", () => { calibInfo(); offlineInfo(); tuningInfo(); });
 
   // ---------------- Start ----------------
   calibInfo();

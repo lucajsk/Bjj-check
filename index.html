@@ -378,6 +378,50 @@ dialog { border-radius: 10px; }
 .toast { border-radius: 4px; background: var(--accent); color: var(--accent-ink); font-weight: 850; text-transform: uppercase; letter-spacing: 0.04em; font-size: 13px; }
 :focus-visible { outline-color: var(--accent); }
 
+/* ===== Studie, Check, Kalibrierung ===== */
+.seg { display: inline-flex; gap: 4px; padding: 4px; background: var(--raised); border: 1px solid var(--line); border-radius: 6px; flex-wrap: wrap; }
+.seg button { border: 0; background: transparent; color: var(--muted); min-height: 38px; padding: 0 14px; border-radius: 4px; font-weight: 850; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; }
+.seg button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); clip-path: polygon(6px 0, 100% 0, calc(100% - 6px) 100%, 0 100%); }
+.proto-now { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 14px; align-items: center; padding: 12px; border-radius: 6px; background: var(--raised); border: 1px solid var(--line); }
+.proto-now .pn { font-family: var(--f-display); font-style: italic; font-weight: 900; font-stretch: 70%; font-size: 54px; line-height: 0.9; background: var(--accent); color: var(--accent-ink); padding: 6px 16px 4px; clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%); font-variant-numeric: tabular-nums; }
+.proto-now .pt { font-family: var(--f-display); font-style: italic; font-weight: 900; font-stretch: 75%; font-size: clamp(22px, 3.2vw, 34px); text-transform: uppercase; line-height: 1; overflow-wrap: anywhere; }
+.proto-now > div { min-width: 0; }
+.proto-now.done .pn { background: var(--ok); }
+.proto-list { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; }
+.proto-list li { padding: 6px 4px; border-radius: 4px; background: var(--raised); border: 1px solid var(--line); text-align: center; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.03em; color: var(--muted); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.proto-list li b { display: block; font-family: var(--f-display); font-style: italic; font-size: 18px; color: var(--ink); }
+.proto-list li.cur { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.proto-list li.hit { background: var(--ok-soft); } .proto-list li.hit.miss { background: var(--bad-soft); }
+.proto-list li.miss { background: var(--warn-soft); }
+.checks { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; }
+.checks li { display: grid; grid-template-columns: 12px minmax(0, 1fr); gap: 8px; align-items: start; padding: 8px 10px; border-radius: 4px; background: var(--raised); font-size: 13px; }
+.checks li i { width: 10px; height: 10px; margin-top: 4px; border-radius: 2px; background: var(--muted); transform: skewX(-12deg); }
+.checks li.ok i { background: var(--ok); } .checks li.warn i { background: var(--warn); } .checks li.bad i { background: var(--bad); }
+.checks li b { display: block; font-weight: 750; } .checks li span { color: var(--muted); font-size: 12px; }
+.calib { position: absolute; inset: 0; z-index: 5; cursor: crosshair; }
+.calib canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+.calib .cmsg { position: absolute; left: 10px; right: 10px; top: 10px; padding: 10px 14px; border-radius: 6px; background: var(--accent); color: var(--accent-ink); font-weight: 850; text-transform: uppercase; letter-spacing: 0.03em; font-size: 14px; pointer-events: none; }
+.calib form { position: absolute; left: 10px; right: 10px; bottom: 10px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; padding: 10px; border-radius: 6px; background: var(--glass); border: 1px solid var(--line); cursor: default; }
+.calib form input { width: 110px; min-height: 42px; border-radius: 4px; border: 1px solid var(--line); background: var(--raised); padding: 0 10px; }
+.rate { display: flex; flex-wrap: wrap; gap: 6px; }
+.rate button { min-height: 40px; padding: 0 12px; border-radius: 4px; border: 1px solid var(--line); background: var(--raised); font-weight: 800; font-size: 13px; text-transform: uppercase; letter-spacing: 0.03em; }
+.rate button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.labels { display: flex; flex-wrap: wrap; gap: 6px; }
+.labels span { font-size: 12px; padding: 3px 8px; border-radius: 3px; background: var(--raised); border: 1px solid var(--line); color: var(--muted); }
+.labels span b { color: var(--ink); }
+.labels span.diff { border-color: var(--warn); }
+#v-results.blind .ki-only { display: none !important; }
+#v-results.blind .lane i { background: var(--muted) !important; outline: 0 !important; }
+.cm { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.cm th, .cm td { border: 1px solid var(--line); padding: 8px 10px; text-align: center; font-size: 14px; }
+.cm th { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 800; }
+.cm td b { font-family: var(--f-display); font-style: italic; font-size: 24px; font-weight: 900; }
+.cm td.ok b { color: var(--ok); } .cm td.bad b { color: var(--bad); }
+.tablewrap { overflow-x: auto; }
+.metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.metrics .kpi small { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+.study-note { font-size: 13px; color: var(--muted); }
+
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
 </style>
 </head>
@@ -408,6 +452,7 @@ dialog { border-radius: 10px; }
       <div>
         <h1>Live</h1>
         <p class="sub">Die Kamera prüft jede Wiederholung und meldet das Ergebnis sofort.</p>
+        <div class="seg" id="live-mode" role="group" aria-label="Modus" style="margin-top:12px"><button type="button" data-m="training" aria-pressed="true">Training</button><button type="button" data-m="studie" aria-pressed="false">Studienprotokoll</button></div>
       </div>
       <div class="row">
         <button class="btn primary big" id="live-start" type="button">
@@ -450,6 +495,10 @@ dialog { border-radius: 10px; }
             <div class="vw" id="vw">Erster Burpee wird erwartet</div>
           </div>
         </div>
+        <div id="cam-check" hidden>
+          <div class="row" style="justify-content:space-between"><h3>Kamera-Check</h3><span class="label" id="check-sum">–</span></div>
+          <ul class="checks" id="checks"></ul>
+        </div>
         <ul class="tips" id="live-tips">
                 <li><span class="n">1</span><span><b>Gerät quer aufs Stativ</b>, seitlich zur Sprungrichtung</span></li>
                 <li><span class="n">2</span><span><b>Ganze Person im Bild</b>, Hände und Füße über die ganze Strecke</span></li>
@@ -461,6 +510,7 @@ dialog { border-radius: 10px; }
             <label class="tog"><input type="checkbox" id="t-sound" checked> Ton</label>
             <label class="tog"><input type="checkbox" id="t-skel" checked> Skelett</label>
           </div>
+          <button class="btn ghost" id="calib-live" type="button" hidden>Kalibrieren</button>
           <button class="btn ghost" id="cam-switch" type="button">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 7h-3l-2-3H9L7 7H4v13h16z"/><path d="M9 13a3 3 0 015-2M15 14a3 3 0 01-5 2"/></svg>
             <span id="cam-label">Rückkamera</span>
@@ -469,12 +519,26 @@ dialog { border-radius: 10px; }
         <div class="status" id="live-status" hidden></div>
       </div>
 
+      <div style="display:flex;flex-direction:column;gap:16px;min-width:0">
+      <div class="card" id="proto-card" hidden>
+        <div class="row" style="justify-content:space-between"><h2>Studienprotokoll</h2><span class="label" id="proto-who">–</span></div>
+        <div class="proto-now" id="proto-now"><span class="pn num" id="proto-n">1</span><div><div class="label">Versuch <span id="proto-i">1</span> von <span id="proto-tot">10</span> · Soll</div><div class="pt" id="proto-soll">Korrekt</div></div></div>
+        <ol class="proto-list" id="proto-list"></ol>
+        <div class="row">
+          <button class="btn" id="proto-back" type="button">← Zurück</button>
+          <button class="btn" id="proto-miss" type="button">Nicht erkannt · weiter</button>
+          <button class="btn ghost" id="proto-shuffle" type="button">Neu mischen</button>
+        </div>
+        <div class="field" style="max-width:240px"><label for="proto-start">Start bei Versuch</label><select id="proto-start"></select></div>
+        <p class="privacy" id="proto-hint">Die App sagt vor jedem Versuch an, was ausgeführt werden soll. Jede erkannte Wiederholung wird automatisch dem aktuellen Versuch zugeordnet.</p>
+      </div>
       <div class="card">
         <div class="row" style="justify-content:space-between">
           <h2>Wiederholungen</h2>
           <span class="label" id="feed-count">0</span>
         </div>
         <ul class="feed" id="feed"><li class="empty" style="display:block;border:0;background:none;padding:0">Noch keine Wiederholung. Nach dem Start erscheint hier jede Meldung.</li></ul>
+      </div>
       </div>
     </div>
   </section>
@@ -506,6 +570,7 @@ dialog { border-radius: 10px; }
       <div>
         <h1>Auswertung</h1>
         <div class="src" style="margin-top:8px"><span class="tag" id="r-src">–</span><span class="tag" id="r-meta">–</span><label class="assign" id="assign-wrap" hidden>Proband <select id="assign"></select></label><span class="tag" id="saved-tag" hidden>gespeichert</span></div>
+        <div class="seg" id="r-mode" role="group" aria-label="Ansicht" style="margin-top:12px"><button type="button" data-m="ki" aria-pressed="true">Auswertung</button><button type="button" data-m="B1" aria-pressed="false">Bewerter 1</button><button type="button" data-m="B2" aria-pressed="false">Bewerter 2</button></div>
       </div>
       <div class="row">
         <button class="btn primary" id="export" type="button">
@@ -531,9 +596,21 @@ dialog { border-radius: 10px; }
           <span class="mono status num" id="ptime">0,0 s</span>
         </div>
         <div class="lane" id="lane" aria-hidden="true"></div>
+        <div class="row">
+          <button class="btn" id="calib-video" type="button" hidden>Kalibrieren</button>
+          <label class="btn" for="relink" id="relink-btn" hidden>Video verknüpfen</label>
+          <input type="file" id="relink" accept="video/*" hidden>
+          <span class="status" id="relink-info"></span>
+        </div>
       </div>
 
-      <div class="card">
+      <div class="card" id="rater-card" hidden>
+        <h2 id="rater-title">Bewerter 1</h2>
+        <p class="sub" style="margin:0">Bewerte jede Wiederholung nach dem Regelwerk. KI-Ergebnis und Soll-Vorgabe sind ausgeblendet, damit die Bewertung unabhängig bleibt.</p>
+        <div class="agree" id="rater-progress">–</div>
+      </div>
+
+      <div class="card ki-only" id="ki-card">
         <div class="summary">
           <div class="ring" aria-hidden="true">
             <svg viewBox="0 0 42 42"><circle cx="21" cy="21" r="16" fill="none" stroke="var(--raised)" stroke-width="5"/><circle id="ring-ok" cx="21" cy="21" r="16" fill="none" stroke="var(--ok)" stroke-width="5" stroke-dasharray="0 100" pathLength="100" stroke-linecap="butt"/><circle id="ring-bad" cx="21" cy="21" r="16" fill="none" stroke="var(--bad)" stroke-width="5" stroke-dasharray="0 100" pathLength="100"/></svg>
@@ -550,7 +627,9 @@ dialog { border-radius: 10px; }
         <div class="row">
           <button class="btn" id="missing" type="button">+ Übersehene Wdh</button>
           <span class="status" id="missing-n"></span>
+          <button class="btn" id="consensus" type="button" hidden>Konsens übernehmen</button>
         </div>
+        <div class="agree" id="rater-info"></div>
       </div>
     </div>
 
@@ -617,6 +696,22 @@ dialog { border-radius: 10px; }
       <ul class="slist" id="pu-sessions"></ul>
     </div>
 
+    <div class="card" id="study-card">
+      <div class="row" style="justify-content:space-between">
+        <h2>Studienauswertung</h2>
+        <div class="row">
+          <label class="assign">Referenz <select id="st-ref"><option value="konsens">Konsens</option><option value="B1">Bewerter 1</option><option value="B2">Bewerter 2</option><option value="soll">Soll (Protokoll)</option></select></label>
+          <label class="tog"><input type="checkbox" id="st-proto"> nur Protokoll</label>
+        </div>
+      </div>
+      <div id="study-out" class="empty">Noch keine bewerteten Aufnahmen.</div>
+      <div class="row">
+        <button class="btn" id="st-csv" type="button">Studien-CSV exportieren</button>
+        <button class="btn" id="st-recalc" type="button">KI mit aktuellen Einstellungen neu berechnen</button>
+      </div>
+      <p class="study-note">Positiv = fehlerhaft. Konfidenzintervalle per Bootstrap über Probanden (2000 Wiederholungen). Pilotstudie: Kennzahlen deskriptiv interpretieren.</p>
+    </div>
+
     <div class="card">
       <h2>Speicher</h2>
       <div class="status" id="store-info">–</div>
@@ -637,6 +732,13 @@ dialog { border-radius: 10px; }
       <div class="rule"><span class="k">FEHLER 1</span><h3>Doppelsprung</h3><p>Die Füße heben nach der Landung des Broad Jumps erneut ab, bevor die Hände für den nächsten Burpee aufsetzen.</p><span class="pill ok" style="align-self:flex-start">wird erkannt</span></div>
       <div class="rule"><span class="k">FEHLER 2</span><h3>Overstepping</h3><p>Die Zehenspitze steht beim Herausspringen aus dem Burpee vor der Linie der Fingerspitzen.</p><span class="pill ok" style="align-self:flex-start">wird erkannt</span></div>
       <div class="rule"><span class="k">FEHLER 3</span><h3>Kein Brustkontakt</h3><p>Die Brustwarzenlinie berührt am tiefsten Punkt des Burpees nicht klar den Boden.</p><span class="pill warn" style="align-self:flex-start">noch nicht erkannt</span></div>
+    </div>
+    <div class="card prose">
+      <h2>Ablauf einer Studiensitzung</h2>
+      <p><b>1. Vorbereiten:</b> Proband unter „Probanden“ anlegen und aktiv setzen. Kamera seitlich aufstellen, Kamera-Check abwarten und einmal mit zwei Bodenmarkierungen kalibrieren.</p>
+      <p><b>2. Aufnehmen:</b> Unter „Live“ auf „Studienprotokoll“ wechseln und starten. Die App sagt jeden Versuch an und ordnet die erkannte Wiederholung automatisch zu. Wird ein Versuch nicht erkannt, „Nicht erkannt · weiter“ tippen.</p>
+      <p><b>3. Bewerten:</b> In der Analyse bewerten beide Bewerter getrennt unter „Bewerter 1“ und „Bewerter 2“, ohne KI-Ergebnis. Übereinstimmungen mit „Konsens übernehmen“ als Referenz setzen, Abweichungen gemeinsam klären. Der zweite Bewerter kann auch auf einem eigenen Gerät bewerten; beim Import werden die Bewertungen ergänzt.</p>
+      <p><b>4. Auswerten:</b> Unter „Probanden“ zeigt die Studienauswertung Konfusionsmatrix, Accuracy, Sensitivität, Spezifität und Kappa. „Studien-CSV exportieren“ liefert alle Wiederholungen für SPSS, R oder Excel.</p>
     </div>
     <div class="card prose">
       <h2>Was als Wiederholung zählt</h2>
@@ -676,6 +778,16 @@ dialog { border-radius: 10px; }
     <div class="field"><label for="s-tol">Overstep-Toleranz (cm)</label><input id="s-tol" type="number" inputmode="decimal" step="0.5" value="0"><span class="hint">Regelwerk: 0</span></div>
     <div class="field"><label for="s-air">Flug-Schwelle (cm)</label><input id="s-air" type="number" inputmode="decimal" step="0.5" value="4"><span class="hint">Ab dieser Fußhöhe zählt ein Sprung</span></div>
     <label class="check"><input type="checkbox" id="s-step"> Nachschritt mit nur einem Fuß als Fehler werten</label>
+    <div class="dlg-sec label">Kalibrierung</div>
+    <div class="field wide"><span class="status" id="calib-info">Nicht kalibriert</span><span class="hint">Im Live-Bild oder im Video auf „Kalibrieren“ tippen und zwei Bodenmarkierungen mit bekanntem Abstand antippen.</span></div>
+    <div class="field"><button class="btn" id="calib-reset" type="button">Kalibrierung löschen</button></div>
+    <div class="dlg-sec label">Studienprotokoll · Versuche pro Proband</div>
+    <div class="field"><label for="s-pk">Korrekt</label><input id="s-pk" type="number" min="0" max="20" value="5"></div>
+    <div class="field"><label for="s-p1">Doppelsprung</label><input id="s-p1" type="number" min="0" max="20" value="2"></div>
+    <div class="field"><label for="s-p2">Overstepping</label><input id="s-p2" type="number" min="0" max="20" value="2"></div>
+    <div class="field"><label for="s-p3">Kein Brustkontakt</label><input id="s-p3" type="number" min="0" max="20" value="1"><span class="hint">Wird von der KI nicht geprüft, aber erfasst</span></div>
+    <div class="dlg-sec label">Offline</div>
+    <div class="field wide"><span class="status" id="offline-info">–</span><button class="btn" id="offline-prep" type="button" style="align-self:flex-start;margin-top:6px">Für offline vorbereiten</button><span class="hint">Lädt die gewählten KI-Modelle einmal herunter, danach läuft die App auch ohne Internet.</span></div>
     <div class="dlg-sec label">KI</div>
     <div class="field wide"><label for="s-pose">Skelett</label><select id="s-pose"><option value="mediapipe">MediaPipe · 33 Punkte · schnell</option><option value="rtmw">RTMW · 133 Punkte · präzise Hände und Füße</option></select><span class="hint" id="pose-hint">RTMW lädt beim ersten Mal ein größeres Modell und läuft am besten mit WebGPU. MediaPipe wird weiterhin für die Personen-Box genutzt.</span></div>
     <div class="field wide" id="rtmw-file-row"><label for="s-rtmw-file">RTMW-Modelldatei (nur falls der Download scheitert)</label><input id="s-rtmw-file" type="file" accept=".onnx"><span class="hint">Datei rtmw-m.onnx, wird auf dem Gerät gespeichert</span></div>
@@ -1219,10 +1331,90 @@ dialog { border-radius: 10px; }
 
 </script>
 <script>
+/* Studienauswertung: KI gegen Referenz (positiv = fehlerhaft).
+   rows: [{ proband, ref, ki, kiF1, kiF2, b1, b2 }]
+     ref: "korrekt" | "F1" | "F2" | "F3" | "mehrere" | "keine"   (Referenzlabel der gewählten Quelle)
+     ki:  "korrekt" | "fehlerhaft" | null (null = Versuch von der KI nicht erkannt)
+     b1, b2: Labels der beiden Bewerter (optional, für Kappa) */
+(function (root) {
+  "use strict";
+  const bin = (v) => (v === "korrekt" ? "korrekt" : v === "keine" || v == null || v === "" ? null : "fehlerhaft");
+
+  function metrics(pairs) {
+    let tp = 0, tn = 0, fp = 0, fn = 0;
+    for (const [r, k] of pairs) {
+      if (r === "fehlerhaft" && k === "fehlerhaft") tp++;
+      else if (r === "korrekt" && k === "korrekt") tn++;
+      else if (r === "korrekt" && k === "fehlerhaft") fp++;
+      else if (r === "fehlerhaft" && k === "korrekt") fn++;
+    }
+    const n = tp + tn + fp + fn, div = (a, b) => (b ? a / b : NaN);
+    return { TP: tp, TN: tn, FP: fp, FN: fn, n, accuracy: div(tp + tn, n), sensitivitaet: div(tp, tp + fn), spezifitaet: div(tn, tn + fp) };
+  }
+
+  function kappa(a, b) {
+    const pairs = []; for (let i = 0; i < a.length; i++) if (a[i] && b[i]) pairs.push([a[i], b[i]]);
+    const n = pairs.length; if (!n) return { kappa: NaN, n: 0, roh: NaN };
+    const cats = [...new Set(pairs.flat())];
+    const po = pairs.filter(([x, y]) => x === y).length / n;
+    let pe = 0; for (const c of cats) pe += (pairs.filter(([x]) => x === c).length / n) * (pairs.filter(([, y]) => y === c).length / n);
+    return { kappa: pe < 1 ? (po - pe) / (1 - pe) : 1, n, roh: po };
+  }
+
+  // deterministischer Zufall für reproduzierbare Bootstrap-Intervalle
+  function rng(seed) { let s = seed >>> 0 || 1; return () => { s ^= s << 13; s >>>= 0; s ^= s >>> 17; s ^= s << 5; s >>>= 0; return s / 4294967296; }; }
+
+  function bootstrap(pairsByProband, nBoot, seed) {
+    const ids = Object.keys(pairsByProband);
+    if (ids.length < 3) return null;
+    const r = rng(seed || 42), vals = { accuracy: [], sensitivitaet: [], spezifitaet: [] };
+    for (let b = 0; b < nBoot; b++) {
+      const sample = [];
+      for (let i = 0; i < ids.length; i++) sample.push(...pairsByProband[ids[Math.floor(r() * ids.length)]]);
+      const m = metrics(sample);
+      for (const k in vals) if (!isNaN(m[k])) vals[k].push(m[k]);
+    }
+    const ci = {};
+    for (const k in vals) { const v = vals[k].sort((x, y) => x - y); if (v.length) ci[k] = [v[Math.floor(0.025 * v.length)], v[Math.ceil(0.975 * v.length) - 1]]; }
+    return { ci, probanden: ids.length, wiederholungen: nBoot };
+  }
+
+  function evaluate(rows, opts) {
+    opts = Object.assign({ nBoot: 2000, seed: 42 }, opts || {});
+    const withRef = rows.filter((x) => x.ref);
+    const bewertbar = withRef.filter((x) => bin(x.ref) && x.ki);
+    const pairs = bewertbar.map((x) => [bin(x.ref), x.ki]);
+    const m = metrics(pairs);
+    const byP = {}; for (const x of bewertbar) (byP[x.proband] = byP[x.proband] || []).push([bin(x.ref), x.ki]);
+    const boot = bootstrap(byP, opts.nBoot, opts.seed);
+    const typ = {};
+    for (const t of ["F1", "F2", "F3"]) {
+      const sel = bewertbar.filter((x) => x.ref === t);
+      typ[t] = { n: sel.length, alsFehler: sel.filter((x) => x.ki === "fehlerhaft").length,
+        richtigerTyp: t === "F1" ? sel.filter((x) => x.kiF1).length : t === "F2" ? sel.filter((x) => x.kiF2).length : null };
+    }
+    const kKI = kappa(bewertbar.map((x) => bin(x.ref)), bewertbar.map((x) => x.ki));
+    const rB = rows.filter((x) => x.b1 && x.b2);
+    const kB = kappa(rB.map((x) => bin(x.b1) || "keine"), rB.map((x) => bin(x.b2) || "keine"));
+    const kBk = kappa(rB.map((x) => x.b1), rB.map((x) => x.b2));
+    return {
+      matrix: m, boot, typ, kappaKI: kKI, kappaBewerter: kB, kappaBewerterKategorien: kBk,
+      nichtErkannt: withRef.filter((x) => !x.ki && bin(x.ref)).length,
+      falschGezaehlt: withRef.filter((x) => x.ref === "keine" && x.ki).length,
+      ohneReferenz: rows.length - withRef.length, probanden: Object.keys(byP).length,
+    };
+  }
+
+  root.STUDY = { evaluate, metrics, kappa, bootstrap, bin };
+  if (typeof module !== "undefined") module.exports = root.STUDY;
+})(typeof window !== "undefined" ? window : globalThis);
+
+</script>
+<script>
 (function () {
   "use strict";
   const $ = (id) => document.getElementById(id);
-  const APP_VERSION = "0.5.1";
+  const APP_VERSION = "0.6.0";
   const MP_VERSIONS = ["0.10.14", "0.10.18", "0.10.21"];
   const MODEL_URL = (v) => `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_${v}/float16/latest/pose_landmarker_${v}.task`;
   const SKEL = [[11,12],[11,13],[13,15],[12,14],[14,16],[15,19],[16,20],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],[27,29],[29,31],[27,31],[28,30],[30,32],[28,32]];
@@ -1236,7 +1428,7 @@ dialog { border-radius: 10px; }
 
   // ---------------- Einstellungen ----------------
   const LS = "bbj-settings-v2";
-  const FIELDS = ["s-height", "s-pxcm", "s-dir", "s-side", "s-tol", "s-air", "s-step", "s-pose", "s-model", "s-rate", "t-voice", "t-sound", "t-skel"];
+  const FIELDS = ["s-height", "s-pxcm", "s-dir", "s-side", "s-tol", "s-air", "s-step", "s-pose", "s-model", "s-rate", "s-pk", "s-p1", "s-p2", "s-p3", "t-voice", "t-sound", "t-skel"];
   const store = { get(k) { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} } };
   const saved = store.get(LS) || {};
   for (const id of FIELDS) if (id in saved) { const el = $(id); if (el.type === "checkbox") el.checked = saved[id]; else el.value = saved[id]; }
@@ -1244,6 +1436,17 @@ dialog { border-radius: 10px; }
   FIELDS.forEach((id) => $(id).addEventListener("change", saveSettings));
   const num = (id) => { const v = parseFloat(String($(id).value).replace(",", ".")); return isFinite(v) && v > 0 ? v : null; };
   const poseSel = () => $("s-pose").value;
+  // Kalibrierung gilt nur für die Auflösung, mit der sie gemacht wurde
+  function calibPx(w, h) {
+    const v = num("s-pxcm"); if (!v) return null;
+    const res = store.get("bbj-calib-res");
+    if (res && w && h && (res.w !== w || res.h !== h)) return null;
+    return v;
+  }
+  function calibInfo() {
+    const v = num("s-pxcm"), res = store.get("bbj-calib-res");
+    $("calib-info").textContent = v ? `Kalibriert: ${fmt(v, false, 2)} Pixel pro cm${res ? ` für ${res.w}×${res.h}` : ""}${res && res.datum ? ` · ${new Date(res.datum).toLocaleDateString("de-DE")}` : ""}` : "Nicht kalibriert · cm werden über die Körpergröße geschätzt";
+  }
   function cfg(extra, skel, profileId) {
     const sk = skel || poseSel();
     const ph = typeof profHeight === "function" ? profHeight(profileId === undefined ? activeProfileId() : profileId) : null;
@@ -1360,6 +1563,12 @@ dialog { border-radius: 10px; }
     drawPose(ctx, f);
     const rep = repAt(result.reps, t);
     if (!rep) return;
+    if (RMODE !== "ki") {
+      const fs0 = Math.round(H / 17); ctx.font = `italic 900 ${fs0}px ${css("--f-display")}`;
+      const txt0 = `WDH ${rep.wdh}`, tw0 = ctx.measureText(txt0).width, ph0 = fs0 * 1.55;
+      ctx.fillStyle = "rgba(0,0,0,0.72)"; ctx.fillRect(W * 0.025, H * 0.04, tw0 + fs0, ph0); ctx.fillStyle = "#fff"; ctx.fillText(txt0, W * 0.025 + fs0 / 2, H * 0.04 + fs0 * 1.1);
+      return;
+    }
     const [a, b] = rep._fenster2;
     if (t >= a && t <= b) {
       const col = rep.fehler2Overstep ? css("--bad") : "#3FB7FF";
@@ -1382,19 +1591,58 @@ dialog { border-radius: 10px; }
   // ---------------- Sitzung & Ergebnisse ----------------
   const S = { skelett: "mediapipe", source: "demo", name: "Beispiel", frames: [], fps: 30, w: 0, h: 0, result: null, videoURL: null, korr: {}, missing: 0, created: new Date().toISOString(), playing: false, t: 0 };
   function setSession(o) {
-    Object.assign(S, { korr: {}, missing: 0, created: new Date().toISOString(), skelett: "mediapipe", dbId: null, profileId: null }, o);
+    Object.assign(S, { korr: {}, missing: 0, created: new Date().toISOString(), skelett: "mediapipe", dbId: null, profileId: null, soll: [], protokoll: null, bew: { B1: {}, B2: {} }, pxcm: null, fileName: null }, o);
     $("note").value = o.note || ""; evaluate();
   }
   function evaluate() {
     if (!S.frames.length) return;
-    S.result = BBJ.analyse(S.frames, S.fps, S.source === "demo" ? cfg({ pixelProCm: 4, koerpergroesseCm: null, richtung: "auto", seite: "auto" }, S.skelett, null) : cfg(null, S.skelett, S.profileId));
+    S.result = BBJ.analyse(S.frames, S.fps, S.source === "demo" ? cfg({ pixelProCm: 4, koerpergroesseCm: null, richtung: "auto", seite: "auto" }, S.skelett, null) : cfg({ pixelProCm: S.pxcm || null }, S.skelett, S.profileId));
     renderResults();
   }
   const KORR = [["", "– Was war wirklich? –"], ["korrekt", "Korrekt"], ["F1", "Doppelsprung"], ["F2", "Overstepping"], ["F3", "Kein Brustkontakt"], ["mehrere", "Mehrere Fehler"], ["keine", "Keine echte Wdh"]];
   function kiBinary(r) { return r.kiLabel === "korrekt" ? "korrekt" : "fehlerhaft"; }
   function truthBinary(v) { return v === "korrekt" ? "korrekt" : v === "keine" ? "keine" : "fehlerhaft"; }
+  let RMODE = "ki";   // ki | B1 | B2
+  const LABEL = { korrekt: "Korrekt", F1: "Doppelsprung", F2: "Overstepping", F3: "Kein Brustkontakt", mehrere: "Mehrere Fehler", keine: "Keine Wdh" };
+  function sollFor(rep) {
+    if (!S.soll || !S.soll.length) return null;
+    const t = rep.frameTiefpunkt / S.fps; let best = null, bd = 0.8;
+    for (const s of S.soll) { const dd = Math.abs(s.t - t); if (dd < bd) { bd = dd; best = s; } }
+    return best;
+  }
+  document.querySelectorAll("#r-mode button").forEach((b) => b.addEventListener("click", () => {
+    RMODE = b.dataset.m;
+    document.querySelectorAll("#r-mode button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+    renderResults();
+  }));
+  function renderRater(ul, reps) {
+    const key = RMODE, map = S.bew[key] || (S.bew[key] = {});
+    for (const x of reps) {
+      const li = document.createElement("li"); li.className = "rep";
+      li.innerHTML = `<button type="button" class="rn" aria-label="Zu Wiederholung ${x.wdh} springen">${x.wdh}</button>
+        <div class="rh"><span class="rt">Wiederholung ${x.wdh}</span><span class="pill">${fmt(x.zeitS)} s</span></div>
+        <div class="rate" role="group" aria-label="Bewertung Wiederholung ${x.wdh}">${KORR.slice(1).map(([v, t]) => `<button type="button" data-v="${v}" aria-pressed="${map[x.wdh] === v}">${t}</button>`).join("")}</div>`;
+      li.querySelectorAll(".rate button").forEach((btn) => btn.addEventListener("click", () => {
+        if (map[x.wdh] === btn.dataset.v) delete map[x.wdh]; else map[x.wdh] = btn.dataset.v;
+        li.querySelectorAll(".rate button").forEach((o) => o.setAttribute("aria-pressed", map[x.wdh] === o.dataset.v));
+        raterProgress(); queueSave();
+      }));
+      li.querySelector(".rn").addEventListener("click", () => { seekFrame(Math.max(0, x.frameTiefpunkt - 15)); $("player").scrollIntoView({ behavior: "smooth", block: "center" }); });
+      ul.append(li);
+    }
+    raterProgress();
+  }
+  function raterProgress() {
+    const reps = S.result ? S.result.reps : [], map = S.bew[RMODE] || {};
+    const n = reps.filter((x) => map[x.wdh]).length;
+    $("rater-progress").innerHTML = `<b>${n} von ${reps.length}</b> Wiederholungen bewertet` + (S.dbId ? "" : " · Aufnahme ist nicht gespeichert, Bewertungen gehen beim Schließen verloren");
+  }
   function renderResults() {
     const r = S.result, reps = r.reps;
+    const blind = RMODE !== "ki";
+    $("v-results").classList.toggle("blind", blind);
+    $("rater-card").hidden = !blind; $("rater-title").textContent = blind ? (RMODE === "B1" ? "Bewerter 1" : "Bewerter 2") : "";
+
     const ok = reps.filter((x) => x.kiLabel === "korrekt").length, bad = reps.length - ok, un = reps.filter((x) => x.unsicher).length;
     $("st-n").textContent = reps.length; $("st-ok").textContent = ok; $("st-bad").textContent = bad; $("st-un").textContent = un;
     const pOk = reps.length ? ok / reps.length * 100 : 0, pBad = reps.length ? bad / reps.length * 100 : 0;
@@ -1406,16 +1654,23 @@ dialog { border-radius: 10px; }
     $("notes").textContent = (r.meta.hinweise || []).join(" ");
     const ul = $("reps"); ul.innerHTML = "";
     if (!reps.length) { const li = document.createElement("li"); li.className = "empty"; li.textContent = "Keine Wiederholung erkannt. Prüfe, ob die Kamera seitlich steht und die ganze Person im Bild ist."; ul.append(li); }
-    for (const x of reps) {
+    if (blind) { renderRater(ul, reps); }
+    else for (const x of reps) {
       const li = document.createElement("li"); li.className = "rep";
       const cls = x.kiLabel === "korrekt" ? "ok" : "bad";
       const title = x.kiLabel === "korrekt" ? "Saubere Ausführung" : reasons(x);
       const det = [`${fmt(x.zeitS)} s`, `Zehe → Finger ${fmt(x.overstepWert, true)} ${unit(x)}`];
       if (x.sprungweite != null) det.push(`Sprung ${fmt(x.sprungweite, false, 0)} ${unit(x)}`);
       if (x.hinweise) det.push(x.hinweise);
+      const so = sollFor(x), b1 = S.bew.B1[x.wdh], b2 = S.bew.B2[x.wdh];
+      const lab = [];
+      if (so) lab.push(`<span>Soll V${so.versuch || "?"}: <b>${LABEL[so.soll] || so.soll}</b></span>`);
+      if (b1) lab.push(`<span class="${b2 && b1 !== b2 ? "diff" : ""}">B1: <b>${LABEL[b1]}</b></span>`);
+      if (b2) lab.push(`<span class="${b1 && b1 !== b2 ? "diff" : ""}">B2: <b>${LABEL[b2]}</b></span>`);
       li.innerHTML = `<button type="button" class="rn ${cls}" aria-label="Zu Wiederholung ${x.wdh} springen">${x.wdh}</button>
         <div class="rh"><span class="rt">${esc(title)}</span>${x.unsicher ? '<span class="pill warn">unsicher</span>' : `<span class="pill ${cls}">${x.kiLabel}</span>`}</div>
         <div class="rd">${det.map((d) => `<span>${esc(d)}</span>`).join("")}</div>
+        ${lab.length ? `<div class="labels">${lab.join("")}</div>` : ""}
         <div class="rc"><select aria-label="Tatsächliches Ergebnis Wiederholung ${x.wdh}">${KORR.map(([v, t]) => `<option value="${v}">${t}</option>`).join("")}</select></div>`;
       const sel = li.querySelector("select"); sel.value = S.korr[x.wdh] || "";
       const mark = () => { li.classList.remove("corrected-ok", "corrected-bad"); const v = sel.value; if (!v) return; li.classList.add(truthBinary(v) === kiBinary(x) ? "corrected-ok" : "corrected-bad"); };
@@ -1428,25 +1683,94 @@ dialog { border-radius: 10px; }
     for (const x of reps) { const i = document.createElement("i"); i.className = (x.kiLabel === "korrekt" ? "k" : "f") + (x.unsicher ? " u" : ""); i.style.left = (x.frameTiefpunkt / T * 100) + "%"; lane.append(i); }
     const cur = document.createElement("b"); cur.id = "lane-cur"; lane.append(cur);
     renderAgree(); setupPlayer();
+    $("calib-video").hidden = !(S.videoURL && !pv.hidden);
+    $("relink-btn").hidden = !(S.source === "video" && !S.videoURL);
+    $("relink-info").textContent = S.source === "video" && !S.videoURL ? "Originalvideo erneut auswählen, um es abzuspielen" : "";
+  }
+  function consensusState() {
+    const reps = S.result ? S.result.reps : [];
+    let agree = 0, differ = 0, both = 0;
+    for (const x of reps) { const a = S.bew.B1[x.wdh], b = S.bew.B2[x.wdh]; if (a && b) { both++; if (a === b) agree++; else differ++; } }
+    return { agree, differ, both };
   }
   function renderAgree() {
     const reps = S.result ? S.result.reps : [];
     const rated = reps.filter((x) => S.korr[x.wdh]);
     const same = rated.filter((x) => truthBinary(S.korr[x.wdh]) === kiBinary(x)).length;
     $("missing-n").textContent = S.missing ? `${S.missing} übersehen` : "";
+    const cs = consensusState();
+    $("consensus").hidden = !cs.agree;
+    $("rater-info").textContent = cs.both ? `Bewerter: ${cs.agree} von ${cs.both} gleich bewertet${cs.differ ? `, ${cs.differ} abweichend (gelb markiert, bitte gemeinsam klären)` : ""}.` : "";
     if (!rated.length && !S.missing) { $("agree").innerHTML = "Trag bei jeder Wiederholung ein, was wirklich passiert ist. So sehen wir, wo die KI danebenliegt."; return; }
     $("agree").innerHTML = `KI stimmt bei <b>${same} von ${rated.length}</b> bewerteten Wdh mit dir überein` + (S.missing ? ` · <b>${S.missing}</b> Wdh übersehen` : "");
   }
+  $("consensus").addEventListener("click", () => {
+    const reps = S.result ? S.result.reps : []; let n = 0;
+    for (const x of reps) { const a = S.bew.B1[x.wdh], b = S.bew.B2[x.wdh]; if (a && b && a === b && S.korr[x.wdh] !== a) { S.korr[x.wdh] = a; n++; } }
+    renderResults(); queueSave(); toast(n ? `${n} übereinstimmende Bewertungen als Referenz übernommen` : "Nichts Neues zu übernehmen");
+  });
   $("missing").addEventListener("click", () => { S.missing++; renderAgree(); queueSave(); toast("Übersehene Wiederholung gezählt"); });
   $("missing").addEventListener("contextmenu", (e) => { e.preventDefault(); S.missing = Math.max(0, S.missing - 1); renderAgree(); queueSave(); });
   $("note").addEventListener("input", () => queueSave());
   $("reeval").addEventListener("click", () => { evaluate(); queueSave(); toast("Neu bewertet"); });
 
+  // ---------------- Kalibrierung per Tippen ----------------
+  function startCalib(stageEl, vw, vh, onDone) {
+    if (!vw || !vh) { toast("Erst Kamera starten oder Video laden"); return; }
+    const box = document.createElement("div"); box.className = "calib";
+    box.innerHTML = `<canvas></canvas><div class="cmsg">Tippe auf Markierung 1 am Boden</div>`;
+    stageEl.append(box);
+    const cv = box.querySelector("canvas"); cv.width = vw; cv.height = vh; const c = cv.getContext("2d");
+    const pts = [], msg = box.querySelector(".cmsg");
+    const draw = () => {
+      c.clearRect(0, 0, vw, vh); const r = Math.max(6, vw / 140);
+      c.strokeStyle = "#FFE01B"; c.fillStyle = "#FFE01B"; c.lineWidth = Math.max(2, vw / 400);
+      if (pts.length === 2) { c.beginPath(); c.moveTo(pts[0][0], pts[0][1]); c.lineTo(pts[1][0], pts[1][1]); c.stroke(); }
+      for (const [x, y] of pts) { c.beginPath(); c.arc(x, y, r, 0, 7); c.fill(); c.beginPath(); c.moveTo(x - r * 2.5, y); c.lineTo(x + r * 2.5, y); c.moveTo(x, y - r * 2.5); c.lineTo(x, y + r * 2.5); c.stroke(); }
+    };
+    const close = () => box.remove();
+    box.addEventListener("click", (e) => {
+      if (e.target.closest("form") || pts.length >= 2) return;
+      const rect = box.getBoundingClientRect();
+      pts.push([(e.clientX - rect.left) / rect.width * vw, (e.clientY - rect.top) / rect.height * vh]); draw();
+      if (pts.length === 1) msg.textContent = "Tippe auf Markierung 2";
+      if (pts.length === 2) {
+        msg.textContent = "Abstand der Markierungen eingeben";
+        const f = document.createElement("form");
+        f.innerHTML = `<label for="calib-cm" class="label">Abstand in cm</label><input id="calib-cm" type="number" inputmode="decimal" value="100" min="10" max="1000"><button class="btn primary" type="submit">Übernehmen</button><button class="btn" type="button" data-a="redo">Neu</button><button class="btn" type="button" data-a="cancel">Abbrechen</button>`;
+        box.append(f);
+        f.addEventListener("submit", (ev) => {
+          ev.preventDefault();
+          const cm = parseFloat(String(f.querySelector("input").value).replace(",", "."));
+          const px = Math.hypot(pts[1][0] - pts[0][0], pts[1][1] - pts[0][1]);
+          if (!(cm > 0) || px < 20) { toast("Markierungen liegen zu nah beieinander"); return; }
+          const v = Math.round(px / cm * 1000) / 1000;
+          $("s-pxcm").value = v; store.set("bbj-calib-res", { w: vw, h: vh, datum: new Date().toISOString(), cm }); saveSettings(); calibInfo();
+          close(); toast(`Kalibriert: ${fmt(v, false, 2)} Pixel pro cm`); onDone && onDone(v);
+        });
+        f.querySelector('[data-a="redo"]').addEventListener("click", () => { pts.length = 0; f.remove(); draw(); msg.textContent = "Tippe auf Markierung 1 am Boden"; });
+        f.querySelector('[data-a="cancel"]').addEventListener("click", close);
+      }
+    });
+    toast("Kalibrierung: Kamera nicht bewegen");
+  }
+  $("calib-reset").addEventListener("click", () => { $("s-pxcm").value = ""; store.set("bbj-calib-res", null); saveSettings(); calibInfo(); toast("Kalibrierung gelöscht"); });
+  $("s-pxcm").addEventListener("change", () => { store.set("bbj-calib-res", null); calibInfo(); });
+  $("calib-video").addEventListener("click", () => startCalib($("player"), S.w, S.h, (v) => { S.pxcm = v; evaluate(); queueSave(); }));
+  $("relink").addEventListener("change", async (e) => {
+    const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+    const url = URL.createObjectURL(f), v = document.createElement("video"); v.preload = "metadata"; v.src = url;
+    try { await new Promise((res, rej) => { v.onloadedmetadata = res; v.onerror = rej; setTimeout(rej, 10000); }); } catch (err) { toast("Video konnte nicht gelesen werden"); return; }
+    const dur = S.frames.length / S.fps;
+    if (Math.abs(v.duration - dur) > 1.5 || v.videoWidth !== S.w) toast("Achtung: Länge oder Auflösung passt nicht zur Aufnahme");
+    S.videoURL = url; renderResults();
+  });
+
   // ---------------- Player ----------------
   const pv = $("pv"), pbg = $("pbg"), pov = $("pov");
   function setupPlayer() {
     stopPlay();
-    const hasVid = S.source === "video" && S.videoURL;
+    const hasVid = (S.source === "video" || S.source === "datei") && S.videoURL;
     pv.hidden = !hasVid; pbg.hidden = !!hasVid;
     if (hasVid && pv.src !== S.videoURL) pv.src = S.videoURL;
     pov.width = pbg.width = S.w || 1280; pov.height = pbg.height = S.h || 720;
@@ -1512,6 +1836,7 @@ dialog { border-radius: 10px; }
       geraet: navigator.userAgent, notiz: $("note").value, uebersehen: S.missing,
       ki: S.result ? S.result.reps.map(cleanRep) : [], meta: S.result ? S.result.meta : null,
       korrekturen: Object.entries(S.korr).map(([wdh, wert]) => ({ wdh: +wdh, wert })),
+      bewertung: S.bew, soll: S.soll, protokoll: S.protokoll, pixelProCm: S.pxcm,
       punkte: { kodierung: "int16-base64 [x_px, y_px, sichtbarkeit*1000] × 33 je Bild, -32768 = fehlt", daten: encodeFrames(S.frames) },
     };
   }
@@ -1545,7 +1870,7 @@ dialog { border-radius: 10px; }
     try {
       const j = JSON.parse(await f.text()); if (j.format !== "bbj-check-session") throw new Error("Keine BBJ-Check-Datei");
       const frames = decodeFrames(j.punkte.daten, j.bilder);
-      setSession({ source: j.quelle === "demo" ? "demo" : "datei", name: j.name || f.name, frames, fps: j.fps, w: j.breite, h: j.hoehe, videoURL: null, note: j.notiz || "", skelett: j.skelett || "mediapipe" });
+      setSession({ source: j.quelle === "demo" ? "demo" : (j.quelle || "datei"), name: j.name || f.name, frames, fps: j.fps, w: j.breite, h: j.hoehe, videoURL: null, note: j.notiz || "", skelett: j.skelett || "mediapipe", soll: j.soll || [], protokoll: j.protokoll || null, bew: j.bewertung || { B1: {}, B2: {} }, pxcm: j.pixelProCm || (j.einstellungen && j.einstellungen.pixelProCm) || null });
       S.created = j.erstellt || S.created; S.missing = j.uebersehen || 0; for (const k of j.korrekturen || []) S.korr[k.wdh] = k.wert;
       renderResults(); await saveCurrent(activeProfileId()); toast("Datei geladen und gespeichert");
     } catch (err) { toast("Datei konnte nicht gelesen werden: " + err.message); }
@@ -1601,7 +1926,7 @@ dialog { border-radius: 10px; }
         if (i % 5 === 0) { const pct = (i + 1) / n, el = (performance.now() - t0) / 1000, rest = el / pct - el; $("v-bar").style.width = (pct * 100).toFixed(1) + "%"; status(`Bild ${i + 1} von ${n} · noch ca. ${Math.max(1, Math.round(rest))} s`); }
       }
       if (S.videoURL) URL.revokeObjectURL(S.videoURL);
-      setSession({ source: "video", name: file.name, frames, fps: rate, w: W, h: H, videoURL: url, skelett: poseSel() === "rtmw" && RTMW.session ? "rtmw" : "mediapipe", profileId: activeProfileId() });
+      setSession({ source: "video", name: file.name, frames, fps: rate, w: W, h: H, videoURL: url, skelett: poseSel() === "rtmw" && RTMW.session ? "rtmw" : "mediapipe", profileId: activeProfileId(), pxcm: calibPx(W, H), fileName: file.name });
       saveCurrent(activeProfileId());
       $("v-bar").style.width = "100%"; status("Fertig"); setTimeout(() => ($("v-prog").hidden = true), 800); go("results");
     } catch (e) { status(e.message === "abgebrochen" ? "Analyse abgebrochen." : "Fehler: " + e.message); }
@@ -1644,9 +1969,121 @@ dialog { border-radius: 10px; }
     let li = ul.querySelector(`[data-n="${e.n}"]`);
     if (!li) { li = document.createElement("li"); li.dataset.n = e.n; ul.prepend(li); }
     const cls = e.ok ? "ok" : "bad";
-    li.innerHTML = `<span class="fn">${e.n}</span><span class="ft">${esc(e.title)}<small>${esc(e.why)}</small></span><span class="pill ${cls}">${e.ok ? "korrekt" : "fehler"}</span>`;
+    const soll = e.soll ? ` · V${e.versuch + 1} Soll: ${LABEL[e.soll]}` : "";
+    li.innerHTML = `<span class="fn">${e.n}</span><span class="ft">${esc(e.title)}<small>${esc(e.why + soll)}</small></span><span class="pill ${cls}">${e.ok ? "korrekt" : "fehler"}</span>`;
     const okN = announced.filter((a) => a.ok).length; $("c-ok").textContent = okN; $("c-bad").textContent = announced.length - okN; $("feed-count").textContent = announced.length;
   }
+  // ----- Modus Training / Studienprotokoll -----
+  let LMODE = store.get("bbj-live-mode") || "training";
+  const PR = { on: false, order: [], idx: 0, assigned: [] };
+  function setLiveMode(m) {
+    LMODE = m; store.set("bbj-live-mode", m);
+    document.querySelectorAll("#live-mode button").forEach((b) => b.setAttribute("aria-pressed", b.dataset.m === m));
+    $("proto-card").hidden = m !== "studie"; renderProto();
+  }
+  document.querySelectorAll("#live-mode button").forEach((b) => b.addEventListener("click", () => { if (liveOn) { toast("Erst die Aufnahme stoppen"); return; } setLiveMode(b.dataset.m); }));
+  function protoPlan() {
+    const n = (id, d) => { const v = parseInt($(id).value, 10); return isFinite(v) && v >= 0 ? Math.min(v, 20) : d; };
+    return [].concat(Array(n("s-pk", 5)).fill("korrekt"), Array(n("s-p1", 2)).fill("F1"), Array(n("s-p2", 2)).fill("F2"), Array(n("s-p3", 1)).fill("F3"));
+  }
+  const sameMulti = (a, b) => a.length === b.length && a.slice().sort().join() === b.slice().sort().join();
+  async function ensureOrder(p, force) {
+    const plan = protoPlan();
+    if (!force && p.protokoll && sameMulti(p.protokoll.reihenfolge, plan)) return p.protokoll.reihenfolge;
+    const o = plan.slice(); for (let i = o.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [o[i], o[j]] = [o[j], o[i]]; }
+    p.protokoll = { reihenfolge: o, erstellt: new Date().toISOString() };
+    try { await DB.put("profiles", p); } catch (e) {}
+    return o;
+  }
+  const sollText = (v) => v === "korrekt" ? "Korrekt ausführen" : "Absichtlich " + (LABEL[v] || v);
+  async function renderProto() {
+    if (LMODE !== "studie") return;
+    const p = profById(activeProfileId());
+    $("proto-who").textContent = p ? p.code : "kein Proband aktiv";
+    const list = $("proto-list"), sel = $("proto-start");
+    if (!p) { list.innerHTML = ""; $("proto-n").textContent = "–"; $("proto-soll").textContent = "Proband auswählen"; $("proto-i").textContent = "–"; $("proto-tot").textContent = "–"; return; }
+    const order = PR.on ? PR.order : await ensureOrder(p);
+    const idx = PR.on ? PR.idx : (parseInt(sel.value, 10) || 1) - 1;
+    if (!PR.on) { const cur = sel.value; sel.innerHTML = order.map((_, i) => `<option value="${i + 1}">${i + 1}</option>`).join(""); sel.value = cur && +cur <= order.length ? cur : "1"; }
+    sel.disabled = PR.on; $("proto-shuffle").disabled = PR.on; $("proto-back").disabled = !PR.on || !PR.assigned.length; $("proto-miss").disabled = !PR.on || PR.idx >= order.length;
+    $("proto-tot").textContent = order.length;
+    const done = idx >= order.length;
+    $("proto-now").classList.toggle("done", done);
+    $("proto-n").textContent = done ? "✓" : idx + 1; $("proto-i").textContent = done ? order.length : idx + 1;
+    $("proto-soll").textContent = done ? "Protokoll fertig" : (LABEL[order[idx]] || order[idx]);
+    list.innerHTML = order.map((v, i) => {
+      const a = PR.assigned.find((x) => x.versuch === i);
+      const cls = [i === idx && PR.on ? "cur" : "", a ? (a.status === "erkannt" ? "hit" + (a.match === false ? " miss" : "") : "miss") : ""].join(" ");
+      return `<li class="${cls}" title="Versuch ${i + 1}: ${LABEL[v]}"><b>${i + 1}</b>${(LABEL[v] || v).replace("Kein Brustkontakt", "Brust").replace("Overstepping", "Overstep").replace("Doppelsprung", "Doppel")}</li>`;
+    }).join("");
+  }
+  $("proto-start").addEventListener("change", renderProto);
+  $("proto-shuffle").addEventListener("click", async () => { const p = profById(activeProfileId()); if (!p) return; await ensureOrder(p, true); renderProto(); toast("Neue Reihenfolge für " + p.code); });
+  ["s-pk", "s-p1", "s-p2", "s-p3"].forEach((id) => $(id).addEventListener("change", renderProto));
+  function announceAttempt() {
+    if (!PR.on) return;
+    if (PR.idx >= PR.order.length) { say("Protokoll abgeschlossen."); showVerdict("✓", true, "Protokoll fertig", "Stoppen, um auszuwerten"); return; }
+    const v = PR.order[PR.idx]; say(`Versuch ${PR.idx + 1}. ${sollText(v)}.`);
+  }
+  function assignAttempt(e, rep) {
+    if (!PR.on || PR.idx >= PR.order.length) return;
+    const soll = PR.order[PR.idx];
+    e.versuch = PR.idx; e.soll = soll;
+    const kiBin = rep.kiLabel === "korrekt" ? "korrekt" : "fehlerhaft";
+    PR.assigned.push({ versuch: PR.idx, soll, status: "erkannt", entry: e, match: soll === "korrekt" ? kiBin === "korrekt" : kiBin === "fehlerhaft" });
+    PR.idx++; renderProto(); setTimeout(announceAttempt, 1400);
+  }
+  $("proto-back").addEventListener("click", () => {
+    const a = PR.assigned.pop(); if (!a) return;
+    if (a.entry) { delete a.entry.versuch; delete a.entry.soll; addFeed(a.entry); }
+    PR.idx = a.versuch; renderProto(); announceAttempt();
+  });
+  $("proto-miss").addEventListener("click", () => {
+    if (!PR.on || PR.idx >= PR.order.length) return;
+    PR.assigned.push({ versuch: PR.idx, soll: PR.order[PR.idx], status: "nicht erkannt", entry: null });
+    PR.idx++; renderProto(); toast("Versuch als nicht erkannt markiert"); announceAttempt();
+  });
+
+  // ----- Kamera-Check -----
+  const chkCanvas = document.createElement("canvas"); chkCanvas.width = 32; chkCanvas.height = 18;
+  let lastCheck = 0, lastUprightH = null;
+  function runCheck(f, fps) {
+    const W = cam.videoWidth, H = cam.videoHeight, items = [];
+    const has = f && !isNaN(f[23 * 3]);
+    const X = (j) => f[j * 3], Y = (j) => f[j * 3 + 1];
+    items.push(["Person erkannt", has ? "ok" : "bad", has ? "" : "Niemand im Bild"]);
+    if (has) {
+      const pts = [0, 15, 16, 19, 20, 27, 28, 29, 30, 31, 32];
+      const out = pts.filter((j) => isNaN(X(j)) || X(j) < 0.02 * W || X(j) > 0.98 * W || Y(j) < 0.02 * H || Y(j) > 0.98 * H);
+      items.push(["Ganzer Körper im Bild", out.length === 0 ? "ok" : out.length <= 2 ? "warn" : "bad", out.length ? "Hände oder Füße am Bildrand" : ""]);
+      const torso = Math.hypot((X(11) + X(12)) / 2 - (X(23) + X(24)) / 2, (Y(11) + Y(12)) / 2 - (Y(23) + Y(24)) / 2);
+      const upright = Math.abs((Y(11) + Y(12)) / 2 - (Y(23) + Y(24)) / 2) > 0.8 * torso;
+      if (upright && torso > 10) {
+        const ratio = Math.abs(X(11) - X(12)) / torso;
+        items.push(["Seitliche Ansicht", ratio < 0.35 ? "ok" : ratio < 0.6 ? "warn" : "bad", ratio < 0.35 ? "" : "Kamera steht zu frontal"]);
+        let top = Infinity, bot = -Infinity; for (const j of [0, 27, 28, 29, 30, 31, 32]) { if (!isNaN(Y(j))) { top = Math.min(top, Y(j)); bot = Math.max(bot, Y(j)); } }
+        lastUprightH = (bot - top) / H;
+      }
+      if (lastUprightH != null) items.push(["Person groß genug", lastUprightH > 0.4 ? "ok" : lastUprightH > 0.25 ? "warn" : "bad", lastUprightH > 0.4 ? "" : "Näher heran oder zoomen"]);
+      const dir = $("s-dir").value, hx = (X(23) + X(24)) / 2 / W;
+      if (dir === "auto") items.push(["Sprungrichtung", "warn", "In den Einstellungen festlegen"]);
+      else { const ok = dir === "rechts" ? hx < 0.45 : hx > 0.55; items.push(["Startposition", ok ? "ok" : "warn", ok ? `Platz nach ${dir}` : `Weiter nach ${dir === "rechts" ? "links" : "rechts"} stellen`]); }
+    }
+    items.push(["Bildrate", fps >= 25 ? "ok" : fps >= 15 ? "warn" : "bad", `${Math.round(fps)} fps` + (fps < 15 ? " · Modell Lite wählen" : "")]);
+    try {
+      const c = chkCanvas.getContext("2d", { willReadFrequently: true }); c.drawImage(cam, 0, 0, 32, 18);
+      const d = c.getImageData(0, 0, 32, 18).data; let s = 0; for (let i = 0; i < d.length; i += 4) s += 0.2126 * d[i] + 0.7152 * d[i + 1] + 0.0722 * d[i + 2];
+      const lum = s / (d.length / 4);
+      items.push(["Licht", lum >= 60 && lum <= 225 ? "ok" : lum >= 35 ? "warn" : "bad", lum < 60 ? "Zu dunkel" : lum > 225 ? "Überbelichtet" : ""]);
+    } catch (e) {}
+    const cal = calibPx(W, H);
+    items.push(["Kalibrierung", cal ? "ok" : "warn", cal ? `${fmt(cal, false, 2)} px/cm` : num("s-pxcm") ? "Passt nicht zur Auflösung" : "Optional, für echte cm"]);
+    $("checks").innerHTML = items.map(([t, st, d]) => `<li class="${st}"><i></i><div><b>${t}</b>${d ? `<span>${esc(d)}</span>` : ""}</div></li>`).join("");
+    const bad = items.filter((x) => x[1] === "bad").length, warn = items.filter((x) => x[1] === "warn").length;
+    $("check-sum").textContent = bad ? `${bad} Problem${bad > 1 ? "e" : ""}` : warn ? `${warn} Hinweis${warn > 1 ? "e" : ""}` : "alles bereit";
+  }
+  $("calib-live").addEventListener("click", () => startCalib($("live-stage"), cam.videoWidth, cam.videoHeight));
+
   async function openCamera() {
     if (stream) stream.getTracks().forEach((t) => t.stop());
     stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facing, width: { ideal: 1280 }, height: { ideal: 720 }, frameRate: { ideal: 60 } }, audio: false });
@@ -1656,6 +2093,7 @@ dialog { border-radius: 10px; }
   }
   async function startLive() {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { liveStatus("Dieser Browser erlaubt keinen Kamerazugriff. Bitte Safari oder Chrome über den https-Link verwenden."); return; }
+    if (LMODE === "studie" && !profById(activeProfileId())) { liveStatus("Für das Studienprotokoll zuerst unter „Probanden“ einen Probanden aktiv setzen."); return; }
     $("live-start").disabled = true; liveStatus("Lade KI-Modell …");
     try {
       try { audio = audio || new (window.AudioContext || window.webkitAudioContext)(); audio.resume(); } catch (e) {}
@@ -1668,6 +2106,12 @@ dialog { border-radius: 10px; }
       $("c-ok").textContent = "0"; $("c-bad").textContent = "0"; $("feed-count").textContent = "0";
       $("live-ph").hidden = true; $("live-tips").hidden = true; $("live-chips").hidden = false; $("live-start").hidden = true; $("live-stop").hidden = false; liveStatus("");
       showVerdict("–", null, "Bereit", "Erster Burpee wird erwartet");
+      $("cam-check").hidden = false; $("calib-live").hidden = false; lastUprightH = null;
+      if (LMODE === "studie") {
+        const p = profById(activeProfileId());
+        PR.order = await ensureOrder(p); PR.idx = Math.max(0, Math.min(PR.order.length, (parseInt($("proto-start").value, 10) || 1) - 1)); PR.assigned = []; PR.on = true;
+        renderProto(); showVerdict(PR.idx + 1, null, LABEL[PR.order[PR.idx]] || "Fertig", sollText(PR.order[PR.idx] || "korrekt")); setTimeout(announceAttempt, 600);
+      } else PR.on = false;
       await keepAwake();
       let lastVT = -1, busy = false;
       const tick = async () => {
@@ -1678,10 +2122,7 @@ dialog { border-radius: 10px; }
           let f;
           try { f = await detectFrame(cam, cam.videoWidth, cam.videoHeight, Math.round(now)); } finally { busy = false; }
           if (!liveOn) return;
-          buf.push(f); bufT.push(now); if (all.length < MAX_ALL) { all.push(f); allT.push(now); }
-          const maxN = Math.round(BUF_S * liveFps()); while (buf.length > maxN) { buf.shift(); bufT.shift(); }
-          const c = camOv.getContext("2d"); c.clearRect(0, 0, camOv.width, camOv.height); if ($("t-skel").checked) { drawPose(c, f); drawDetail(c); }
-          if (now - lastAnalyse > 350) { lastAnalyse = now; liveAnalyse(); }
+          onLiveFrame(f, now, true);
         }
         liveRaf = requestAnimationFrame(tick);
       };
@@ -1691,6 +2132,24 @@ dialog { border-radius: 10px; }
       stopLive(true);
     } finally { $("live-start").disabled = false; }
   }
+  function onLiveFrame(f, now, real) {
+    buf.push(f); bufT.push(now); if (all.length < MAX_ALL) { all.push(f); allT.push(now); }
+    const maxN = Math.round(BUF_S * liveFps()); while (buf.length > maxN) { buf.shift(); bufT.shift(); }
+    const c = camOv.getContext("2d"); c.clearRect(0, 0, camOv.width, camOv.height); if ($("t-skel").checked) { drawPose(c, f); drawDetail(c); }
+    if (now - lastAnalyse > 350) { lastAnalyse = now; liveAnalyse(); }
+    if (real && now - lastCheck > 600 && !$("cam-check").hidden) { lastCheck = now; runCheck(f, liveFps()); }
+  }
+  // Testzugang: spielt Posedaten durch dieselbe Live-Logik (ohne Kamera). Nur über die Konsole nutzbar.
+  window.__bbjSimLive = async (frames, fps, w, h) => {
+    if (LMODE === "studie" && !profById(activeProfileId())) throw new Error("kein Proband aktiv");
+    liveSkel = "mediapipe"; liveOn = true; buf = []; bufT = []; all = []; allT = []; announced = []; lastAnalyse = 0;
+    camOv.width = w; camOv.height = h; $("feed").innerHTML = "";
+    if (LMODE === "studie") { PR.order = await ensureOrder(profById(activeProfileId())); PR.idx = 0; PR.assigned = []; PR.on = true; renderProto(); }
+    for (let i = 0; i < frames.length; i++) onLiveFrame(frames[i], 1000 + i * 1000 / fps, false);
+    const log = announced.map((e) => ({ n: e.n, title: e.title, versuch: e.versuch, soll: e.soll }));
+    stopLive(false);
+    return log;
+  };
   function liveFps() { const n = bufT.length; if (n < 10) return 30; const k = Math.min(n, 120); return Math.max(5, Math.min(60, (k - 1) / ((bufT[n - 1] - bufT[n - k]) / 1000))); }
   const findEntry = (ms) => announced.find((e) => Math.abs(e.ms - ms) < 700) || null;
   function liveAnalyse() {
@@ -1706,13 +2165,13 @@ dialog { border-radius: 10px; }
       if (!e) {
         if (rep.fehler2Overstep) {
           e = { ms, n: announced.length + 1, final: false, ok: false, title: "Overstepping", why: `Zehe ${fmt(rep.overstepWert, true)} ${unit(rep)} vor den Fingerspitzen` + (rep.grenzfall ? " · Grenzfall" : "") };
-          announced.push(e); showVerdict(e.n, false, e.title, e.why); addFeed(e); beep(false); say("Fehler. Füße vor den Händen.");
+          announced.push(e); assignAttempt(e, rep); showVerdict(e.n, false, e.title, e.why); addFeed(e); beep(false); say("Fehler. Füße vor den Händen.");
         } else if (final) {
           const ok = rep.kiLabel === "korrekt";
           e = { ms, n: announced.length + 1, final: true, ok,
             title: ok ? "Korrekt" : rep.fehler1Doppelsprung && rep.fehler2Overstep ? "2 Fehler" : rep.fehler1Doppelsprung ? "Doppelsprung" : "Overstepping",
             why: ok ? (rep.sprungweite != null ? `Sprung ${fmt(rep.sprungweite, false, 0)} ${unit(rep)}` : "Saubere Ausführung") : reasons(rep) };
-          announced.push(e); showVerdict(e.n, ok, e.title, e.why); addFeed(e); beep(ok);
+          announced.push(e); assignAttempt(e, rep); showVerdict(e.n, ok, e.title, e.why); addFeed(e); beep(ok);
           say(ok ? "Gut." : rep.fehler1Doppelsprung ? "Fehler. Doppelsprung." : "Fehler. Füße vor den Händen.");
         }
       } else {
@@ -1728,11 +2187,35 @@ dialog { border-radius: 10px; }
     liveOn = false; cancelAnimationFrame(liveRaf);
     if (stream) stream.getTracks().forEach((t) => t.stop()); stream = null; cam.srcObject = null; cam.hidden = true;
     $("live-start").hidden = false; $("live-stop").hidden = true; $("live-chips").hidden = true; $("verdict").hidden = true; $("live-ph").hidden = false; $("live-tips").hidden = false;
+    $("cam-check").hidden = true; $("calib-live").hidden = true; document.querySelectorAll("#live-stage .calib").forEach((x) => x.remove());
+    const wasProto = PR.on; PR.on = false;
     const c = camOv.getContext("2d"); c.clearRect(0, 0, camOv.width, camOv.height);
     releaseAwake();
     if (!silent && all.length > 30) {
       const span = (allT[allT.length - 1] - allT[0]) / 1000, fps = Math.max(5, Math.min(60, (all.length - 1) / span));
-      setSession({ source: "live", name: "Live-Aufnahme " + new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }), frames: all.slice(), fps, w: camOv.width, h: camOv.height, videoURL: null, skelett: liveSkel, profileId: activeProfileId() });
+      const t0 = allT[0];
+      let soll = [], protokoll = null, missed = 0;
+      if (wasProto) {
+        const versuche = PR.assigned.map((a) => ({ versuch: a.versuch + 1, soll: a.soll, status: a.status, t: a.entry ? Math.round((a.entry.ms - t0) / 10) / 100 : null }));
+        soll = versuche.filter((v) => v.t != null).map((v) => ({ t: v.t, soll: v.soll, versuch: v.versuch }));
+        protokoll = { reihenfolge: PR.order.slice(), versuche };
+      }
+      setSession({ source: "live", name: (wasProto ? "Protokoll " : "Live-Aufnahme ") + new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" }), frames: all.slice(), fps, w: camOv.width, h: camOv.height, videoURL: null, skelett: liveSkel, profileId: activeProfileId(), pxcm: calibPx(camOv.width, camOv.height), soll, protokoll });
+      if (protokoll) {
+        // Versuche, deren Wiederholung in der Gesamtauswertung fehlt, gelten als nicht erkannt
+        for (const v of protokoll.versuche) if (v.status === "erkannt" && !S.result.reps.some((r) => Math.abs(r.frameTiefpunkt / S.fps - v.t) < 0.8)) v.status = "nicht erkannt";
+        // Wiederholungen nach der letzten Meldung (z. B. direkt vor dem Stoppen) den nächsten Versuchen zuordnen
+        const lastT = Math.max(-1, ...protokoll.versuche.filter((v) => v.t != null).map((v) => v.t));
+        let next = PR.idx;
+        for (const r of S.result.reps) {
+          const t = Math.round(r.frameTiefpunkt / S.fps * 100) / 100;
+          if (t <= lastT + 0.8 || next >= PR.order.length || S.soll.some((x) => Math.abs(x.t - t) < 0.8)) continue;
+          const v = { versuch: next + 1, soll: PR.order[next], status: "erkannt", t };
+          protokoll.versuche.push(v); S.soll.push({ t, soll: v.soll, versuch: v.versuch }); next++;
+        }
+        missed = protokoll.versuche.filter((v) => v.status === "nicht erkannt").length;
+        S.missing = missed; renderResults();
+      }
       saveCurrent(activeProfileId());
       go("results"); toast("Aufnahme ausgewertet. Trag jetzt ein, was wirklich passiert ist.");
     }
@@ -1800,10 +2283,15 @@ dialog { border-radius: 10px; }
       wahr: { korrekt: rated.filter((x) => S.korr[x.wdh] === "korrekt").length, F1: rated.filter((x) => S.korr[x.wdh] === "F1").length, F2: rated.filter((x) => S.korr[x.wdh] === "F2").length, F3: rated.filter((x) => S.korr[x.wdh] === "F3").length },
     };
   }
+  function kiReps(result, fps) {
+    return (result ? result.reps : []).map((x) => ({ wdh: x.wdh, t: Math.round(x.frameTiefpunkt / fps * 100) / 100, label: x.kiLabel, f1: x.fehler1Doppelsprung, f2: x.fehler2Overstep,
+      ov: x.overstepWert, sw: x.sprungweite, un: x.unsicher, gf: x.grenzfall, einheit: x.einheit }));
+  }
   function sessionMeta() {
     return { id: S.dbId, profileId: S.profileId || null, created: S.created, updated: new Date().toISOString(), source: S.source, name: S.name, skelett: S.skelett,
       fps: S.fps, w: S.w, h: S.h, bilder: S.frames.length, korr: Object.assign({}, S.korr), missing: S.missing, note: $("note").value,
-      einstellungen: cfg(null, S.skelett, S.profileId), summary: summary(), version: APP_VERSION };
+      einstellungen: cfg({ pixelProCm: S.pxcm || null }, S.skelett, S.profileId), summary: summary(), version: APP_VERSION,
+      soll: S.soll || [], protokoll: S.protokoll || null, bew: S.bew, pxcm: S.pxcm || null, fileName: S.fileName || null, kiReps: kiReps(S.result, S.fps) };
   }
   async function saveCurrent(profileId) {
     if (!S.result || S.source === "demo") return;
@@ -1836,7 +2324,9 @@ dialog { border-radius: 10px; }
     const m = P.sessions.find((s) => s.id === id); if (!m) return;
     const fr = await DB.get("frames", id); if (!fr) { toast("Posedaten fehlen"); return; }
     if (S.videoURL) { URL.revokeObjectURL(S.videoURL); }
-    setSession({ source: m.source, name: m.name, frames: decodeFrames(fr.punkte, m.bilder), fps: m.fps, w: m.w, h: m.h, videoURL: null, note: m.note || "", skelett: m.skelett || "mediapipe", dbId: m.id, profileId: m.profileId || null });
+    setSession({ source: m.source, name: m.name, frames: decodeFrames(fr.punkte, m.bilder), fps: m.fps, w: m.w, h: m.h, videoURL: null, note: m.note || "", skelett: m.skelett || "mediapipe", dbId: m.id, profileId: m.profileId || null,
+      soll: m.soll || [], protokoll: m.protokoll || null, bew: { B1: Object.assign({}, (m.bew || {}).B1), B2: Object.assign({}, (m.bew || {}).B2) },
+      pxcm: m.pxcm != null ? m.pxcm : (m.einstellungen && m.einstellungen.pixelProCm) || null, fileName: m.fileName || null });
     S.created = m.created; S.missing = m.missing || 0; S.korr = Object.assign({}, m.korr || {});
     renderResults(); go("results");
   }
@@ -1894,7 +2384,7 @@ dialog { border-radius: 10px; }
     $("p-unassigned-card").hidden = !un.length; $("pu-count").textContent = un.length;
     const ul = $("pu-sessions"); ul.innerHTML = ""; un.sort((a, b) => b.created.localeCompare(a.created)).forEach((s) => ul.append(sessionRow(s)));
     if (P.open && profById(P.open)) openProfile(P.open, true); else $("p-detail").hidden = true;
-    storageInfo();
+    storageInfo(); renderStudy();
   }
   function openProfile(id, keepScroll) {
     const p = profById(id); if (!p) return; P.open = id;
@@ -1926,7 +2416,7 @@ dialog { border-radius: 10px; }
     if (!keepScroll) $("p-detail").scrollIntoView({ behavior: "smooth", block: "start" });
   }
   $("pd-close").addEventListener("click", () => { P.open = null; $("p-detail").hidden = true; });
-  $("pd-active").addEventListener("click", () => { store.set(LS_ACTIVE, P.open); renderWho(); renderPeople(); toast(`${profById(P.open).code} ist aktiv`); });
+  $("pd-active").addEventListener("click", () => { store.set(LS_ACTIVE, P.open); renderWho(); renderPeople(); renderProto(); toast(`${profById(P.open).code} ist aktiv`); });
 
   function nextCode() { let n = 1; const codes = new Set(P.profiles.map((p) => p.code)); while (codes.has("P" + String(n).padStart(2, "0"))) n++; return "P" + String(n).padStart(2, "0"); }
   function showForm(p) {
@@ -1985,12 +2475,22 @@ dialog { border-radius: 10px; }
       if (j.format !== "bbj-check-daten") throw new Error("Das ist keine BBJ-Check-Datensicherung");
       let np = 0, ns = 0;
       for (const p of j.probanden || []) { if (!profById(p.id)) { await DB.put("profiles", p); np++; } }
+      let nm = 0;
       for (const s of j.aufnahmen || []) {
-        if (P.sessions.some((x) => x.id === s.id) || !s.punkte) continue;
+        const ex = P.sessions.find((x) => x.id === s.id);
+        if (ex) {
+          // vorhandene Aufnahme: Bewertungen und Referenz ergänzen (z. B. vom zweiten Bewerter auf einem anderen Gerät)
+          let changed = false; ex.bew = ex.bew || { B1: {}, B2: {} }; ex.korr = ex.korr || {};
+          for (const k of ["B1", "B2"]) for (const [w, v] of Object.entries((s.bew || {})[k] || {})) if (!ex.bew[k] || !ex.bew[k][w]) { (ex.bew[k] = ex.bew[k] || {})[w] = v; changed = true; }
+          for (const [w, v] of Object.entries(s.korr || {})) if (!ex.korr[w]) { ex.korr[w] = v; changed = true; }
+          if (changed) { await DB.put("sessions", ex); nm++; }
+          continue;
+        }
+        if (!s.punkte) continue;
         const punkte = s.punkte; const meta = Object.assign({}, s); delete meta.punkte;
         await DB.put("frames", { id: s.id, punkte }); await DB.put("sessions", meta); ns++;
       }
-      await loadAll(); renderPeople(); toast(`${np} ${np === 1 ? "Proband" : "Probanden"} und ${ns} ${ns === 1 ? "Aufnahme" : "Aufnahmen"} importiert`);
+      await loadAll(); renderPeople(); toast(`${np} ${np === 1 ? "Proband" : "Probanden"}, ${ns} ${ns === 1 ? "Aufnahme" : "Aufnahmen"} importiert` + (nm ? `, ${nm} mit neuen Bewertungen ergänzt` : ""));
     } catch (err) { toast("Import fehlgeschlagen: " + err.message); }
   });
   $("all-delete").addEventListener("click", (e) => confirmBtn(e.currentTarget, "Alles löschen", async () => {
@@ -2007,10 +2507,117 @@ dialog { border-radius: 10px; }
   }
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
 
+  // ---------------- Studienauswertung ----------------
+  function studyRows() {
+    const refSrc = $("st-ref").value, onlyProto = $("st-proto").checked, rows = []; let ohneKI = 0;
+    for (const s of P.sessions) {
+      if (onlyProto && !s.protokoll) continue;
+      const prob = profById(s.profileId); const proband = prob ? prob.code : "ohne Proband";
+      if (!s.kiReps) { ohneKI++; continue; }
+      const bew = s.bew || {}, korr = s.korr || {};
+      const sollAt = (t) => { let best = null, bd = 0.8; for (const x of s.soll || []) { const d = Math.abs(x.t - t); if (d < bd) { bd = d; best = x; } } return best; };
+      for (const k of s.kiReps) {
+        const so = sollAt(k.t), b1 = (bew.B1 || {})[k.wdh] || "", b2 = (bew.B2 || {})[k.wdh] || "", kon = korr[k.wdh] || "";
+        const ref = refSrc === "konsens" ? kon : refSrc === "B1" ? b1 : refSrc === "B2" ? b2 : so ? so.soll : "";
+        rows.push({ proband, sitzung: s.id, datum: s.created, quelle: s.source, wdh: k.wdh, t: k.t, versuch: so ? so.versuch : "", soll: so ? so.soll : "", b1, b2, konsens: kon,
+          ref, ki: k.label, kiF1: k.f1, kiF2: k.f2, ov: k.ov, sw: k.sw, un: k.un, einheit: k.einheit });
+      }
+      if (s.protokoll) for (const v of s.protokoll.versuche || []) if (v.status === "nicht erkannt")
+        rows.push({ proband, sitzung: s.id, datum: s.created, quelle: s.source, wdh: "", t: v.t, versuch: v.versuch, soll: v.soll, b1: "", b2: "", konsens: "", ref: refSrc === "soll" ? v.soll : "", ki: null });
+    }
+    return { rows, ohneKI };
+  }
+  const f3 = (v) => v == null || isNaN(v) ? "–" : (v * 100).toFixed(1).replace(".", ",") + " %";
+  const ci = (b, k) => b && b.ci[k] ? `Konfidenzintervall 95 %: ${f3(b.ci[k][0])} – ${f3(b.ci[k][1])}` : "Konfidenzintervall ab 3 Probanden";
+  const kap = (k) => k && k.n ? k.kappa.toFixed(2).replace(".", ",") : "–";
+  function renderStudy() {
+    const out = $("study-out"); if (!out) return;
+    const { rows, ohneKI } = studyRows();
+    const e = STUDY.evaluate(rows), m = e.matrix;
+    if (!m.n) {
+      out.className = "empty";
+      out.textContent = rows.length ? "Noch keine Referenzlabels für die gewählte Quelle. Bewertungen eintragen oder Referenz wechseln." : "Noch keine Aufnahmen für die Auswertung.";
+      if (ohneKI) out.textContent += ` ${ohneKI} ältere Aufnahmen ohne gespeicherte KI-Ergebnisse: „KI neu berechnen“ tippen.`;
+      return;
+    }
+    out.className = "";
+    const t = e.typ;
+    out.innerHTML = `<div class="metrics">
+        <div class="kpi"><b>${m.n}</b><span>bewertete Wdh · ${e.probanden} ${e.probanden === 1 ? "Proband" : "Probanden"}</span></div>
+        <div class="kpi"><b>${f3(m.accuracy)}</b><span>Accuracy</span><small>${ci(e.boot, "accuracy")}</small></div>
+        <div class="kpi"><b>${f3(m.sensitivitaet)}</b><span>Sensitivität (Fehler erkannt)</span><small>${ci(e.boot, "sensitivitaet")}</small></div>
+        <div class="kpi"><b>${f3(m.spezifitaet)}</b><span>Spezifität (Korrektes erkannt)</span><small>${ci(e.boot, "spezifitaet")}</small></div>
+        <div class="kpi"><b>${kap(e.kappaKI)}</b><span>Kappa KI ↔ Referenz</span></div>
+        <div class="kpi"><b>${kap(e.kappaBewerter)}</b><span>Kappa Bewerter 1 ↔ 2</span><small>${e.kappaBewerter.n ? `n = ${e.kappaBewerter.n}, Kategorien ${kap(e.kappaBewerterKategorien)}` : "noch keine Doppelbewertung"}</small></div>
+      </div>
+      <div class="tablewrap"><table class="cm"><thead><tr><th></th><th>KI: korrekt</th><th>KI: fehlerhaft</th></tr></thead><tbody>
+        <tr><th>Referenz: korrekt</th><td class="ok"><b>${m.TN}</b><br>richtig negativ</td><td class="bad"><b>${m.FP}</b><br>falscher Alarm</td></tr>
+        <tr><th>Referenz: fehlerhaft</th><td class="bad"><b>${m.FN}</b><br>übersehen</td><td class="ok"><b>${m.TP}</b><br>richtig erkannt</td></tr></tbody></table></div>
+      <div class="tablewrap"><table class="cm"><thead><tr><th>Fehlertyp (Referenz)</th><th>n</th><th>als fehlerhaft erkannt</th><th>richtiger Typ</th></tr></thead><tbody>
+        <tr><th>Doppelsprung</th><td>${t.F1.n}</td><td>${t.F1.n ? f3(t.F1.alsFehler / t.F1.n) : "–"}</td><td>${t.F1.n ? f3(t.F1.richtigerTyp / t.F1.n) : "–"}</td></tr>
+        <tr><th>Overstepping</th><td>${t.F2.n}</td><td>${t.F2.n ? f3(t.F2.alsFehler / t.F2.n) : "–"}</td><td>${t.F2.n ? f3(t.F2.richtigerTyp / t.F2.n) : "–"}</td></tr>
+        <tr><th>Kein Brustkontakt</th><td>${t.F3.n}</td><td>${t.F3.n ? f3(t.F3.alsFehler / t.F3.n) : "–"}</td><td>wird nicht geprüft</td></tr></tbody></table></div>
+      <p class="study-note">${e.nichtErkannt} Versuche von der KI nicht als Wiederholung erkannt · ${e.falschGezaehlt} gezählte Bewegungen ohne echte Wdh · ${e.ohneReferenz} Wdh ohne Referenz${ohneKI ? ` · ${ohneKI} Aufnahmen ohne KI-Daten` : ""}</p>`;
+  }
+  $("st-ref").addEventListener("change", renderStudy);
+  $("st-proto").addEventListener("change", renderStudy);
+  $("st-csv").addEventListener("click", async () => {
+    const { rows } = studyRows(); if (!rows.length) { toast("Noch keine Daten"); return; }
+    const cols = ["proband", "sitzung", "datum", "quelle", "versuch", "wdh", "t", "soll", "b1", "b2", "konsens", "ki", "kiF1", "kiF2", "ov", "sw", "einheit", "un"];
+    const head = ["proband", "aufnahme_id", "datum", "quelle", "versuch", "wdh", "zeit_s", "soll", "bewerter1", "bewerter2", "referenz_konsens", "ki_label", "ki_doppelsprung", "ki_overstep", "overstep_wert", "sprungweite", "einheit", "ki_unsicher"];
+    const v = (x) => x === true ? "ja" : x === false ? "nein" : x == null ? (x === null ? "" : "") : String(x).replace(/[;\n]/g, " ");
+    const lines = [head.join(";")].concat(rows.map((r) => cols.map((c) => c === "ki" && r.ki === null ? "nicht erkannt" : v(r[c])).join(";")));
+    const d = new Date(), p2 = (n) => String(n).padStart(2, "0");
+    const res = await shareOrDownload(new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv" }), `bbj_studie_${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}.csv`);
+    if (res !== "abgebrochen") toast("Studien-CSV " + res);
+  });
+  $("st-recalc").addEventListener("click", async (ev) => {
+    const btn = ev.currentTarget; btn.disabled = true; let n = 0;
+    try {
+      for (const s of P.sessions) {
+        const fr = await DB.get("frames", s.id); if (!fr) continue;
+        const frames = decodeFrames(fr.punkte, s.bilder);
+        const pxcm = s.pxcm != null ? s.pxcm : (s.einstellungen && s.einstellungen.pixelProCm) || null;
+        const r = BBJ.analyse(frames, s.fps, cfg({ pixelProCm: pxcm }, s.skelett, s.profileId));
+        s.kiReps = kiReps(r, s.fps);
+        s.summary = Object.assign({}, s.summary || {}, { n: r.reps.length, ok: r.reps.filter((x) => x.kiLabel === "korrekt").length, bad: r.reps.filter((x) => x.kiLabel !== "korrekt").length,
+          f1: r.reps.filter((x) => x.fehler1Doppelsprung).length, f2: r.reps.filter((x) => x.fehler2Overstep).length, unsicher: r.reps.filter((x) => x.unsicher).length });
+        s.erkennung = BBJ.VERSION; await DB.put("sessions", s); n++;
+        btn.textContent = `Berechne … ${n}/${P.sessions.length}`; await new Promise((r2) => setTimeout(r2, 0));
+      }
+      toast(`${n} Aufnahmen neu berechnet`);
+    } catch (e) { toast("Fehler: " + e.message); }
+    btn.disabled = false; btn.textContent = "KI mit aktuellen Einstellungen neu berechnen"; renderPeople();
+  });
+
+  // ---------------- Offline ----------------
+  async function offlineInfo() {
+    const el = $("offline-info"); if (!el) return;
+    if (!("serviceWorker" in navigator) || !window.caches) { el.textContent = "Offline-Modus wird von diesem Browser nicht unterstützt."; return; }
+    try {
+      const lib = await caches.open("bbj-lib-v1"); const keys = (await lib.keys()).map((r) => r.url);
+      const mp = keys.some((u) => u.includes("pose_landmarker_")) && keys.some((u) => u.includes("vision_wasm"));
+      const rt = await (await caches.open("bbj-models-v1")).match("/bbj-models/rtmw-m.onnx");
+      const ort = keys.some((u) => u.includes("onnxruntime-web"));
+      el.textContent = `MediaPipe: ${mp ? "offline bereit ✓" : "noch nicht gespeichert"} · RTMW: ${rt && ort ? "offline bereit ✓" : rt ? "Modell gespeichert, Laufzeit fehlt" : "nicht gespeichert"}`;
+    } catch (e) { el.textContent = "Status nicht verfügbar"; }
+  }
+  $("offline-prep").addEventListener("click", async (ev) => {
+    const b = ev.currentTarget; b.disabled = true; b.textContent = "Lade …";
+    try { await getLandmarker(); if (poseSel() === "rtmw") await ensurePose(); toast("Offline bereit"); }
+    catch (e) { toast("Fehler: " + e.message); }
+    b.disabled = false; b.textContent = "Für offline vorbereiten"; offlineInfo();
+  });
+  if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+    navigator.serviceWorker.register("sw.js").then(() => offlineInfo()).catch(() => {});
+  }
+  $("open-settings").addEventListener("click", () => { calibInfo(); offlineInfo(); });
+
   // ---------------- Start ----------------
+  calibInfo();
   const demo = BBJ.synth();
   setSession({ source: "demo", name: "Beispiel", frames: demo.frames, fps: demo.fps, w: demo.width, h: demo.height });
-  loadAll().then(() => { if (location.hash === "#people") renderPeople(); });
+  loadAll().then(() => { if (location.hash === "#people") renderPeople(); setLiveMode(LMODE); });
   go(location.hash.slice(1) || "live", false);
 })();
 </script>

@@ -712,6 +712,14 @@ dialog { border-radius: 10px; }
       <p class="study-note">Positiv = fehlerhaft. Konfidenzintervalle per Bootstrap über Probanden (2000 Wiederholungen). Pilotstudie: Kennzahlen deskriptiv interpretieren.</p>
     </div>
 
+    <div class="card" id="tune-card">
+      <div class="row" style="justify-content:space-between"><h2>Feintuning</h2><span class="label" id="tune-state">–</span></div>
+      <p class="sub" style="margin:0">Stellt die Erkennung auf eure bewerteten Aufnahmen ein und prüft das Ergebnis an Probanden, die beim Einstellen nicht verwendet wurden. Läuft komplett auf diesem Gerät. Referenz wie oben in der Studienauswertung gewählt.</p>
+      <div class="row"><button class="btn primary" id="tune-start" type="button">Feintuning starten</button><span class="status" id="tune-hint"></span></div>
+      <div class="progress" id="tune-prog" hidden><div class="bar"><i id="tune-bar"></i></div><div class="status" id="tune-status">–</div></div>
+      <div id="tune-out" hidden></div>
+    </div>
+
     <div class="card">
       <h2>Speicher</h2>
       <div class="status" id="store-info">–</div>
@@ -802,7 +810,7 @@ dialog { border-radius: 10px; }
 
 <div class="toast" id="toast" role="status" hidden></div>
 
-<script>
+<script id="src-core">
 /* BBJ-Analyse – Erkennungskern v0.2
    Eingabe: frames = Array von Float32Array(99) [x_px, y_px, sichtbarkeit] × 33 MediaPipe-Punkte, NaN = keine Person.
 
@@ -1414,11 +1422,137 @@ dialog { border-radius: 10px; }
 })(typeof window !== "undefined" ? window : globalThis);
 
 </script>
+<script id="src-tune">
+/* Feintuning der Erkennung – gleiche Logik wie feintuning.py (PC-Version).
+   sessions: [{ id, proband, frames: Float32Array[], fps, cfg: {...}, refs: [[t_s, label], ...] }]
+   Benötigt BBJ.analyse (core.js). */
+(function (root) {
+  "use strict";
+  const MATCH_S = 0.8;
+  const GRID_A = { minSprungRel: [0.12, 0.16, 0.20, 0.24, 0.28], minHueftHubRel: [0.02, 0.035, 0.05, 0.07] };
+  const GRID_B = { flugSchwelleCm: [2.0, 2.5, 3.0, 4.0, 5.0, 6.0], minFlugzeitS: [0.04, 0.06, 0.09], aufrechtGrad: [35.0, 40.0, 50.0] };
+  const GRID_C_HALT = [0.05, 0.10, 0.15, 0.20];
+  const GRID_C_TOL = []; for (let i = 0; i <= 18; i++) GRID_C_TOL.push(Math.round((-3 + 0.5 * i) * 10) / 10);
+  const DEFAULTS = { minSprungRel: 0.2, minHueftHubRel: 0.05, flugSchwelleCm: 4.0, minFlugzeitS: 0.06, aufrechtGrad: 40.0, overstepHaltS: 0.1, overstepToleranzCm: 0.0 };
+  const PC_NAMES = { minSprungRel: "min_sprung_rel", minHueftHubRel: "min_hueft_hub_rel", flugSchwelleCm: "flug_schwelle_cm", minFlugzeitS: "min_flugzeit_s",
+    aufrechtGrad: "aufrecht_grad", overstepHaltS: "overstep_halt_s", overstepToleranzCm: "overstep_toleranz_cm" };
+
+  function product(grid) {
+    const keys = Object.keys(grid); let out = [{}];
+    for (const k of keys) { const next = []; for (const o of out) for (const v of grid[k]) next.push(Object.assign({}, o, { [k]: v })); out = next; }
+    return out;   // gleiche Reihenfolge wie itertools.product
+  }
+
+  function Tuner(sessions, onProgress) {
+    const cache = new Map(); let analysen = 0;
+    const keyOf = (p) => Object.keys(p).sort().map((k) => k + "=" + p[k]).join("&");
+    function run(d, params) {
+      const key = d.id + "|" + keyOf(params);
+      let v = cache.get(key);
+      if (!v) {
+        const r = root.BBJ.analyse(d.frames, d.fps, Object.assign({}, d.cfg, params));
+        v = r.reps.map((x) => ({ t: x.frameTiefpunkt / d.fps, f1: x.fehler1Doppelsprung, f2: x.fehler2Overstep, ov: x.overstepWert, cm: String(x.einheit || "").startsWith("cm") }));
+        cache.set(key, v); analysen++;
+        if (onProgress && analysen % 5 === 0) onProgress(analysen);
+      }
+      return v;
+    }
+    function match(d, params) {
+      const ki = run(d, params), used = new Set(), pairs = [];
+      for (const [t, lab] of d.refs) {
+        let best = -1, bd = MATCH_S;
+        for (let i = 0; i < ki.length; i++) if (!used.has(i) && Math.abs(ki[i].t - t) < bd) { best = i; bd = Math.abs(ki[i].t - t); }
+        if (best < 0) pairs.push([lab, null]); else { used.add(best); pairs.push([lab, ki[best]]); }
+      }
+      return [pairs, ki.length - used.size];
+    }
+    function balAcc(tp, fn, tn, fp) {
+      const sens = tp + fn ? tp / (tp + fn) : NaN, spec = tn + fp ? tn / (tn + fp) : NaN;
+      const v = [sens, spec].filter((x) => !isNaN(x));
+      return [v.length ? v.reduce((a, b) => a + b, 0) / v.length : NaN, sens, spec];
+    }
+    function score(data, params, stage, tol) {
+      let tp = 0, fn = 0, tn = 0, fp = 0, hit = 0, miss = 0, extra = 0;
+      for (const d of data) {
+        const [pairs, ex] = match(d, params); extra += ex;
+        for (const [lab, r] of pairs) {
+          if (lab === "keine") { if (r) extra++; continue; }
+          if (!r) { miss++; continue; }
+          hit++;
+          if (stage === "A") continue;
+          let pos, ki;
+          if (stage === "B") { if (lab === "mehrere") continue; pos = lab === "F1"; ki = r.f1; }
+          else if (stage === "C") {
+            if (lab === "mehrere" || !r.cm) continue;
+            pos = lab === "F2"; ki = r.ov != null && r.ov > (tol != null ? tol : (params.overstepToleranzCm || 0));
+          } else { pos = lab !== "korrekt"; ki = r.f1 || r.f2; }
+          if (pos && ki) tp++; else if (pos) fn++; else if (ki) fp++; else tn++;
+        }
+      }
+      if (stage === "A") { const tot = hit + miss + extra; return [tot ? hit / tot : NaN, { erkannt: hit, uebersehen: miss, zusaetzlich: extra }]; }
+      const [ba, sens, spec] = balAcc(tp, fn, tn, fp);
+      return [ba, { TP: tp, FN: fn, TN: tn, FP: fp, sens, spez: spec, uebersehen: miss }];
+    }
+    const dist = (c, b) => { let s = 0; for (const k in c) if (k in b) s += Math.abs(c[k] - b[k]) / (Math.abs(b[k]) || 1); return s; };
+    const better = (s, cand, best, base) => !isNaN(s) && (!best || s > best[0] + 1e-9 || (Math.abs(s - best[0]) <= 1e-9 && dist(cand, base) < dist(best[1], base)));
+    function tune(data, base) {
+      let p = Object.assign({}, base), best = null;
+      for (const c of product(GRID_A)) { const cand = Object.assign({}, p, c); const [s] = score(data, cand, "A"); if (better(s, cand, best, base)) best = [s, cand]; }
+      if (best) p = best[1]; best = null;
+      for (const c of product(GRID_B)) { const cand = Object.assign({}, p, c); const [s] = score(data, cand, "B"); if (better(s, cand, best, base)) best = [s, cand]; }
+      if (best) p = best[1]; best = null;
+      for (const halt of GRID_C_HALT) for (const tol of GRID_C_TOL) {
+        const cand = Object.assign({}, p, { overstepHaltS: halt, overstepToleranzCm: tol });
+        const [s] = score(data, Object.assign({}, p, { overstepHaltS: halt }), "C", tol);
+        if (better(s, cand, best, base)) best = [s, cand];
+      }
+      if (best) p = best[1];
+      return p;
+    }
+    function full() {
+      const probanden = [...new Set(sessions.map((d) => d.proband))].sort();
+      const res = { probanden: probanden.length, aufnahmen: sessions.length, wiederholungen: sessions.reduce((a, d) => a + d.refs.length, 0) };
+      const block = (params, data) => { const [, a] = score(data, params, "A"); const [ba, f] = score(data, params, "F"); return Object.assign({ ausgewogen: ba }, a, f); };
+      res.standard = block(DEFAULTS, sessions);
+      res.werte = tune(sessions, DEFAULTS);
+      res.angepasst = block(res.werte, sessions);
+      if (probanden.length >= 3) {
+        const aggD = { TP: 0, FN: 0, TN: 0, FP: 0 }, aggT = { TP: 0, FN: 0, TN: 0, FP: 0 };
+        probanden.forEach((pb, i) => {
+          if (onProgress) onProgress(analysen, `Kreuzvalidierung ${i + 1}/${probanden.length}`);
+          const train = sessions.filter((d) => d.proband !== pb), test = sessions.filter((d) => d.proband === pb);
+          const pf = tune(train, DEFAULTS);
+          for (const [agg, prm] of [[aggD, DEFAULTS], [aggT, pf]]) { const [, f] = score(test, prm, "F"); for (const k in agg) agg[k] += f[k]; }
+        });
+        const [bd, sd, pd] = balAcc(aggD.TP, aggD.FN, aggD.TN, aggD.FP), [bt, st, pt] = balAcc(aggT.TP, aggT.FN, aggT.TN, aggT.FP);
+        res.kreuzvalidierung = { standard: Object.assign({ ausgewogen: bd, sens: sd, spez: pd }, aggD), angepasst: Object.assign({ ausgewogen: bt, sens: st, spez: pt }, aggT) };
+        res.empfohlen = bt > bd + 0.005;
+      } else {
+        res.kreuzvalidierung = null;
+        res.empfohlen = res.angepasst.ausgewogen > res.standard.ausgewogen + 0.005;
+      }
+      res.analysen = analysen;
+      return res;
+    }
+    return { full, tune, score };
+  }
+
+  function settingsFile(res, referenz, erkennung) {
+    const pc = {}; for (const k in res.werte) pc[PC_NAMES[k]] = res.werte[k];
+    return { format: "bbj-check-feintuning", version: 1, erkennung, referenz, probanden: res.probanden, wiederholungen: res.wiederholungen,
+      empfohlen: !!res.empfohlen, app: Object.assign({}, res.werte), pc, ergebnis: res };
+  }
+
+  root.TUNE = { Tuner, DEFAULTS, settingsFile, GRID_A, GRID_B, GRID_C_HALT, GRID_C_TOL };
+  if (typeof module !== "undefined") module.exports = root.TUNE;
+})(typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : globalThis);
+
+</script>
 <script>
 (function () {
   "use strict";
   const $ = (id) => document.getElementById(id);
-  const APP_VERSION = "0.6.1";
+  const APP_VERSION = "0.7.0";
   const MP_VERSIONS = ["0.10.14", "0.10.18", "0.10.21"];
   const MODEL_URL = (v) => `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_${v}/float16/latest/pose_landmarker_${v}.task`;
   const SKEL = [[11,12],[11,13],[13,15],[12,14],[14,16],[15,19],[16,20],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],[27,29],[29,31],[27,31],[28,30],[30,32],[28,32]];
@@ -2413,7 +2547,7 @@ dialog { border-radius: 10px; }
     $("p-unassigned-card").hidden = !un.length; $("pu-count").textContent = un.length;
     const ul = $("pu-sessions"); ul.innerHTML = ""; un.sort((a, b) => b.created.localeCompare(a.created)).forEach((s) => ul.append(sessionRow(s)));
     if (P.open && profById(P.open)) openProfile(P.open, true); else $("p-detail").hidden = true;
-    storageInfo(); renderStudy();
+    storageInfo(); renderStudy(); tuneHint();
   }
   function openProfile(id, keepScroll) {
     const p = profById(id); if (!p) return; P.open = id;
@@ -2618,6 +2752,112 @@ dialog { border-radius: 10px; }
     } catch (e) { toast("Fehler: " + e.message); }
     btn.disabled = false; btn.textContent = "KI mit aktuellen Einstellungen neu berechnen"; renderPeople();
   });
+
+  // ---------------- Feintuning auf dem Gerät ----------------
+  function tuneSessionsMeta() {
+    const refSrc = $("st-ref").value, list = [];
+    for (const s of P.sessions) {
+      const tOf = {}; for (const k of s.kiReps || []) tOf[k.wdh] = k.t;
+      let refs = [];
+      if (refSrc === "soll") refs = (s.soll || []).filter((x) => x.t != null).map((x) => [x.t, x.soll]);
+      else {
+        const korr = s.korr || {}, b1 = (s.bew || {}).B1 || {}, b2 = (s.bew || {}).B2 || {};
+        const keys = [...new Set([...Object.keys(korr), ...Object.keys(b1), ...Object.keys(b2)].map(Number))].sort((a, b) => a - b);
+        for (const w of keys) {
+          if (!(w in tOf)) continue;
+          const lab = refSrc === "konsens" ? (korr[w] || (b1[w] && b1[w] === b2[w] ? b1[w] : null)) : refSrc === "B1" ? b1[w] : b2[w];
+          if (lab) refs.push([tOf[w], lab]);
+        }
+      }
+      if (!refs.length) continue;
+      const e = s.einstellungen || {}, pr = profById(s.profileId);
+      list.push({ id: s.id, proband: pr ? pr.code : "ohne Proband", fps: s.fps, bilder: s.bilder, refs,
+        cfg: { pixelProCm: (s.pxcm != null ? s.pxcm : e.pixelProCm) || null, koerpergroesseCm: (pr && pr.groesseCm) || e.koerpergroesseCm || null,
+          richtung: e.richtung || "auto", seite: e.seite || "auto", einzelschrittAlsFehler: !!e.einzelschrittAlsFehler, minSichtbarkeit: s.skelett === "rtmw" ? 0.3 : 0.5 } });
+    }
+    return list;
+  }
+  function tuneHint() {
+    const l = tuneSessionsMeta(), pb = new Set(l.map((x) => x.proband)).size, n = l.reduce((a, x) => a + x.refs.length, 0);
+    $("tune-hint").textContent = n ? `${n} bewertete Wdh von ${pb} ${pb === 1 ? "Proband" : "Probanden"}${pb < 3 ? " · für die ehrliche Prüfung mindestens 3 Probanden" : ""}` : "Noch keine bewerteten Wiederholungen";
+    $("tune-start").disabled = !n;
+    const t = store.get("bbj-tuning"); $("tune-state").textContent = t ? "Feintuning aktiv" : "Standardwerte";
+  }
+  const WORKER_SRC = `
+    self.onmessage = (e) => {
+      try {
+        const dec = (b64, n) => { const bin = atob(b64), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+          const a = new Int16Array(u.buffer), out = []; for (let i = 0; i < n; i++) { const f = new Float32Array(99); for (let k = 0; k < 99; k++) { const v = a[i * 99 + k]; f[k] = v === -32768 ? NaN : (k % 3 === 2 ? v / 1000 : v); } out.push(f); } return out; };
+        const ds = e.data.sessions.map((s) => Object.assign({}, s, { frames: dec(s.punkte, s.bilder), punkte: null }));
+        let phase = "Suche Werte";
+        const t = TUNE.Tuner(ds, (n, ph) => { if (ph) phase = ph; self.postMessage({ type: "progress", n, phase }); });
+        self.postMessage({ type: "done", res: t.full() });
+      } catch (err) { self.postMessage({ type: "error", message: String(err && err.message || err) }); }
+    };`;
+  let tuneWorker = null, lastTune = null;
+  $("tune-start").addEventListener("click", async () => {
+    const meta = tuneSessionsMeta(); if (!meta.length) return;
+    $("tune-start").disabled = true; $("tune-out").hidden = true; $("tune-prog").hidden = false; $("tune-bar").style.width = "2%"; $("tune-status").textContent = "Lade Aufnahmen …";
+    try {
+      const sessions = [];
+      for (const m of meta) { const fr = await DB.get("frames", m.id); if (fr) sessions.push(Object.assign({}, m, { punkte: fr.punkte })); }
+      const folds = new Set(sessions.map((s) => s.proband)).size, perSet = 20 + 54 + 4;
+      const expected = sessions.length * perSet * (folds >= 3 ? 1.6 : 1);
+      const done = (res) => { $("tune-bar").style.width = "100%"; showTune(res); };
+      const fail = (msg) => { $("tune-status").textContent = "Fehler: " + msg; $("tune-start").disabled = false; };
+      const prog = (n, phase) => { $("tune-bar").style.width = Math.min(98, 2 + n / expected * 96).toFixed(1) + "%"; $("tune-status").textContent = `${phase} · ${n} Analysen`; };
+      let ok = false;
+      try {
+        const src = document.getElementById("src-core").textContent + "\n" + document.getElementById("src-tune").textContent + "\n" + WORKER_SRC;
+        const url = URL.createObjectURL(new Blob([src], { type: "text/javascript" }));
+        if (tuneWorker) tuneWorker.terminate();
+        tuneWorker = new Worker(url); ok = true;
+        tuneWorker.onmessage = (ev) => { const d = ev.data; if (d.type === "progress") prog(d.n, d.phase); else if (d.type === "done") { done(d.res); tuneWorker.terminate(); tuneWorker = null; } else fail(d.message); };
+        tuneWorker.onerror = (ev) => fail(ev.message || "Hintergrundprozess abgebrochen");
+        tuneWorker.postMessage({ sessions });
+      } catch (e) { ok = false; }
+      if (!ok) {   // Rückfall ohne Worker: rechnet im Vordergrund
+        $("tune-status").textContent = "Rechne … (die App reagiert währenddessen kaum)";
+        await new Promise((r) => setTimeout(r, 50));
+        const ds = sessions.map((s) => Object.assign({}, s, { frames: decodeFrames(s.punkte, s.bilder) }));
+        done(TUNE.Tuner(ds).full());
+      }
+    } catch (e) { $("tune-status").textContent = "Fehler: " + e.message; $("tune-start").disabled = false; }
+  });
+  const pc1 = (v) => v == null || isNaN(v) ? "–" : (v * 100).toFixed(1).replace(".", ",") + " %";
+  const TUNE_LABEL = { minSprungRel: "Mindest-Sprungweite (Anteil Körperhöhe)", minHueftHubRel: "Mindest-Hüfthub (Anteil Körperhöhe)", flugSchwelleCm: "Flug-Schwelle (cm)",
+    minFlugzeitS: "Mindest-Flugzeit (s)", aufrechtGrad: "Max. Rumpfneigung beim Zusatzsprung (°)", overstepHaltS: "Overstep-Mindestdauer (s)", overstepToleranzCm: "Overstep-Toleranz (cm)" };
+  function showTune(res) {
+    lastTune = res; $("tune-start").disabled = false; $("tune-prog").hidden = true;
+    const cv = res.kreuzvalidierung, out = $("tune-out"); out.hidden = false;
+    const changed = Object.keys(res.werte).filter((k) => res.werte[k] !== TUNE.DEFAULTS[k]);
+    out.innerHTML = `<div class="metrics">
+        <div class="kpi"><b>${pc1(cv ? cv.standard.ausgewogen : res.standard.ausgewogen)}</b><span>vorher · ausgewogene Genauigkeit</span><small>Sensitivität ${pc1(cv ? cv.standard.sens : res.standard.sens)} · Spezifität ${pc1(cv ? cv.standard.spez : res.standard.spez)}</small></div>
+        <div class="kpi"><b style="color:${res.empfohlen ? "var(--ok)" : "var(--ink)"}">${pc1(cv ? cv.angepasst.ausgewogen : res.angepasst.ausgewogen)}</b><span>nachher${cv ? " · bei neuen Probanden geprüft" : " · nur auf denselben Daten"}</span><small>Sensitivität ${pc1(cv ? cv.angepasst.sens : res.angepasst.sens)} · Spezifität ${pc1(cv ? cv.angepasst.spez : res.angepasst.spez)}</small></div>
+        <div class="kpi"><b>${res.wiederholungen}</b><span>bewertete Wdh · ${res.probanden} ${res.probanden === 1 ? "Proband" : "Probanden"}</span></div>
+      </div>
+      <p class="${res.empfohlen ? "" : "notes"}" style="margin:4px 0">${res.empfohlen ? "Die angepassten Werte verbessern die Erkennung" + (cv ? " auch bei Probanden, die beim Einstellen nicht verwendet wurden." : ". Für eine ehrliche Prüfung fehlen noch Probanden (mindestens 3).")
+        : "Keine verlässliche Verbesserung. Standardwerte beibehalten oder mehr bewertete Aufnahmen sammeln."}</p>
+      ${changed.length ? `<div class="tablewrap"><table class="cm"><thead><tr><th>Wert</th><th>Standard</th><th>angepasst</th></tr></thead><tbody>${changed.map((k) => `<tr><th>${TUNE_LABEL[k]}</th><td>${fmt(TUNE.DEFAULTS[k], false, 2)}</td><td><b>${fmt(res.werte[k], false, 2)}</b></td></tr>`).join("")}</tbody></table></div>` : '<p class="study-note">Alle Werte bleiben beim Standard.</p>'}
+      <div class="row">
+        ${changed.length ? `<button class="btn ${res.empfohlen ? "primary" : ""}" id="tune-apply" type="button">${res.empfohlen ? "Übernehmen" : "Trotzdem übernehmen"}</button>` : ""}
+        <button class="btn" id="tune-save" type="button">Als Datei speichern</button>
+        <button class="btn ghost" id="tune-discard" type="button">Verwerfen</button>
+      </div>`;
+    const ap = $("tune-apply");
+    if (ap) ap.addEventListener("click", () => {
+      const j = TUNE.settingsFile(res, $("st-ref").value, BBJ.VERSION);
+      store.set("bbj-tuning", { app: j.app, probanden: j.probanden, wiederholungen: j.wiederholungen, empfohlen: j.empfohlen, geladen: new Date().toISOString() });
+      $("s-tol").value = j.app.overstepToleranzCm; $("s-air").value = j.app.flugSchwelleCm; saveSettings(); tuningInfo(); evaluate();
+      out.hidden = true; tuneHint(); toast("Feintuning übernommen, Aufnahmen werden neu berechnet"); $("st-recalc").click();
+    });
+    $("tune-save").addEventListener("click", async () => {
+      const r = await shareOrDownload(new Blob([JSON.stringify(TUNE.settingsFile(res, $("st-ref").value, BBJ.VERSION), null, 2)], { type: "application/json" }), "bbj_feintuning.json");
+      if (r !== "abgebrochen") toast("Feintuning " + r);
+    });
+    $("tune-discard").addEventListener("click", () => { out.hidden = true; });
+  }
+  $("st-ref").addEventListener("change", tuneHint);
 
   // ---------------- Offline ----------------
   async function offlineInfo() {

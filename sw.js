@@ -1,7 +1,7 @@
 /* BBJ Check – Offline-Speicher.
    App-Dateien: zuerst Netz (damit Updates ankommen), sonst gespeicherte Version.
    Bibliotheken, KI-Modelle und Schriften: einmal geladen, danach aus dem Speicher. */
-const APP_CACHE = "bbj-app-v7";
+const APP_CACHE = "bbj-app-v8";
 const LIB_CACHE = "bbj-lib-v1";
 const APP_FILES = ["./", "./index.html", "./manifest.webmanifest", "./icon-180.png", "./icon-512.png"];
 const LIB_HOSTS = ["cdn.jsdelivr.net", "cdnjs.cloudflare.com", "storage.googleapis.com", "fonts.googleapis.com", "fonts.gstatic.com"];

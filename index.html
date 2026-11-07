@@ -794,10 +794,10 @@ dialog { border-radius: 10px; }
     <div class="field"><label for="s-p1">Doppelsprung</label><input id="s-p1" type="number" min="0" max="20" value="2"></div>
     <div class="field"><label for="s-p2">Overstepping</label><input id="s-p2" type="number" min="0" max="20" value="2"></div>
     <div class="field"><label for="s-p3">Kein Brustkontakt</label><input id="s-p3" type="number" min="0" max="20" value="1"><span class="hint">Wird von der KI nicht geprüft, aber erfasst</span></div>
-    <div class="dlg-sec label">Feintuning</div>
+    <div class="dlg-sec label">Modell · Feintuning</div>
     <div class="field wide"><span class="status" id="tuning-info">Standardwerte der Erkennung</span>
-      <div class="row" style="margin-top:6px"><label class="btn" for="tuning-file">Feintuning laden</label><input type="file" id="tuning-file" accept=".json,application/json" hidden><button class="btn" id="tuning-reset" type="button" hidden>Auf Standard zurücksetzen</button></div>
-      <span class="hint">Datei bbj_feintuning.json aus dem Feintuning-Skript. Danach unter „Probanden“ „KI neu berechnen“ tippen, damit alte Aufnahmen mit den neuen Werten bewertet werden.</span></div>
+      <div class="row" style="margin-top:6px"><label class="btn" for="tuning-file">Modell / Feintuning laden</label><input type="file" id="tuning-file" accept=".json,application/json" hidden><button class="btn" id="tuning-reset" type="button" hidden>Auf Standard zurücksetzen</button></div>
+      <span class="hint">Datei bbj_modell.json aus dem Studien-Tool (oder bbj_feintuning.json). Danach unter „Probanden“ „KI neu berechnen“ tippen, damit alte Aufnahmen mit den neuen Werten bewertet werden.</span></div>
     <div class="dlg-sec label">Offline</div>
     <div class="field wide"><span class="status" id="offline-info">–</span><button class="btn" id="offline-prep" type="button" style="align-self:flex-start;margin-top:6px">Für offline vorbereiten</button><span class="hint">Lädt die gewählten KI-Modelle einmal herunter, danach läuft die App auch ohne Internet.</span></div>
     <div class="dlg-sec label">KI</div>
@@ -823,7 +823,7 @@ dialog { border-radius: 10px; }
      (verhindert, dass das Zurückspringen in den Liegestütz als Zusatzsprung zählt). Flugerkennung mit Hysterese. */
 (function (root) {
   "use strict";
-  const VERSION = "0.3.0";
+  const VERSION = "0.4.0";
   const NOSE = 0, LSH = 11, RSH = 12, LWR = 15, RWR = 16, LIX = 19, RIX = 20,
     LHIP = 23, RHIP = 24, LKNEE = 25, RKNEE = 26, LANK = 27, RANK = 28, LHEEL = 29, RHEEL = 30, LTOE = 31, RTOE = 32;
 
@@ -879,7 +879,17 @@ dialog { border-radius: 10px; }
       if (sx.length >= 5) { bx.push(median(sx)); by.push(percentile(sy, 90)); }
     }
     if (bx.length >= 3 && Math.max(...bx) - Math.min(...bx) > 1e-3) {
-      const [a, b] = polyfit1(bx, by); if (Math.abs(a) < 0.15) return [a, b];
+      let [a, b] = polyfit1(bx, by), X = bx, Y = by;
+      // Abschnitte, in denen die Füße fast nur in der Luft waren, liegen über dem Boden → verwerfen und neu anpassen
+      for (let it = 0; it < 3; it++) {
+        const r = X.map((v, i) => Y[i] - (a * v + b)), tol = Math.max(4, 2.5 * median(r.map(Math.abs)));
+        const keep = r.map((v) => v >= -tol), n = keep.filter(Boolean).length;
+        if (n === X.length || n < 3) break;
+        const X2 = X.filter((_, i) => keep[i]), Y2 = Y.filter((_, i) => keep[i]);
+        if (Math.max(...X2) - Math.min(...X2) <= 1e-3) break;
+        X = X2; Y = Y2; [a, b] = polyfit1(X, Y);
+      }
+      if (Math.abs(a) < 0.15) return [a, b];
     }
     return [0, percentile(y, 95)];
   }
@@ -1072,10 +1082,10 @@ dialog { border-radius: 10px; }
         return up - low;
       });
       const jumpOk = airRuns.map((_, i) => disp[i] > cfg.minSprungRel * bodyPx && hub[i] > cfg.minHueftHubRel * bodyPx);
-      let sprung = false, weite = null, zusatz = [], landing = null, w1e = w1e0;
+      let sprung = false, weite = null, zusatz = [], landing = null, w1e = w1e0, mSprung = 0, mHub = 0;
       if (jumpOk.some(Boolean)) {
         let j = -1; for (let i = 0; i < airRuns.length; i++) if (jumpOk[i] && (j < 0 || disp[i] > disp[j])) j = i;
-        sprung = true; weite = conv(disp[j]); landing = airRuns[j][1];
+        sprung = true; weite = conv(disp[j]); landing = airRuns[j][1]; mSprung = disp[j] / bodyPx; mHub = hub[j] / bodyPx;
         // Fenster endet, sobald der nächste Burpee beginnt (Oberkörper kippt oder Hände gehen Richtung Boden)
         const landX = feetMid[landing];
         for (let t = landing + 1; t <= w1e0; t++) if (torso[t] > 45 || wristClear[t] < handUp || Math.abs(feetMid[t] - landX) > 0.45 * bodyPx) { w1e = t - 1; break; }
@@ -1098,6 +1108,18 @@ dialog { border-radius: 10px; }
       let vs = 0, vn = 0, vf = 0;
       for (let t = b; t <= w1e; t++) { if (valid[t]) vf++; for (const j of keyPts) { const v = raw[t][j * 3 + 2]; if (!isNaN(v)) { vs += v; vn++; } } }
       const vis = vn ? vs / vn : 0, validW = w1e >= b ? vf / (w1e - b + 1) : 0;
+      // Merkmale für das Lernmodell: skalierungsfrei (bezogen auf die Körperhöhe) und unabhängig von den Schwellenwerten
+      let zH = 0, zD = 0;
+      if (landing !== null) {
+        const low = 0.01 * bodyPx; let run = 0;
+        for (let t = landing + 2; t <= w1e; t++) {
+          const v = clear[t] - base; if (v > zH) zH = v;
+          run = v > low ? run + 1 : 0; if (run > zD) zD = run;
+        }
+      }
+      const r4 = (v) => Math.round(v * 10000) / 10000;
+      const merkmale = { overstepRel: r4(held / bodyPx), overstepMaxRel: r4(rawMax / bodyPx), sprungRel: r4(mSprung), hubRel: r4(mHub),
+        zusatzHoeheRel: r4(zH / bodyPx), zusatzDauerS: r4(zD / fps), nZusatz: zusatz.length, sichtbarkeit: r4(vis) };
       const gueltig = handsFound[k] && sprung && validW >= cfg.minPersonImBild;
       let unsicher = vis < cfg.minSichtbarkeit || grenz2;
       if (vis < cfg.minSichtbarkeit) notes.push(`Hände/Füße schlecht sichtbar (${vis.toFixed(2)})`);
@@ -1111,7 +1133,7 @@ dialog { border-radius: 10px; }
         sprungErkannt: sprung, sprungweite: weite === null ? null : r1(weite),
         einzelschrittHinweis: einzel, sichtbarkeit: Math.round(vis * 100) / 100,
         unsicher, hinweise: notes.join("; "),
-        gueltig, haendeAmBoden: handsFound[k],
+        gueltig, haendeAmBoden: handsFound[k], merkmale,
         _fenster2: [w2s, w2e], _fingerX: d * finger, _ende: w1e, _zusatz: zusatz, _overFrame: heldAt, _haende: [hs, he], _landung: landing,
       };
     });
@@ -1180,7 +1202,26 @@ dialog { border-radius: 10px; }
     return { frames, fps: FPS, width: 2400, height: 1000, pixelProCm: S };
   }
 
-  root.BBJ = { analyse, synth, DEFAULTS, VERSION };
+  // Gelerntes Modell anwenden (aus dem Studien-Tool): logistische Regression je Fehlertyp auf den Merkmalen
+  function prob(m, mk) {
+    let z = m.achse;
+    for (let i = 0; i < m.merkmale.length; i++) { const sd = m.std[i] || 1; z += m.koef[i] * ((mk[m.merkmale[i]] || 0) - m.mittel[i]) / sd; }
+    return 1 / (1 + Math.exp(-z));
+  }
+  function applyModel(result, model) {
+    if (!model || !model.ml || !result) return result;
+    const apply = (reps) => reps.forEach((r) => {
+      if (!r.merkmale) return;
+      if (model.ml.F1) { r.pF1 = Math.round(prob(model.ml.F1, r.merkmale) * 1000) / 1000; r.fehler1Doppelsprung = r.pF1 >= model.ml.F1.schwelle; }
+      if (model.ml.F2) { r.pF2 = Math.round(prob(model.ml.F2, r.merkmale) * 1000) / 1000; r.fehler2Overstep = r.pF2 >= model.ml.F2.schwelle; }
+      r.kiLabel = r.fehler1Doppelsprung || r.fehler2Overstep ? "fehlerhaft" : "korrekt";
+    });
+    apply(result.reps); if (result.kandidaten) apply(result.kandidaten);
+    result.meta.modell = model.version;
+    return result;
+  }
+
+  root.BBJ = { analyse, synth, DEFAULTS, VERSION, applyModel };
   if (typeof module !== "undefined") module.exports = root.BBJ;
 })(typeof window !== "undefined" ? window : globalThis);
 
@@ -1552,7 +1593,7 @@ dialog { border-radius: 10px; }
 (function () {
   "use strict";
   const $ = (id) => document.getElementById(id);
-  const APP_VERSION = "0.7.0";
+  const APP_VERSION = "0.8.0";
   const MP_VERSIONS = ["0.10.14", "0.10.18", "0.10.21"];
   const MODEL_URL = (v) => `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_${v}/float16/latest/pose_landmarker_${v}.task`;
   const SKEL = [[11,12],[11,13],[13,15],[12,14],[14,16],[15,19],[16,20],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],[27,29],[29,31],[27,31],[28,30],[30,32],[28,32]];
@@ -1601,10 +1642,20 @@ dialog { border-radius: 10px; }
     const o = Object.assign({}, t.app); delete o.overstepToleranzCm; delete o.flugSchwelleCm;   // diese beiden stehen als Felder in den Einstellungen
     return o;
   }
+  // Analyse mit geladenem Feintuning bzw. gelerntem Modell (Studien-Tool, Format bbj-check-modell)
+  function analyseKI(frames, fps, c) {
+    const r = BBJ.analyse(frames, fps, c), t = store.get("bbj-tuning");
+    if (t && t.ml) BBJ.applyModel(r, { ml: t.ml, version: t.version });
+    return r;
+  }
+  const METHODE = { standard: "Regeln, Standardwerte", feintuning: "Regeln, Feintuning", lernmodell: "Lernmodell" };
   function tuningInfo() {
     const t = store.get("bbj-tuning"), el = $("tuning-info"); if (!el) return;
-    el.textContent = t ? `Feintuning aktiv · ${t.probanden} Probanden, ${t.wiederholungen} Wdh · geladen ${new Date(t.geladen).toLocaleDateString("de-DE")}${t.empfohlen ? "" : " · laut Bericht keine verlässliche Verbesserung"}` : "Standardwerte der Erkennung";
+    el.textContent = !t ? "Standardwerte der Erkennung"
+      : t.version ? `Modell ${t.version} aktiv · ${METHODE[t.methode] || t.methode} · ${t.probanden} Probanden, ${t.wiederholungen} Versuche · geladen ${new Date(t.geladen).toLocaleDateString("de-DE")}`
+      : `Feintuning aktiv · ${t.probanden} Probanden, ${t.wiederholungen} Wdh · geladen ${new Date(t.geladen).toLocaleDateString("de-DE")}${t.empfohlen ? "" : " · laut Bericht keine verlässliche Verbesserung"}`;
     $("tuning-reset").hidden = !t;
+    $("ver").textContent = `Version ${APP_VERSION} · Erkennung ${BBJ.VERSION}${t && t.version ? ` · Modell ${t.version}` : t ? " · Feintuning" : ""} · Analyse lokal im Browser`;
   }
   $("open-settings").addEventListener("click", () => { const d = $("settings"); if (d.showModal) d.showModal(); else d.setAttribute("open", ""); });
   $("close-settings").addEventListener("click", () => { const d = $("settings"); if (d.close) d.close(); else d.removeAttribute("open"); });
@@ -1745,7 +1796,7 @@ dialog { border-radius: 10px; }
   }
   function evaluate() {
     if (!S.frames.length) return;
-    S.result = BBJ.analyse(S.frames, S.fps, S.source === "demo" ? cfg({ pixelProCm: 4, koerpergroesseCm: null, richtung: "auto", seite: "auto" }, S.skelett, null) : cfg({ pixelProCm: S.pxcm || null }, S.skelett, S.profileId));
+    S.result = analyseKI(S.frames, S.fps, S.source === "demo" ? cfg({ pixelProCm: 4, koerpergroesseCm: null, richtung: "auto", seite: "auto" }, S.skelett, null) : cfg({ pixelProCm: S.pxcm || null }, S.skelett, S.profileId));
     renderResults();
   }
   const KORR = [["", "– Was war wirklich? –"], ["korrekt", "Korrekt"], ["F1", "Doppelsprung"], ["F2", "Overstepping"], ["F3", "Kein Brustkontakt"], ["mehrere", "Mehrere Fehler"], ["keine", "Keine echte Wdh"]];
@@ -1907,11 +1958,17 @@ dialog { border-radius: 10px; }
     const f = e.target.files[0]; e.target.value = ""; if (!f) return;
     try {
       const j = JSON.parse(await f.text());
-      if (j.format !== "bbj-check-feintuning" || !j.app) throw new Error("Keine Feintuning-Datei");
-      store.set("bbj-tuning", { app: j.app, probanden: j.probanden, wiederholungen: j.wiederholungen, empfohlen: j.empfohlen, geladen: new Date().toISOString() });
+      if (j.format === "bbj-check-modell") {
+        if (!j.app || !j.version) throw new Error("Modelldatei unvollständig");
+        if (j.ml) for (const k in j.ml) { const m = j.ml[k]; if (!m || !Array.isArray(m.merkmale) || m.merkmale.length !== m.koef.length) throw new Error("Lernmodell " + k + " fehlerhaft"); }
+        store.set("bbj-tuning", { app: j.app, ml: j.ml || null, version: j.version, methode: j.methode, probanden: j.datenbasis && j.datenbasis.probanden, wiederholungen: j.datenbasis && j.datenbasis.versuche, empfohlen: true, erkennung: j.erkennung, geladen: new Date().toISOString() });
+        if (j.erkennung && j.erkennung !== BBJ.VERSION) toast(`Hinweis: Modell für Erkennung ${j.erkennung}, App nutzt ${BBJ.VERSION}`);
+      } else if (j.format === "bbj-check-feintuning" && j.app) {
+        store.set("bbj-tuning", { app: j.app, probanden: j.probanden, wiederholungen: j.wiederholungen, empfohlen: j.empfohlen, geladen: new Date().toISOString() });
+      } else throw new Error("Weder Modell- noch Feintuning-Datei");
       if (j.app.overstepToleranzCm != null) $("s-tol").value = j.app.overstepToleranzCm;
       if (j.app.flugSchwelleCm != null) $("s-air").value = j.app.flugSchwelleCm;
-      saveSettings(); tuningInfo(); evaluate(); toast(j.empfohlen ? "Feintuning geladen" : "Geladen, laut Bericht aber keine verlässliche Verbesserung");
+      saveSettings(); tuningInfo(); evaluate(); toast(j.format === "bbj-check-modell" ? `Modell ${j.version} geladen · unter „Probanden“ KI neu berechnen` : j.empfohlen ? "Feintuning geladen" : "Geladen, laut Bericht aber keine verlässliche Verbesserung");
     } catch (err) { toast("Datei konnte nicht geladen werden: " + err.message); }
   });
   $("tuning-reset").addEventListener("click", () => {
@@ -1994,7 +2051,7 @@ dialog { border-radius: 10px; }
   const cleanRep = (r) => { const o = {}; for (const k in r) if (k[0] !== "_") o[k] = r[k]; return o; };
   function sessionJSON() {
     return {
-      format: "bbj-check-session", formatVersion: 1, app: APP_VERSION, erkennung: BBJ.VERSION, erstellt: S.created, exportiert: new Date().toISOString(),
+      format: "bbj-check-session", formatVersion: 1, app: APP_VERSION, erkennung: BBJ.VERSION, modell: (store.get("bbj-tuning") || {}).version || null, erstellt: S.created, exportiert: new Date().toISOString(),
       quelle: S.source, skelett: S.skelett, name: S.name, fps: S.fps, breite: S.w, hoehe: S.h, bilder: S.frames.length, einstellungen: cfg(null, S.skelett),
       geraet: navigator.userAgent, notiz: $("note").value, uebersehen: S.missing,
       ki: S.result ? S.result.reps.map(cleanRep) : [], meta: S.result ? S.result.meta : null,
@@ -2318,7 +2375,7 @@ dialog { border-radius: 10px; }
   function liveAnalyse() {
     const fps = liveFps(); $("fps-chip").textContent = Math.round(fps) + " fps" + (fps < 15 ? " · zu langsam" : "");
     if (buf.length < fps * 1.5) return;
-    const r = BBJ.analyse(buf, fps, cfg(null, liveSkel, activeProfileId())), T = buf.length;
+    const r = analyseKI(buf, fps, cfg(null, liveSkel, activeProfileId())), T = buf.length;
     // Gemeldet wird nur ein vollständiger Burpee Broad Jump: Hände am Boden + gelandeter Broad Jump.
     const kand = r.kandidaten || r.reps;
     kand.forEach((rep, k) => {
@@ -2453,7 +2510,7 @@ dialog { border-radius: 10px; }
   function sessionMeta() {
     return { id: S.dbId, profileId: S.profileId || null, created: S.created, updated: new Date().toISOString(), source: S.source, name: S.name, skelett: S.skelett,
       fps: S.fps, w: S.w, h: S.h, bilder: S.frames.length, korr: Object.assign({}, S.korr), missing: S.missing, note: $("note").value,
-      einstellungen: cfg({ pixelProCm: S.pxcm || null }, S.skelett, S.profileId), summary: summary(), version: APP_VERSION,
+      einstellungen: cfg({ pixelProCm: S.pxcm || null }, S.skelett, S.profileId), summary: summary(), version: APP_VERSION, modell: (store.get("bbj-tuning") || {}).version || null,
       soll: S.soll || [], protokoll: S.protokoll || null, bew: S.bew, pxcm: S.pxcm || null, fileName: S.fileName || null, kiReps: kiReps(S.result, S.fps) };
   }
   async function saveCurrent(profileId) {
@@ -2741,7 +2798,8 @@ dialog { border-radius: 10px; }
         const fr = await DB.get("frames", s.id); if (!fr) continue;
         const frames = decodeFrames(fr.punkte, s.bilder);
         const pxcm = s.pxcm != null ? s.pxcm : (s.einstellungen && s.einstellungen.pixelProCm) || null;
-        const r = BBJ.analyse(frames, s.fps, cfg({ pixelProCm: pxcm }, s.skelett, s.profileId));
+        const r = analyseKI(frames, s.fps, cfg({ pixelProCm: pxcm }, s.skelett, s.profileId));
+        s.modell = (store.get("bbj-tuning") || {}).version || null;
         s.kiReps = kiReps(r, s.fps);
         s.summary = Object.assign({}, s.summary || {}, { n: r.reps.length, ok: r.reps.filter((x) => x.kiLabel === "korrekt").length, bad: r.reps.filter((x) => x.kiLabel !== "korrekt").length,
           f1: r.reps.filter((x) => x.fehler1Doppelsprung).length, f2: r.reps.filter((x) => x.fehler2Overstep).length, unsicher: r.reps.filter((x) => x.unsicher).length });
@@ -2881,6 +2939,7 @@ dialog { border-radius: 10px; }
     navigator.serviceWorker.register("sw.js").then(() => offlineInfo()).catch(() => {});
   }
   $("open-settings").addEventListener("click", () => { calibInfo(); offlineInfo(); tuningInfo(); });
+  tuningInfo();
 
   // ---------------- Start ----------------
   calibInfo();

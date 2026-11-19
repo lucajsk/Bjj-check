@@ -963,8 +963,8 @@ dialog { border-radius: 10px; }
       if (Math.abs(diff) < 0.3 * (mxx - mnx + 1e-6) || mxx - mnx < 1) hinweise.push("Sprungrichtung unsicher – in den Einstellungen festlegen.");
     }
     // Beide Seiten ähnlich gut sichtbar: trotzdem nur EINE Seite nutzen – die zur Kamera gewandte
-    // (Bewegung nach rechts → linke Körperseite, nach links → rechte). Die verdeckte Seite wird nur geraten.
-    if (seite === "beide" && cfg.seite === "auto") seite = d > 0 ? "L" : "R";
+    // (Bewegung im Bild nach rechts → rechte Körperseite zur Kamera, nach links → linke). Die verdeckte Seite wird nur geraten.
+    if (seite === "beide" && cfg.seite === "auto") seite = d > 0 ? "R" : "L";
 
     // --- Rumpf ----------------------------------------------------------------
     const shX = ts.map((t) => (X(t, LSH) + X(t, RSH)) / 2), shY = ts.map((t) => (Y(t, LSH) + Y(t, RSH)) / 2);
@@ -1596,7 +1596,7 @@ dialog { border-radius: 10px; }
 (function () {
   "use strict";
   const $ = (id) => document.getElementById(id);
-  const APP_VERSION = "0.8.1";
+  const APP_VERSION = "0.8.2";
   const MP_VERSIONS = ["0.10.14", "0.10.18", "0.10.21"];
   const MODEL_URL = (v) => `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_${v}/float16/latest/pose_landmarker_${v}.task`;
   const SKEL = [[11,12],[11,13],[13,15],[12,14],[14,16],[15,19],[16,20],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],[27,29],[29,31],[27,31],[28,30],[30,32],[28,32]];

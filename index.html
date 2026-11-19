@@ -835,7 +835,7 @@ dialog { border-radius: 10px; }
     flugSchwelleCm: 4, flugSchwelleRel: 0.025, minFlugzeitS: 0.06,
     einzelschrittCm: 8, einzelschrittAlsFehler: false,
     torsoHorizontalGrad: 60, schulterTiefRel: 0.3, minBurpeeS: 0.2, minWdhAbstandS: 1.2,
-    haendeBodenRel: 0.07, haendeObenRel: 0.25, aufrechtGrad: 40,
+    haendeBodenRel: 0.07, haendeObenRel: 0.25, aufrechtGrad: 40, sprungRumpfMax: 75,
     minSprungRel: 0.2, minHueftHubRel: 0.05, minPersonImBild: 0.6,
     minSichtbarkeit: 0.5, richtung: "auto", seite: "auto", glaettungFrames: 5,
   };
@@ -1072,10 +1072,13 @@ dialog { border-radius: 10px; }
       const seg = clear.slice(w1s, w1e0 + 1);
       const base = seg.length >= 6 ? percentile(seg, 25) : 0;
       const air = hysteresis(seg.map((c) => c - base), flugThr, flugThr * 0.5);
-      let airRuns = runs(air, minAir).map(([s, e]) => [w1s + s, w1s + e]);
+      const rawRuns = runs(air, minAir).map(([s, e]) => [w1s + s, w1s + e]);
       const upright = (s, e) => median(torso.slice(s, e + 1)) < cfg.aufrechtGrad;
       const handsHigh = (s, e) => { let m = Infinity; for (let t = s; t <= e; t++) m = Math.min(m, wristClear[t]); return m > handUp; };
-      airRuns = airRuns.filter(([s, e]) => upright(s, e) && handsHigh(s, e));
+      // Broad Jump: Oberkörper darf nach vorn geneigt sein, Arme schwingen tief – nur kein Liegestütz (Rumpf < sprungRumpfMax)
+      const airRuns = rawRuns.filter(([s, e]) => median(torso.slice(s, e + 1)) < cfg.sprungRumpfMax);
+      // Zusatzsprünge nach der Landung: streng (aufrecht, Hände oben), damit das Zurückspringen in den Liegestütz nicht zählt
+      const strictRuns = rawRuns.filter(([s, e]) => upright(s, e) && handsHigh(s, e));
       const disp = airRuns.map(([s, e]) => feetMid[Math.min(T - 1, e + 2)] - feetMid[Math.max(0, s - 2)]);
       // Broad Jump = Flugphase mit deutlicher Vorwärtsbewegung UND Hüfthub aus der Hocke (unterscheidet ihn von Gehen/Laufen)
       const hub = airRuns.map(([s, e]) => {
@@ -1092,7 +1095,7 @@ dialog { border-radius: 10px; }
         // Fenster endet, sobald der nächste Burpee beginnt (Oberkörper kippt oder Hände gehen Richtung Boden)
         const landX = feetMid[landing];
         for (let t = landing + 1; t <= w1e0; t++) if (torso[t] > 45 || wristClear[t] < handUp || Math.abs(feetMid[t] - landX) > 0.45 * bodyPx) { w1e = t - 1; break; }
-        zusatz = airRuns.slice(j + 1).filter(([s, e]) => e <= w1e);
+        zusatz = strictRuns.filter(([s, e]) => s > landing && e <= w1e);
       } else notes.push("Broad Jump nicht eindeutig erkannt");
       let f1 = zusatz.length > 0;
 
@@ -1596,7 +1599,7 @@ dialog { border-radius: 10px; }
 (function () {
   "use strict";
   const $ = (id) => document.getElementById(id);
-  const APP_VERSION = "0.8.2";
+  const APP_VERSION = "0.8.3";
   const MP_VERSIONS = ["0.10.14", "0.10.18", "0.10.21"];
   const MODEL_URL = (v) => `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_${v}/float16/latest/pose_landmarker_${v}.task`;
   const SKEL = [[11,12],[11,13],[13,15],[12,14],[14,16],[15,19],[16,20],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],[27,29],[29,31],[27,31],[28,30],[30,32],[28,32]];

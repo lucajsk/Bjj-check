@@ -1008,6 +1008,7 @@ dialog { border-radius: 10px; }
     const bothFeet = Math.min(visL, visR) >= 0.2;
     const clear = ts.map((t) => bothFeet || seite === "beide" ? Math.min(footClear(t, LHEEL, LTOE), footClear(t, RHEEL, RTOE))
       : seite === "L" ? footClear(t, LHEEL, LTOE) : footClear(t, RHEEL, RTOE));
+    const fussClear = bothFeet || seite === "beide" ? [ts.map((t) => footClear(t, LHEEL, LTOE)), ts.map((t) => footClear(t, RHEEL, RTOE))] : [clear];
     const feetMid = ts.map((t) => d * pick(t, LANK, RANK, (a, b) => (a + b) / 2, X));
     // Overstepping betrifft jeden Fuß – auch den von der Kamera abgewandten (sofern überhaupt erkannt)
     const toeFront = ts.map((t) => bothFeet ? Math.max(d * X(t, LTOE), d * X(t, RTOE)) : pick(t, LTOE, RTOE, Math.max, (tt, j) => d * X(tt, j)));
@@ -1075,7 +1076,12 @@ dialog { border-radius: 10px; }
       });
       const jumpOk = airRuns.map((_, i) => disp[i] > cfg.minSprungRel * bodyPx && hub[i] > cfg.minHueftHubRel * bodyPx);
       // Hüpfer (vor oder nach dem Broad Jump): Oberkörper nicht stark gebeugt, Hände oben
-      const huepfer = (s, e) => median(torso.slice(s, e + 1)) < cfg.huepferRumpfMax && minWrist(s, e) > handUp;
+      // … und JEDER Fuß hebt gegenüber seinem eigenen Stand davor ab (ein einzelner Schritt oder Driften eines Fußes zählt nicht)
+      const beideHeben = (s, e) => fussClear.every((fc) => {
+        let pk = -Infinity; for (let t = s; t <= e; t++) pk = Math.max(pk, fc[t]);
+        return pk - median(s > 0 ? fc.slice(Math.max(0, s - kb), s) : fc.slice(s, s + 1)) >= flugThr;
+      });
+      const huepfer = (s, e) => median(torso.slice(s, e + 1)) < cfg.huepferRumpfMax && minWrist(s, e) > handUp && beideHeben(s, e);
       let sprung = false, weite = null, zusatz = [], vor = [], landing = null, absprung = null, w1e = w1e0, mSprung = 0, mHub = 0;
       const j = jumpOk.indexOf(true);          // Broad Jump = ERSTER gültige Sprung
       if (j >= 0) {
@@ -1610,7 +1616,7 @@ dialog { border-radius: 10px; }
 (function () {
   "use strict";
   const $ = (id) => document.getElementById(id);
-  const APP_VERSION = "0.9.0";
+  const APP_VERSION = "0.9.1";
   const MP_VERSIONS = ["0.10.14", "0.10.18", "0.10.21"];
   const MODEL_URL = (v) => `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_${v}/float16/latest/pose_landmarker_${v}.task`;
   const SKEL = [[11,12],[11,13],[13,15],[12,14],[14,16],[15,19],[16,20],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],[27,29],[29,31],[27,31],[28,30],[30,32],[28,32]];

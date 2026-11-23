@@ -833,7 +833,7 @@ dialog { border-radius: 10px; }
     grenzfallCm: 3, grenzfallRel: 0.018,
     overstepHaltS: 0.1,
     flugSchwelleCm: 4, flugSchwelleRel: 0.025, minFlugzeitS: 0.06,
-    einzelschrittCm: 8, einzelschrittAlsFehler: false,
+    einzelschrittCm: 8, einzelschrittAlsFehler: false, vorsprungAlsFehler: true, huepferRumpfMax: 60,
     torsoHorizontalGrad: 60, schulterTiefRel: 0.3, minBurpeeS: 0.2, minWdhAbstandS: 1.2,
     haendeBodenRel: 0.07, haendeObenRel: 0.25, aufrechtGrad: 40, sprungRumpfMax: 75,
     minSprungRel: 0.2, minHueftHubRel: 0.05, minPersonImBild: 0.6,
@@ -1009,7 +1009,8 @@ dialog { border-radius: 10px; }
     const clear = ts.map((t) => bothFeet || seite === "beide" ? Math.min(footClear(t, LHEEL, LTOE), footClear(t, RHEEL, RTOE))
       : seite === "L" ? footClear(t, LHEEL, LTOE) : footClear(t, RHEEL, RTOE));
     const feetMid = ts.map((t) => d * pick(t, LANK, RANK, (a, b) => (a + b) / 2, X));
-    const toeFront = ts.map((t) => pick(t, LTOE, RTOE, Math.max, (tt, j) => d * X(tt, j)));
+    // Overstepping betrifft jeden Fuß – auch den von der Kamera abgewandten (sofern überhaupt erkannt)
+    const toeFront = ts.map((t) => bothFeet ? Math.max(d * X(t, LTOE), d * X(t, RTOE)) : pick(t, LTOE, RTOE, Math.max, (tt, j) => d * X(tt, j)));
     const fingerFront = ts.map((t) => pick(t, LIX, RIX, Math.max, (tt, j) => d * X(tt, j)));
     const minAir = Math.max(2, sec(cfg.minFlugzeitS));
     const holdK = Math.max(2, sec(cfg.overstepHaltS));
@@ -1046,11 +1047,53 @@ dialog { border-radius: 10px; }
     const kandidaten = bottoms.map(({ b }, k) => {
       const [hs, he] = regions[k], notes = [];
 
-      // ---- Fehler 2: Overstepping ----
+      // ---- Flugphasen nach dem Aufrichten (Hände vom Boden) bis zum nächsten Burpee ----
+      const nxt = k + 1 < regions.length ? regions[k + 1][0] : T;
+      const w1s = he, w1e0 = Math.max(he, nxt - 1);
+      // Fußhöhe relativ zum Stand kurz davor (gleitendes Minimum über 0,4 s): robust gegen Hocke und Bodenlinie
+      const kb = sec(0.4), loI = Math.max(0, w1s - kb);
+      const full = clear.slice(loI, w1e0 + 1);
+      const rel = [];
+      for (let i = w1s - loI; i < full.length; i++) { let m = Infinity; for (let q = Math.max(0, i - kb); q <= i; q++) m = Math.min(m, full[q]); rel.push(full[i] - m); }
+      const air = hysteresis(rel, flugThr, flugThr * 0.75);
+      // Gegenprobe gegen langsames Driften der Fußpunkte: Spitze der Flugphase gegenüber dem Median des Stands davor
+      const rawRuns = runs(air, minAir).map(([s, e]) => [w1s + s, w1s + e]).filter(([s, e]) => {
+        let pk = -Infinity; for (let t = s; t <= e; t++) pk = Math.max(pk, clear[t]);
+        const vor0 = s > 0 ? clear.slice(Math.max(0, s - kb), s) : clear.slice(s, s + 1);
+        return pk - median(vor0) >= 0.75 * flugThr;
+      });
+      const minWrist = (s, e) => { let m = Infinity; for (let t = s; t <= e; t++) m = Math.min(m, wristClear[t]); return m; };
+      // kein Liegestütz, Hände nicht am Boden (schließt das Heranspringen der Füße an die Hände aus)
+      const airRuns = rawRuns.filter(([s, e]) => median(torso.slice(s, e + 1)) < cfg.sprungRumpfMax && minWrist(s, e) > handThr);
+      const disp = airRuns.map(([s, e]) => feetMid[Math.min(T - 1, e + 2)] - feetMid[Math.max(0, s - 2)]);
+      // Broad Jump = Flugphase mit deutlicher Vorwärtsbewegung UND Hüfthub aus der Hocke (unterscheidet ihn von Gehen/Laufen)
+      const hub = airRuns.map(([s, e]) => {
+        let up = -Infinity, low = Infinity;
+        for (let t = s; t <= e; t++) up = Math.max(up, hipH[t]);
+        for (let t = Math.max(w1s, s - sec(0.5)); t <= s; t++) low = Math.min(low, hipH[t]);
+        return up - low;
+      });
+      const jumpOk = airRuns.map((_, i) => disp[i] > cfg.minSprungRel * bodyPx && hub[i] > cfg.minHueftHubRel * bodyPx);
+      // Hüpfer (vor oder nach dem Broad Jump): Oberkörper nicht stark gebeugt, Hände oben
+      const huepfer = (s, e) => median(torso.slice(s, e + 1)) < cfg.huepferRumpfMax && minWrist(s, e) > handUp;
+      let sprung = false, weite = null, zusatz = [], vor = [], landing = null, absprung = null, w1e = w1e0, mSprung = 0, mHub = 0;
+      const j = jumpOk.indexOf(true);          // Broad Jump = ERSTER gültige Sprung
+      if (j >= 0) {
+        sprung = true; weite = conv(disp[j]); landing = airRuns[j][1]; absprung = airRuns[j][0]; mSprung = disp[j] / bodyPx; mHub = hub[j] / bodyPx;
+        // Fenster endet, wenn der nächste Burpee beginnt (Hände Richtung Boden / Rumpf waagerecht) oder weit weggegangen
+        const landX = feetMid[landing];
+        for (let t = landing + 1; t <= w1e0; t++) if (wristClear[t] < 2 * handThr || torso[t] > cfg.sprungRumpfMax || Math.abs(feetMid[t] - landX) > 1.5 * bodyPx) { w1e = t - 1; break; }
+        zusatz = airRuns.filter(([s, e], i) => i > j && s <= w1e && (jumpOk[i] || huepfer(s, e)));
+        vor = airRuns.filter(([s, e], i) => i < j && huepfer(s, e));
+        if (vor.length) notes.push(`Hüpfer vor dem Broad Jump (${vor.length}×)`);
+      } else notes.push("Broad Jump nicht eindeutig erkannt");
+
+      // ---- Fehler 2: Overstepping – vom tiefsten Punkt bis zum Absprung (bzw. einem Hüpfer davor), jeder Fuß ----
       const n = he - hs + 1;
       const fs0 = hs + Math.floor(0.1 * n), fs1 = Math.max(fs0, he - Math.max(1, Math.floor(0.15 * n)));
       const finger = median(fingerFront.slice(fs0, fs1 + 1));
-      const w2s = b, w2e = Math.min(T - 1, he + sec(0.1));
+      const ende2 = absprung !== null ? Math.min(absprung, ...vor.map(([s]) => s)) : null;
+      const w2s = b, w2e = ende2 !== null ? Math.max(w2s, ende2 - 1) : Math.min(T - 1, he + sec(0.1));
       const over = []; for (let t = w2s; t <= w2e; t++) over.push(toeFront[t] - finger);
       // anhaltende Überschreitung: höchster Wert, der für holdK Bilder am Stück gehalten wird
       let held = -Infinity, heldAt = w2s, rawMax = -Infinity;
@@ -1065,39 +1108,7 @@ dialog { border-radius: 10px; }
       const f2 = held > overTol;
       const grenz2 = Math.abs(held - overTol) <= grenzPx;
       if (grenz2) notes.push("Overstep-Grenzfall");
-
-      // ---- Fehler 1: Doppelsprung ----
-      const nxt = k + 1 < regions.length ? regions[k + 1][0] : T;
-      const w1s = he, w1e0 = Math.max(he, nxt - 1);
-      const seg = clear.slice(w1s, w1e0 + 1);
-      const base = seg.length >= 6 ? percentile(seg, 25) : 0;
-      const air = hysteresis(seg.map((c) => c - base), flugThr, flugThr * 0.5);
-      const rawRuns = runs(air, minAir).map(([s, e]) => [w1s + s, w1s + e]);
-      const upright = (s, e) => median(torso.slice(s, e + 1)) < cfg.aufrechtGrad;
-      const handsHigh = (s, e) => { let m = Infinity; for (let t = s; t <= e; t++) m = Math.min(m, wristClear[t]); return m > handUp; };
-      // Broad Jump: Oberkörper darf nach vorn geneigt sein, Arme schwingen tief – nur kein Liegestütz (Rumpf < sprungRumpfMax)
-      const airRuns = rawRuns.filter(([s, e]) => median(torso.slice(s, e + 1)) < cfg.sprungRumpfMax);
-      // Zusatzsprünge nach der Landung: streng (aufrecht, Hände oben), damit das Zurückspringen in den Liegestütz nicht zählt
-      const strictRuns = rawRuns.filter(([s, e]) => upright(s, e) && handsHigh(s, e));
-      const disp = airRuns.map(([s, e]) => feetMid[Math.min(T - 1, e + 2)] - feetMid[Math.max(0, s - 2)]);
-      // Broad Jump = Flugphase mit deutlicher Vorwärtsbewegung UND Hüfthub aus der Hocke (unterscheidet ihn von Gehen/Laufen)
-      const hub = airRuns.map(([s, e]) => {
-        let up = -Infinity, low = Infinity;
-        for (let t = s; t <= e; t++) up = Math.max(up, hipH[t]);
-        for (let t = Math.max(w1s, s - sec(0.5)); t <= s; t++) low = Math.min(low, hipH[t]);
-        return up - low;
-      });
-      const jumpOk = airRuns.map((_, i) => disp[i] > cfg.minSprungRel * bodyPx && hub[i] > cfg.minHueftHubRel * bodyPx);
-      let sprung = false, weite = null, zusatz = [], landing = null, w1e = w1e0, mSprung = 0, mHub = 0;
-      if (jumpOk.some(Boolean)) {
-        let j = -1; for (let i = 0; i < airRuns.length; i++) if (jumpOk[i] && (j < 0 || disp[i] > disp[j])) j = i;
-        sprung = true; weite = conv(disp[j]); landing = airRuns[j][1]; mSprung = disp[j] / bodyPx; mHub = hub[j] / bodyPx;
-        // Fenster endet, sobald der nächste Burpee beginnt (Oberkörper kippt oder Hände gehen Richtung Boden)
-        const landX = feetMid[landing];
-        for (let t = landing + 1; t <= w1e0; t++) if (torso[t] > 45 || wristClear[t] < handUp || Math.abs(feetMid[t] - landX) > 0.45 * bodyPx) { w1e = t - 1; break; }
-        zusatz = strictRuns.filter(([s, e]) => s > landing && e <= w1e);
-      } else notes.push("Broad Jump nicht eindeutig erkannt");
-      let f1 = zusatz.length > 0;
+      let f1 = zusatz.length > 0 || (cfg.vorsprungAlsFehler && vor.length > 0);
 
       let einzel = false;
       if (landing !== null) {
@@ -1119,7 +1130,7 @@ dialog { border-radius: 10px; }
       if (landing !== null) {
         const low = 0.01 * bodyPx; let run = 0;
         for (let t = landing + 2; t <= w1e; t++) {
-          const v = clear[t] - base; if (v > zH) zH = v;
+          const v = rel[t - w1s]; if (v > zH) zH = v;
           run = v > low ? run + 1 : 0; if (run > zD) zD = run;
         }
       }
@@ -1599,7 +1610,7 @@ dialog { border-radius: 10px; }
 (function () {
   "use strict";
   const $ = (id) => document.getElementById(id);
-  const APP_VERSION = "0.8.3";
+  const APP_VERSION = "0.9.0";
   const MP_VERSIONS = ["0.10.14", "0.10.18", "0.10.21"];
   const MODEL_URL = (v) => `https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_${v}/float16/latest/pose_landmarker_${v}.task`;
   const SKEL = [[11,12],[11,13],[13,15],[12,14],[14,16],[15,19],[16,20],[11,23],[12,24],[23,24],[23,25],[25,27],[24,26],[26,28],[27,29],[29,31],[27,31],[28,30],[30,32],[28,32]];
